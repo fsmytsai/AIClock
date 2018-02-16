@@ -135,6 +135,16 @@ class AlarmClockFragment : Fragment() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == ADD_ALARM_CLOCK && resultCode == RESULT_OK) {
             val alarmClock = Gson().fromJson(data!!.getStringExtra("AlarmClockJsonStr"), AlarmClock::class.java)
+
+            if (data.getBooleanExtra("IsDelete", false)) {
+                for (i in 0..alarmClocks.alarmClockList.size - 1)
+                    if (alarmClocks.alarmClockList[i].acId == alarmClock.acId) {
+                        alarmClocks.alarmClockList.removeAt(i)
+                        rvAlarmClock.adapter.notifyItemRemoved(i)
+                        rvAlarmClock.adapter.notifyItemRangeChanged(i, alarmClocks.alarmClockList.size - i)
+                    }
+            }
+
             //檢查時間是否重複
             for (i in 0..alarmClocks.alarmClockList.size - 1)
                 if (alarmClock.hour == alarmClocks.alarmClockList[i].hour &&
@@ -165,31 +175,36 @@ class AlarmClockFragment : Fragment() {
                             alarmClocks.alarmClockList.removeAt(i)
                             rvAlarmClock.adapter.notifyItemRemoved(i)
                             rvAlarmClock.adapter.notifyItemRangeChanged(i, alarmClocks.alarmClockList.size - i)
+                        } else {
+                            //沒換位置則直接更新資料
+                            alarmClocks.alarmClockList.set(i, alarmClock)
+                            rvAlarmClock.adapter.notifyDataSetChanged()
                         }
                         break
                     }
             }
 
-            //沒改變且是修改，則不加入此次資料
-            if (!data.getBooleanExtra("IsNew", false) && !isChangePosition)
-                return
+            //新資料或有更新位置則插入資料
+            if (data.getBooleanExtra("IsNew", false) || isChangePosition) {
+                //取得應該插入的位置
+                var index = 0
+                for (i in 0..alarmClocks.alarmClockList.size - 1)
+                //新小時大於當前alarmClock小時 或 (新小時等於當前alarmClock小時 且 新分鐘大於當前alarmClock分鐘則繼續找)
+                    if (alarmClock.hour > alarmClocks.alarmClockList[i].hour ||
+                            (alarmClock.hour == alarmClocks.alarmClockList[i].hour &&
+                                    alarmClock.minute > alarmClocks.alarmClockList[i].minute))
+                        index = i + 1
+                    //否則直接結束
+                    else
+                        break
 
-            //取得應該插入的位置
-            var index = 0
-            for (i in 0..alarmClocks.alarmClockList.size - 1)
-            //新小時大於當前alarmClock小時 或 (新小時等於當前alarmClock小時 且 新分鐘大於當前alarmClock分鐘則繼續找)
-                if (alarmClock.hour > alarmClocks.alarmClockList[i].hour ||
-                        (alarmClock.hour == alarmClocks.alarmClockList[i].hour &&
-                                alarmClock.minute > alarmClocks.alarmClockList[i].minute))
-                    index = i + 1
-                //否則直接結束
-                else
-                    break
+                //插入此次資料
+                alarmClocks.alarmClockList.add(index, alarmClock)
+                rvAlarmClock.adapter.notifyItemInserted(index)
+                rvAlarmClock.adapter.notifyItemRangeChanged(index, alarmClocks.alarmClockList.size - index)
+            }
 
-            //插入此次資料
-            alarmClocks.alarmClockList.add(index, alarmClock)
-            rvAlarmClock.adapter.notifyItemInserted(index)
-            rvAlarmClock.adapter.notifyItemRangeChanged(index, alarmClocks.alarmClockList.size - index)
+            //更新資料儲存
             spAlarmClockData.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
         }
     }

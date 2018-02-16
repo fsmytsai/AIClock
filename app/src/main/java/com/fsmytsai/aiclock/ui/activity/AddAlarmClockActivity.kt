@@ -11,23 +11,43 @@ import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
+import android.support.v7.app.AlertDialog
+import android.util.Log
 import com.fsmytsai.aiclock.R
 import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.TimePicker
 import android.widget.Toast
 import com.fsmytsai.aiclock.model.AlarmClock
+import com.fsmytsai.aiclock.model.Text
+import com.fsmytsai.aiclock.model.Texts
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
+import okhttp3.*
+import java.io.IOException
 import java.util.*
+import kotlin.collections.ArrayList
+import com.liulishuo.filedownloader.FileDownloader
+import com.liulishuo.filedownloader.BaseDownloadTask
+import com.liulishuo.filedownloader.FileDownloadListener
+import kotlinx.android.synthetic.main.block_download_dialog.view.*
 
 
 class AddAlarmClockActivity : AppCompatActivity() {
-    private lateinit var alarmClock: AlarmClock
-    private var isNew = true
-    private var isSpeakerPlaying = false
-    private var mpSpeaker = MediaPlayer()
-    private lateinit var timePickerDialog: TimePickerDialog
+    private lateinit var mAlarmClock: AlarmClock
+    private var texts = Texts(ArrayList())
+    private var mIsNew = true
+    private var mIsSpeakerPlaying = false
+    private var mMPSpeaker = MediaPlayer()
+    private lateinit var mTimePickerDialog: TimePickerDialog
+    private var needDownloadCount = 0f
+    private var DownloadedCount = 0f
+    private lateinit var pbDownloading: ProgressBar
+    private lateinit var tvDownloading: TextView
+    private lateinit var dialogDownloading: AlertDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,72 +57,70 @@ class AddAlarmClockActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        mpSpeaker?.release()
+        mMPSpeaker?.release()
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun initViews() {
         getAlarmClockData()
-        if(isNew)
+        if (mIsNew)
             tv_toolBar.setText("新增智能鬧鐘")
-        else
+        else {
+            tv_toolBar_delete.visibility = View.VISIBLE
+            tv_toolBar_delete.setOnClickListener {
+                AlertDialog.Builder(this)
+                        .setTitle("刪除智能鬧鐘")
+                        .setMessage("您確定要刪除嗎?")
+                        .setPositiveButton("確定", { _, _ ->
+                            intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
+                            intent.putExtra("IsDelete", true)
+                            setResult(Activity.RESULT_OK, intent)
+                            finish()
+                        })
+                        .setNegativeButton("取消", null)
+                        .show()
+            }
             tv_toolBar.setText("編輯智能鬧鐘")
+        }
 
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
         supportActionBar?.setHomeButtonEnabled(true)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        et_Time.setText("${alarmClock.hour}:${alarmClock.minute}")
+        et_Time.setText("${String.format("%02d", mAlarmClock.hour)}:${String.format("%02d", mAlarmClock.minute)}")
         setTimeField()
         et_Time.setOnClickListener {
-            timePickerDialog.show()
+            mTimePickerDialog.show()
         }
 
-        when (alarmClock.speaker) {
+        when (mAlarmClock.speaker) {
             0 -> rb_f1.isChecked = true
             1 -> rb_f2.isChecked = true
             2 -> rb_m1.isChecked = true
         }
 
         rg_speaker.setOnCheckedChangeListener { radioGroup, checkedId ->
-            if (isSpeakerPlaying)
-                mpSpeaker?.stop()
+            if (mIsSpeakerPlaying)
+                mMPSpeaker?.stop()
             var uri: Uri? = null
             when (checkedId) {
                 R.id.rb_f1 -> {
-                    alarmClock.speaker = 0
+                    mAlarmClock.speaker = 0
                     uri = Uri.parse("android.resource://${packageName}/raw/f1")
                 }
                 R.id.rb_f2 -> {
-                    alarmClock.speaker = 1
+                    mAlarmClock.speaker = 1
                     uri = Uri.parse("android.resource://${packageName}/raw/f2")
                 }
                 R.id.rb_m1 -> {
-                    alarmClock.speaker = 2
+                    mAlarmClock.speaker = 2
                     uri = Uri.parse("android.resource://${packageName}/raw/m1")
                 }
             }
-            mpSpeaker = MediaPlayer()
-            mpSpeaker.setDataSource(this, uri)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                val audioAttributes = AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .build()
-                mpSpeaker.setAudioAttributes(audioAttributes)
-            } else {
-                mpSpeaker.setAudioStreamType(AudioManager.STREAM_ALARM)
-            }
-            mpSpeaker.setOnCompletionListener {
-                isSpeakerPlaying = false
-            }
-            mpSpeaker.setVolume(1f, 1f)
-            mpSpeaker.prepare()
-            mpSpeaker.start()
-            isSpeakerPlaying = true
+            startPlaying(uri!!, false)
         }
 
-        when (alarmClock.category) {
+        when (mAlarmClock.category) {
             -1 -> rb_no.isChecked = true
             0 -> rb_general.isChecked = true
             1 -> rb_business.isChecked = true
@@ -115,20 +133,20 @@ class AddAlarmClockActivity : AppCompatActivity() {
 
         rg_NewsType.setOnCheckedChangeListener { radioGroup, checkedId ->
             when (checkedId) {
-                R.id.rb_no -> alarmClock.category = -1
-                R.id.rb_general -> alarmClock.category = 0
-                R.id.rb_business -> alarmClock.category = 1
-                R.id.rb_entertainment -> alarmClock.category = 2
-                R.id.rb_health -> alarmClock.category = 3
-                R.id.rb_science -> alarmClock.category = 4
-                R.id.rb_sports -> alarmClock.category = 5
-                R.id.rb_technology -> alarmClock.category = 6
+                R.id.rb_no -> mAlarmClock.category = -1
+                R.id.rb_general -> mAlarmClock.category = 0
+                R.id.rb_business -> mAlarmClock.category = 1
+                R.id.rb_entertainment -> mAlarmClock.category = 2
+                R.id.rb_health -> mAlarmClock.category = 3
+                R.id.rb_science -> mAlarmClock.category = 4
+                R.id.rb_sports -> mAlarmClock.category = 5
+                R.id.rb_technology -> mAlarmClock.category = 6
             }
         }
 
         val circleTextviewFull = ContextCompat.getDrawable(this, R.drawable.circle_textview_full)
         for (i in 0..6) {
-            if (alarmClock.isRepeatArr[i])
+            if (mAlarmClock.isRepeatArr[i])
                 when (i) {
                     0 -> tv_sun.background = circleTextviewFull
                     1 -> tv_mon.background = circleTextviewFull
@@ -142,16 +160,16 @@ class AddAlarmClockActivity : AppCompatActivity() {
 
     }
 
-    private fun getAlarmClockData(){
+    private fun getAlarmClockData() {
         val AlarmClockJsonStr = intent.getStringExtra("AlarmClockJsonStr")
         if (AlarmClockJsonStr != null) {
-            isNew = false
-            alarmClock = Gson().fromJson(AlarmClockJsonStr, AlarmClock::class.java)
-            alarmClock.isOpen = true
+            mIsNew = false
+            mAlarmClock = Gson().fromJson(AlarmClockJsonStr, AlarmClock::class.java)
+            mAlarmClock.isOpen = true
         } else {
             val newCalendar = Calendar.getInstance()
             val acId = intent.getIntExtra("acId", 0)
-            alarmClock = AlarmClock(acId,
+            mAlarmClock = AlarmClock(acId,
                     newCalendar.get(Calendar.HOUR_OF_DAY),
                     newCalendar.get(Calendar.MINUTE),
                     -1,
@@ -161,14 +179,39 @@ class AddAlarmClockActivity : AppCompatActivity() {
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun startPlaying(uri: Uri, isReturn: Boolean) {
+        mMPSpeaker = MediaPlayer()
+        mMPSpeaker.setDataSource(this, uri)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            val audioAttributes = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .build()
+            mMPSpeaker.setAudioAttributes(audioAttributes)
+        } else {
+            mMPSpeaker.setAudioStreamType(AudioManager.STREAM_ALARM)
+        }
+        mMPSpeaker.setOnCompletionListener {
+            mIsSpeakerPlaying = false
+            if (isReturn) {
+                dialogDownloading.dismiss()
+                returnData()
+            }
+        }
+        mMPSpeaker.setVolume(1f, 1f)
+        mMPSpeaker.prepare()
+        mMPSpeaker.start()
+        mIsSpeakerPlaying = true
+    }
+
     private fun setTimeField() {
-        timePickerDialog = TimePickerDialog(this, object : TimePickerDialog.OnTimeSetListener {
+        mTimePickerDialog = TimePickerDialog(this, object : TimePickerDialog.OnTimeSetListener {
             override fun onTimeSet(p0: TimePicker?, p1: Int, p2: Int) {
                 et_Time.setText("${String.format("%02d", p1)}:${String.format("%02d", p2)}")
-                alarmClock.hour = p1
-                alarmClock.minute = p2
+                mAlarmClock.hour = p1
+                mAlarmClock.minute = p2
             }
-        }, alarmClock.hour, alarmClock.minute, true)
+        }, mAlarmClock.hour, mAlarmClock.minute, true)
     }
 
     fun clickRepeat(view: View) {
@@ -184,12 +227,12 @@ class AddAlarmClockActivity : AppCompatActivity() {
         }
         val circleTextview = ContextCompat.getDrawable(this@AddAlarmClockActivity, R.drawable.circle_textview)
         val circleTextviewFull = ContextCompat.getDrawable(this@AddAlarmClockActivity, R.drawable.circle_textview_full)
-        if (alarmClock.isRepeatArr[index]) {
+        if (mAlarmClock.isRepeatArr[index]) {
             view.background = circleTextview
-            alarmClock.isRepeatArr[index] = false
+            mAlarmClock.isRepeatArr[index] = false
         } else {
             view.background = circleTextviewFull
-            alarmClock.isRepeatArr[index] = true
+            mAlarmClock.isRepeatArr[index] = true
         }
     }
 
@@ -205,27 +248,160 @@ class AddAlarmClockActivity : AppCompatActivity() {
     }
 
     fun save(view: View) {
-        if (alarmClock.speaker == -1) {
+        if (mAlarmClock.speaker == -1) {
             Toast.makeText(this, "請選擇播報者", Toast.LENGTH_SHORT).show()
             return
         }
         var isRepeatChoosed = false
-        for(isRepeat in alarmClock.isRepeatArr){
-            if(isRepeat){
+        for (isRepeat in mAlarmClock.isRepeatArr) {
+            if (isRepeat) {
                 isRepeatChoosed = true
                 break
             }
         }
-
-        if(!isRepeatChoosed){
+        if (!isRepeatChoosed) {
             Toast.makeText(this, "請選擇重複天數", Toast.LENGTH_SHORT).show()
             return
         }
 
-        intent.putExtra("AlarmClockJsonStr", Gson().toJson(alarmClock))
-        intent.putExtra("IsNew", isNew)
+        getTextData()
+    }
+
+    private fun getTextData() {
+        val dialogView = layoutInflater.inflate(R.layout.block_download_dialog, null)
+        pbDownloading = dialogView.pb_downloading
+        tvDownloading = dialogView.tv_downloading
+        dialogDownloading = AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create()
+        dialogDownloading.setCanceledOnTouchOutside(false)
+        dialogDownloading.show()
+
+        val request = Request.Builder()
+                .url("${getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
+                        "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}")
+                .build()
+
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call?, e: IOException?) {
+                Toast.makeText(this@AddAlarmClockActivity, "請檢察網路連線", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onResponse(call: Call?, response: Response?) {
+                val statusCode = response?.code()
+                val resMessage = response?.body()?.string()
+                runOnUiThread {
+                    if (statusCode == 200) {
+                        texts = Gson().fromJson(resMessage, Texts::class.java)
+                        if (texts.textList.size > 0) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                                pbDownloading.setProgress(10, true)
+                            else
+                                pbDownloading.setProgress(10)
+                            tvDownloading.setText("10/100")
+                            downloadSound()
+                        } else {
+                            Toast.makeText(this@AddAlarmClockActivity, "Error", Toast.LENGTH_SHORT).show()
+                            dialogDownloading.dismiss()
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+                        }
+                    } else {
+                        Toast.makeText(this@AddAlarmClockActivity, "$statusCode Error", Toast.LENGTH_SHORT).show()
+                        dialogDownloading.dismiss()
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+                    }
+                }
+            }
+        })
+    }
+
+    private fun downloadSound() {
+        FileDownloader.setup(this)
+        for (text in texts.textList) {
+            for (i in 0..text.part_count - 1) {
+                FileDownloader.getImpl().create("${getString(R.string.server_url)}sounds/${text.text_id}-${i}.wav")
+                        .setPath("${filesDir.absolutePath}/sounds/${text.text_id}-${i}.wav")
+                        .setTag(0, "${text.text_id}-${i}")
+                        .setTag(1, text)
+                        .setCallbackProgressTimes(0)
+                        .setListener(queueTarget)
+                        .asInQueueTask()
+                        .enqueue()
+                needDownloadCount++
+            }
+        }
+        FileDownloader.getImpl().start(queueTarget, false)
+    }
+
+    val queueTarget: FileDownloadListener = object : FileDownloadListener() {
+        override fun pending(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {}
+
+        override fun connected(task: BaseDownloadTask?, etag: String?, isContinue: Boolean, soFarBytes: Int, totalBytes: Int) {}
+
+        override fun progress(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {}
+
+        override fun blockComplete(task: BaseDownloadTask?) {}
+
+        override fun retry(task: BaseDownloadTask?, ex: Throwable?, retryingTimes: Int, soFarBytes: Int) {}
+
+        override fun completed(task: BaseDownloadTask) {
+            val text = task.getTag(1) as Text
+            text.completeDownloadCount++
+            Log.d("AddAlarmClockActivity", "file ${task.getTag(0) as String} text_id = ${text.text_id} completeDownloadCount = ${text.completeDownloadCount}")
+            DownloadedCount++
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                pbDownloading.setProgress(10 + (DownloadedCount / needDownloadCount * 90).toInt(), true)
+            else
+                pbDownloading.setProgress(10 + (DownloadedCount / needDownloadCount * 90).toInt())
+
+            tvDownloading.setText("${10 + (DownloadedCount / needDownloadCount * 90).toInt()}/100")
+
+            if (DownloadedCount == needDownloadCount) {
+                pbDownloading.setProgress(100)
+                tvDownloading.setText("100/100")
+
+                Log.d("AddAlarmClockActivity", "Download Finish")
+                var uri: Uri? = null
+                when (mAlarmClock.speaker) {
+                    0 -> uri = Uri.parse("android.resource://${packageName}/raw/setfinishf1")
+                    1 -> uri = Uri.parse("android.resource://${packageName}/raw/setfinishf2")
+                    2 -> uri = Uri.parse("android.resource://${packageName}/raw/setfinishm1")
+                }
+                startPlaying(uri!!, true)
+            }
+        }
+
+        override fun paused(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {}
+
+        override fun error(task: BaseDownloadTask, e: Throwable) {
+            Log.d("AddAlarmClockActivity", "error file ${task.getTag(0) as String}")
+//            DownloadedCount++
+//            if (DownloadedCount == needDownloadCount) {
+//                Log.d("AddAlarmClockActivity", "Download Finish")
+//                var uri: Uri? = null
+//                when (mAlarmClock.speaker) {
+//                    0 -> {
+//                        uri = Uri.parse("android.resource://${packageName}/raw/setfinishf1")
+//                    }
+//                    1 -> {
+//                        uri = Uri.parse("android.resource://${packageName}/raw/setfinishf2")
+//                    }
+//                    2 -> {
+//                        uri = Uri.parse("android.resource://${packageName}/raw/setfinishm1")
+//                    }
+//                }
+//                startPlaying(uri!!, true)
+//            }
+        }
+
+        override fun warn(task: BaseDownloadTask) {}
+    }
+
+    private fun returnData() {
+        intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
+        intent.putExtra("IsNew", mIsNew)
         setResult(Activity.RESULT_OK, intent)
         finish()
-
     }
 }
