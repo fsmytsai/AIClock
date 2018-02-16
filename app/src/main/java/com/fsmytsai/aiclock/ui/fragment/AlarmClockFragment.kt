@@ -28,7 +28,7 @@ import kotlinx.android.synthetic.main.fragment_alarm_clock.view.*
 class AlarmClockFragment : Fragment() {
     private lateinit var rvAlarmClock: RecyclerView
     private lateinit var mMainActivity: MainActivity
-    private lateinit var spAlarmClockData: SharedPreferences
+    private lateinit var spDatas: SharedPreferences
     private var alarmClocks = AlarmClocks(ArrayList())
     private val ADD_ALARM_CLOCK = 10
     private val dayOfWeekArr = arrayOf("日", "一", "二", "三", "四", "五", "六")
@@ -58,8 +58,8 @@ class AlarmClockFragment : Fragment() {
     }
 
     private fun getAlarmClockData() {
-        spAlarmClockData = mMainActivity.getSharedPreferences("Datas", Context.MODE_PRIVATE)
-        val alarmClocksJsonStr = spAlarmClockData.getString("AlarmClocksJsonStr", "")
+        spDatas = mMainActivity.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+        val alarmClocksJsonStr = spDatas.getString("AlarmClocksJsonStr", "")
         if (alarmClocksJsonStr != "")
             alarmClocks = Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
         rvAlarmClock.layoutManager = LinearLayoutManager(mMainActivity, LinearLayoutManager.VERTICAL, false)
@@ -107,7 +107,7 @@ class AlarmClockFragment : Fragment() {
             holder.sbSwitch.isChecked = ac.isOpen
             holder.sbSwitch.setOnCheckedChangeListener { view, isChecked ->
                 alarmClocks.alarmClockList[position].isOpen = isChecked
-                spAlarmClockData.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
+                spDatas.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
             }
 
             holder.rlAlarmClockBlock.setOnClickListener {
@@ -205,7 +205,7 @@ class AlarmClockFragment : Fragment() {
             }
 
             //更新資料儲存
-            spAlarmClockData.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
+            spDatas.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
         }
     }
 

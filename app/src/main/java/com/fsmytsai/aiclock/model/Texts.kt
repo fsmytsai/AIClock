@@ -5,6 +5,7 @@ package com.fsmytsai.aiclock.model
  */
 
 data class Texts(
+        var acId: Int = 0,
         val textList: ArrayList<Text>
 )
 

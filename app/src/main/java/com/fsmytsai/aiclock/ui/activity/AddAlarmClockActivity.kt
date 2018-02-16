@@ -2,7 +2,11 @@ package com.fsmytsai.aiclock.ui.activity
 
 import android.annotation.TargetApi
 import android.app.Activity
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.app.TimePickerDialog
+import android.content.Context
+import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -21,9 +25,11 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.TimePicker
 import android.widget.Toast
+import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.Text
 import com.fsmytsai.aiclock.model.Texts
+import com.fsmytsai.aiclock.model.TextsList
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
 import okhttp3.*
@@ -38,13 +44,13 @@ import kotlinx.android.synthetic.main.block_download_dialog.view.*
 
 class AddAlarmClockActivity : AppCompatActivity() {
     private lateinit var mAlarmClock: AlarmClock
-    private var texts = Texts(ArrayList())
+    private var mTexts = Texts(0, ArrayList())
     private var mIsNew = true
     private var mIsSpeakerPlaying = false
     private var mMPSpeaker = MediaPlayer()
     private lateinit var mTimePickerDialog: TimePickerDialog
-    private var needDownloadCount = 0f
-    private var DownloadedCount = 0f
+    private var mNeedDownloadCount = 0f
+    private var mDownloadedCount = 0f
     private lateinit var pbDownloading: ProgressBar
     private lateinit var tvDownloading: TextView
     private lateinit var dialogDownloading: AlertDialog
@@ -52,16 +58,16 @@ class AddAlarmClockActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_alarm_clock)
+        getAlarmClockData()
         initViews()
     }
 
     override fun onStop() {
         super.onStop()
-        mMPSpeaker?.release()
+        mMPSpeaker.release()
     }
 
     private fun initViews() {
-        getAlarmClockData()
         if (mIsNew)
             tv_toolBar.setText("新增智能鬧鐘")
         else {
@@ -71,6 +77,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
                         .setTitle("刪除智能鬧鐘")
                         .setMessage("您確定要刪除嗎?")
                         .setPositiveButton("確定", { _, _ ->
+                            cancelAlarm()
                             intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
                             intent.putExtra("IsDelete", true)
                             setResult(Activity.RESULT_OK, intent)
@@ -292,8 +299,9 @@ class AddAlarmClockActivity : AppCompatActivity() {
                 val resMessage = response?.body()?.string()
                 runOnUiThread {
                     if (statusCode == 200) {
-                        texts = Gson().fromJson(resMessage, Texts::class.java)
-                        if (texts.textList.size > 0) {
+                        mTexts = Gson().fromJson(resMessage, Texts::class.java)
+                        if (mTexts.textList.size > 0) {
+                            mTexts.acId = mAlarmClock.acId
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                                 pbDownloading.setProgress(10, true)
                             else
@@ -317,7 +325,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
 
     private fun downloadSound() {
         FileDownloader.setup(this)
-        for (text in texts.textList) {
+        for (text in mTexts.textList) {
             for (i in 0..text.part_count - 1) {
                 FileDownloader.getImpl().create("${getString(R.string.server_url)}sounds/${text.text_id}-${i}.wav")
                         .setPath("${filesDir.absolutePath}/sounds/${text.text_id}-${i}.wav")
@@ -327,7 +335,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
                         .setListener(queueTarget)
                         .asInQueueTask()
                         .enqueue()
-                needDownloadCount++
+                mNeedDownloadCount++
             }
         }
         FileDownloader.getImpl().start(queueTarget, false)
@@ -348,16 +356,16 @@ class AddAlarmClockActivity : AppCompatActivity() {
             val text = task.getTag(1) as Text
             text.completeDownloadCount++
             Log.d("AddAlarmClockActivity", "file ${task.getTag(0) as String} text_id = ${text.text_id} completeDownloadCount = ${text.completeDownloadCount}")
-            DownloadedCount++
+            mDownloadedCount++
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                pbDownloading.setProgress(10 + (DownloadedCount / needDownloadCount * 90).toInt(), true)
+                pbDownloading.setProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt(), true)
             else
-                pbDownloading.setProgress(10 + (DownloadedCount / needDownloadCount * 90).toInt())
+                pbDownloading.setProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt())
 
-            tvDownloading.setText("${10 + (DownloadedCount / needDownloadCount * 90).toInt()}/100")
+            tvDownloading.setText("${10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()}/100")
 
-            if (DownloadedCount == needDownloadCount) {
+            if (mDownloadedCount == mNeedDownloadCount) {
                 pbDownloading.setProgress(100)
                 tvDownloading.setText("100/100")
 
@@ -399,9 +407,45 @@ class AddAlarmClockActivity : AppCompatActivity() {
     }
 
     private fun returnData() {
+        val spDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
+        val textsList: TextsList
+        val textsListJsonStr = spDatas.getString("TextsListJsonStr", "")
+        if (textsListJsonStr != "") {
+            textsList = Gson().fromJson(textsListJsonStr, TextsList::class.java)
+            for (texts in textsList.textsList) {
+                if (texts.acId == mAlarmClock.acId)
+                    textsList.textsList.remove(texts)
+            }
+        } else {
+            textsList = TextsList(ArrayList())
+        }
+        textsList.textsList.add(mTexts)
+        spDatas.edit().putString("TextsListJsonStr", Gson().toJson(textsList)).apply()
+
+        setAlarm()
+
         intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
         intent.putExtra("IsNew", mIsNew)
         setResult(Activity.RESULT_OK, intent)
         finish()
+    }
+
+    private fun setAlarm() {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.MINUTE, 1)
+        val intent = Intent(this, AlarmReceiver::class.java)
+        intent.putExtra("ACId", mAlarmClock.acId)
+        val pi = PendingIntent.getBroadcast(this, mAlarmClock.acId, intent, PendingIntent.FLAG_ONE_SHOT)
+        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pi)
+    }
+
+    private fun cancelAlarm() {
+        val intent = Intent(this, AlarmReceiver::class.java)
+        intent.putExtra("IsAlarm", true)
+
+        val pi = PendingIntent.getBroadcast(this, mAlarmClock.acId, intent, PendingIntent.FLAG_ONE_SHOT)
+        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        am.cancel(pi)
     }
 }
