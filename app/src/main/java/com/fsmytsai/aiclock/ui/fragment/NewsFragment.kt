@@ -126,7 +126,7 @@ class NewsFragment : Fragment() {
         mMPBGM.start()
 
         Handler().postDelayed({
-            mMPBGM.setVolume(0.3f, 0.3f)
+            mMPBGM.setVolume(0.2f, 0.2f)
             playNews(Uri.fromFile(File("${mMainActivity.filesDir}/sounds/${mSoundList[0]}.wav")))
         }, 5000)
     }
