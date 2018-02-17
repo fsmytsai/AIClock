@@ -108,7 +108,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
 
         rg_speaker.setOnCheckedChangeListener { radioGroup, checkedId ->
             if (mIsSpeakerPlaying)
-                mMPSpeaker?.stop()
+                mMPSpeaker.stop()
             var uri: Uri? = null
             when (checkedId) {
                 R.id.rb_f1 -> {
