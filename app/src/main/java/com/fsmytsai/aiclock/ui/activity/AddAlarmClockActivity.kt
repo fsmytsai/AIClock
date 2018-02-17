@@ -31,10 +31,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import com.fsmytsai.aiclock.AlarmReceiver
-import com.fsmytsai.aiclock.model.AlarmClock
-import com.fsmytsai.aiclock.model.Text
-import com.fsmytsai.aiclock.model.Texts
-import com.fsmytsai.aiclock.model.TextsList
+import com.fsmytsai.aiclock.model.*
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
 import okhttp3.*
@@ -310,6 +307,20 @@ class AddAlarmClockActivity : AppCompatActivity() {
     }
 
     fun save(view: View) {
+        //檢查時間是否重複
+        val spDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
+        val alarmClocksJsonStr = spDatas.getString("AlarmClocksJsonStr", "")
+        if (alarmClocksJsonStr != "") {
+            val alarmClocks = Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
+            for (i in 0 until alarmClocks.alarmClockList.size)
+                if (mAlarmClock.hour == alarmClocks.alarmClockList[i].hour &&
+                        mAlarmClock.minute == alarmClocks.alarmClockList[i].minute &&
+                        mAlarmClock.acId != alarmClocks.alarmClockList[i].acId) {
+                    Toast.makeText(this, "錯誤，已有相同時間。", Toast.LENGTH_SHORT).show()
+                    return
+                }
+        }
+
         if (mAlarmClock.speaker == -1) {
             Toast.makeText(this, "請選擇播報者", Toast.LENGTH_SHORT).show()
             return
@@ -322,15 +333,25 @@ class AddAlarmClockActivity : AppCompatActivity() {
                 break
             }
         }
+
         if (!isRepeatChoosed) {
             Toast.makeText(this, "請選擇重複天數", Toast.LENGTH_SHORT).show()
             return
         }
 
-        getTextData()
+        val promptStr = getPrompt()
+
+        if (promptStr == "") {
+            Toast.makeText(this, "不可設置太接近當前時間", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        Toast.makeText(this, promptStr, Toast.LENGTH_SHORT).show()
+
+        getTextData(promptStr)
     }
 
-    private fun getTextData() {
+    private fun getTextData(promptStr: String) {
         val dialogView = layoutInflater.inflate(R.layout.block_download_dialog, null)
         pbDownloading = dialogView.pb_downloading
         tvDownloading = dialogView.tv_downloading
@@ -429,9 +450,9 @@ class AddAlarmClockActivity : AppCompatActivity() {
                 Log.d("AddAlarmClockActivity", "Download Finish")
                 var uri: Uri? = null
                 when (mAlarmClock.speaker) {
-                    0 -> uri = Uri.parse("android.resource://${packageName}/raw/setfinishf1")
-                    1 -> uri = Uri.parse("android.resource://${packageName}/raw/setfinishf2")
-                    2 -> uri = Uri.parse("android.resource://${packageName}/raw/setfinishm1")
+                    0 -> uri = Uri.parse("android.resource://$packageName/raw/setfinishf1")
+                    1 -> uri = Uri.parse("android.resource://$packageName/raw/setfinishf2")
+                    2 -> uri = Uri.parse("android.resource://$packageName/raw/setfinishm1")
                 }
                 startPlaying(uri!!, true)
             }
@@ -464,6 +485,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
     }
 
     private fun returnData() {
+        setAlarm()
         val spDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
         val textsList: TextsList
         val textsListJsonStr = spDatas.getString("TextsListJsonStr", "")
@@ -479,28 +501,86 @@ class AddAlarmClockActivity : AppCompatActivity() {
         textsList.textsList.add(mTexts)
         spDatas.edit().putString("TextsListJsonStr", Gson().toJson(textsList)).apply()
 
-        setAlarm()
-
         intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
         intent.putExtra("IsNew", mIsNew)
         setResult(Activity.RESULT_OK, intent)
         finish()
     }
 
+    private val mAlarmCalendar = Calendar.getInstance()
+
+    private fun getPrompt(): String {
+        val nowCalendar = Calendar.getInstance()
+        var addDate = 0
+
+        //排列7天內的DAY_OF_WEEK
+        val days = ArrayList<Int>()
+        for (i in (nowCalendar.get(Calendar.DAY_OF_WEEK) - 1)..(nowCalendar.get(Calendar.DAY_OF_WEEK) + 5)) {
+            days.add(i % 7)
+        }
+        for (i in days) {
+            if (mAlarmClock.isRepeatArr[i]) {
+                //當天有圈，判斷設置的時間是否大於現在時間
+                if (i == nowCalendar.get(Calendar.DAY_OF_WEEK) - 1) {
+                    if (mAlarmClock.hour > nowCalendar.get(Calendar.HOUR_OF_DAY))
+                        break
+                    else if (mAlarmClock.hour == nowCalendar.get(Calendar.HOUR_OF_DAY) &&
+                            mAlarmClock.minute > nowCalendar.get(Calendar.MINUTE))
+                        break
+                    else
+                    //當天有圈但設置時間小於現在時間，等於下星期的今天
+                        addDate++
+                } else
+                //不是當天代表可結束計算
+                    break
+            } else
+                addDate++
+        }
+
+        mAlarmCalendar.add(Calendar.DATE, addDate)
+        mAlarmCalendar.set(Calendar.HOUR_OF_DAY, mAlarmClock.hour)
+        mAlarmCalendar.set(Calendar.MINUTE, mAlarmClock.minute)
+        mAlarmCalendar.set(Calendar.SECOND, 0)
+
+        var promptStr = ""
+        var differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
+
+        if (differenceSecond < 40)
+            return ""
+
+        if (differenceSecond > 60 * 60 * 24) {
+            promptStr += " ${differenceSecond / (60 * 60 * 24)} 天"
+            differenceSecond %= (60 * 60 * 24)
+        }
+        if (differenceSecond > 60 * 60) {
+            promptStr += " ${differenceSecond / (60 * 60)} 小時"
+            differenceSecond %= (60 * 60)
+        }
+        if (differenceSecond > 60)
+            promptStr += " ${differenceSecond / 60} 分鐘"
+
+        if (differenceSecond > 0 && promptStr == "")
+            promptStr += " $differenceSecond 秒"
+        promptStr += "後響鈴"
+
+        return promptStr
+    }
+
     private fun setAlarm() {
-        val cal = Calendar.getInstance()
-        cal.add(Calendar.SECOND, 10)
         val intent = Intent(this, AlarmReceiver::class.java)
         intent.putExtra("ACId", mAlarmClock.acId)
         val pi = PendingIntent.getBroadcast(this, mAlarmClock.acId, intent, PendingIntent.FLAG_ONE_SHOT)
         val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pi)
+        if (Build.VERSION.SDK_INT >= 19) {
+            am.setExact(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
+        } else {
+            am.set(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
+        }
     }
 
     private fun cancelAlarm() {
         val intent = Intent(this, AlarmReceiver::class.java)
-        intent.putExtra("IsAlarm", true)
-
+        intent.putExtra("ACId", mAlarmClock.acId)
         val pi = PendingIntent.getBroadcast(this, mAlarmClock.acId, intent, PendingIntent.FLAG_ONE_SHOT)
         val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         am.cancel(pi)

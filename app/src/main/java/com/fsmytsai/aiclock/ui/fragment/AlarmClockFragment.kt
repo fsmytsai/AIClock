@@ -89,9 +89,9 @@ class AlarmClockFragment : Fragment() {
         override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
             if (getItemViewType(position) == TYPE_FOOTER) {
                 if (alarmClocks.alarmClockList.size == 0)
-                    holder!!.tvFooter.setText("快點新增智能鬧鐘吧!")
+                    holder!!.tvFooter.text = "快點新增智能鬧鐘吧!"
                 else
-                    holder!!.tvFooter.setText("沒有更多鬧鐘囉!")
+                    holder!!.tvFooter.text = "沒有更多鬧鐘囉!"
                 return
             }
 
@@ -142,17 +142,19 @@ class AlarmClockFragment : Fragment() {
                         alarmClocks.alarmClockList.removeAt(i)
                         rvAlarmClock.adapter.notifyItemRemoved(i)
                         rvAlarmClock.adapter.notifyItemRangeChanged(i, alarmClocks.alarmClockList.size - i)
+                        spDatas.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
+                        return
                     }
             }
 
-            //檢查時間是否重複
-            for (i in 0 until alarmClocks.alarmClockList.size)
-                if (alarmClock.hour == alarmClocks.alarmClockList[i].hour &&
-                        alarmClock.minute == alarmClocks.alarmClockList[i].minute &&
-                        alarmClock.acId != alarmClocks.alarmClockList[i].acId) {
-                    Toast.makeText(mMainActivity, "錯誤，已有相同時間。", Toast.LENGTH_SHORT).show()
-                    return
-                }
+//            //檢查時間是否重複
+//            for (i in 0 until alarmClocks.alarmClockList.size)
+//                if (alarmClock.hour == alarmClocks.alarmClockList[i].hour &&
+//                        alarmClock.minute == alarmClocks.alarmClockList[i].minute &&
+//                        alarmClock.acId != alarmClocks.alarmClockList[i].acId) {
+//                    Toast.makeText(mMainActivity, "錯誤，已有相同時間。", Toast.LENGTH_SHORT).show()
+//                    return
+//                }
 
             //檢查修改後順序有沒有改變，有改變則刪掉舊資料
             var isChangePosition = false
