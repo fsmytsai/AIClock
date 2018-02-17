@@ -17,6 +17,7 @@ import android.widget.Toast
 import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.AlarmClocks
+import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.ui.activity.AddAlarmClockActivity
 import com.fsmytsai.aiclock.ui.activity.MainActivity
 import com.google.gson.Gson
@@ -32,6 +33,7 @@ class AlarmClockFragment : Fragment() {
     private var alarmClocks = AlarmClocks(ArrayList())
     private val ADD_ALARM_CLOCK = 10
     private val dayOfWeekArr = arrayOf("日", "一", "二", "三", "四", "五", "六")
+    private var isAutoOn = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -108,6 +110,17 @@ class AlarmClockFragment : Fragment() {
             holder.sbSwitch.setOnCheckedChangeListener { view, isChecked ->
                 alarmClocks.alarmClockList[position].isOpen = isChecked
                 spDatas.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
+
+                if (isChecked && !isAutoOn) {
+                    val intent = Intent(mMainActivity, AddAlarmClockActivity::class.java)
+                    intent.putExtra("AlarmClockJsonStr", Gson().toJson(alarmClocks.alarmClockList[position]))
+                    intent.putExtra("IsOpen", true)
+                    startActivityForResult(intent, ADD_ALARM_CLOCK)
+                } else
+                    SharedService.cancelAlarm(mMainActivity, alarmClocks.alarmClockList[position].acId)
+
+                if (isAutoOn)
+                    isAutoOn = false
             }
 
             holder.rlAlarmClockBlock.setOnClickListener {
@@ -159,18 +172,22 @@ class AlarmClockFragment : Fragment() {
             //檢查修改後順序有沒有改變，有改變則刪掉舊資料
             var isChangePosition = false
             if (!data.getBooleanExtra("IsNew", false)) {
-                for (i in 0..alarmClocks.alarmClockList.size - 1)
+                for (i in 0 until alarmClocks.alarmClockList.size)
                     if (alarmClocks.alarmClockList[i].acId == alarmClock.acId) {
+                        //避免自動開啟新增頁面
+                        if(alarmClock.isOpen != alarmClocks.alarmClockList[i].isOpen)
+                            isAutoOn =true
+
                         //非第一個alarmClock，新小時小於上一個alarmClock小時 或 新小時等於上一個alarmClock小時且新分鐘小於上一個alarmClock分鐘
                         if (i > 0 && (alarmClock.hour < alarmClocks.alarmClockList[i - 1].hour ||
-                                (alarmClock.hour == alarmClocks.alarmClockList[i - 1].hour &&
-                                        alarmClock.minute < alarmClocks.alarmClockList[i - 1].minute)))
+                                        (alarmClock.hour == alarmClocks.alarmClockList[i - 1].hour &&
+                                                alarmClock.minute < alarmClocks.alarmClockList[i - 1].minute)))
                             isChangePosition = true
 
                         //非最後一個alarmClock，新小時大於下一個alarmClock小時 或 新小時等於下一個alarmClock小時且新分鐘大於下一個alarmClock分鐘
                         if (i < alarmClocks.alarmClockList.size - 1 && (alarmClock.hour > alarmClocks.alarmClockList[i + 1].hour ||
-                                (alarmClock.hour == alarmClocks.alarmClockList[i + 1].hour &&
-                                        alarmClock.minute > alarmClocks.alarmClockList[i + 1].minute)))
+                                        (alarmClock.hour == alarmClocks.alarmClockList[i + 1].hour &&
+                                                alarmClock.minute > alarmClocks.alarmClockList[i + 1].minute)))
                             isChangePosition = true
 
                         if (isChangePosition) {

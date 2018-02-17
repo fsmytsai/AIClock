@@ -43,12 +43,13 @@ class MainActivity : AppCompatActivity() {
     private fun initViews() {
         tv_toolBar.text = "AI 智能鬧鐘"
         acId = intent.getIntExtra("ACId", 0)
-        if (acId == 0 && !SharedService.isNewsPlaying && !SharedService.reRunRunnable)
+        if (acId == 0 && !SharedService.isNewsPlaying && !SharedService.reRunRunnable) {
+            stopAlarmService()
             supportFragmentManager
                     .beginTransaction()
                     .replace(R.id.fl_main_container, AlarmClockFragment(), "AlarmClockFragment")
                     .commit()
-        else {
+        } else {
             if (Build.VERSION.SDK_INT >= 27) {
                 setShowWhenLocked(true)
                 setTurnScreenOn(true)
@@ -86,7 +87,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun clearFlags(){
+    fun stopAlarmService() {
+        val intent = Intent(this, AlarmService::class.java)
+        bound = false
+        stopService(intent)
+        SharedService.isNewsPlaying = false
+        SharedService.reRunRunnable = false
+    }
+
+    fun clearFlags() {
         if (Build.VERSION.SDK_INT >= 27) {
             setShowWhenLocked(false)
             setTurnScreenOn(false)
