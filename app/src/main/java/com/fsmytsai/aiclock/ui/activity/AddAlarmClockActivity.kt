@@ -69,7 +69,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
 
     private fun initViews() {
         if (mIsNew)
-            tv_toolBar.setText("新增智能鬧鐘")
+            tv_toolBar.text = "新增智能鬧鐘"
         else {
             tv_toolBar_delete.visibility = View.VISIBLE
             tv_toolBar_delete.setOnClickListener {
@@ -86,7 +86,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
                         .setNegativeButton("取消", null)
                         .show()
             }
-            tv_toolBar.setText("編輯智能鬧鐘")
+            tv_toolBar.text = "編輯智能鬧鐘"
         }
 
         setSupportActionBar(toolbar)
@@ -152,26 +152,26 @@ class AddAlarmClockActivity : AppCompatActivity() {
         }
 
         val circleTextviewFull = ContextCompat.getDrawable(this, R.drawable.circle_textview_full)
-        for (i in 0..6) {
-            if (mAlarmClock.isRepeatArr[i])
-                when (i) {
-                    0 -> tv_sun.background = circleTextviewFull
-                    1 -> tv_mon.background = circleTextviewFull
-                    2 -> tv_tues.background = circleTextviewFull
-                    3 -> tv_wednes.background = circleTextviewFull
-                    4 -> tv_thurs.background = circleTextviewFull
-                    5 -> tv_fri.background = circleTextviewFull
-                    6 -> tv_satur.background = circleTextviewFull
+        (0..6).filter { mAlarmClock.isRepeatArr[it] }
+                .forEach {
+                    when (it) {
+                        0 -> tv_sun.background = circleTextviewFull
+                        1 -> tv_mon.background = circleTextviewFull
+                        2 -> tv_tues.background = circleTextviewFull
+                        3 -> tv_wednes.background = circleTextviewFull
+                        4 -> tv_thurs.background = circleTextviewFull
+                        5 -> tv_fri.background = circleTextviewFull
+                        6 -> tv_satur.background = circleTextviewFull
+                    }
                 }
-        }
 
     }
 
     private fun getAlarmClockData() {
-        val AlarmClockJsonStr = intent.getStringExtra("AlarmClockJsonStr")
-        if (AlarmClockJsonStr != null) {
+        val alarmClockJsonStr = intent.getStringExtra("AlarmClockJsonStr")
+        if (alarmClockJsonStr != null) {
             mIsNew = false
-            mAlarmClock = Gson().fromJson(AlarmClockJsonStr, AlarmClock::class.java)
+            mAlarmClock = Gson().fromJson(alarmClockJsonStr, AlarmClock::class.java)
             mAlarmClock.isOpen = true
         } else {
             val newCalendar = Calendar.getInstance()
@@ -212,12 +212,10 @@ class AddAlarmClockActivity : AppCompatActivity() {
     }
 
     private fun setTimeField() {
-        mTimePickerDialog = TimePickerDialog(this, object : TimePickerDialog.OnTimeSetListener {
-            override fun onTimeSet(p0: TimePicker?, p1: Int, p2: Int) {
-                et_Time.setText("${String.format("%02d", p1)}:${String.format("%02d", p2)}")
-                mAlarmClock.hour = p1
-                mAlarmClock.minute = p2
-            }
+        mTimePickerDialog = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { p0, p1, p2 ->
+            et_Time.setText("${String.format("%02d", p1)}:${String.format("%02d", p2)}")
+            mAlarmClock.hour = p1
+            mAlarmClock.minute = p2
         }, mAlarmClock.hour, mAlarmClock.minute, true)
     }
 
@@ -244,7 +242,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        val id = item?.getItemId()
+        val id = item?.itemId
 
         if (id == android.R.id.home) {
             finish()
@@ -259,6 +257,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
             Toast.makeText(this, "請選擇播報者", Toast.LENGTH_SHORT).show()
             return
         }
+//        val isRepeatChoosed = mAlarmClock.isRepeatArr.any { it }
         var isRepeatChoosed = false
         for (isRepeat in mAlarmClock.isRepeatArr) {
             if (isRepeat) {
@@ -286,7 +285,8 @@ class AddAlarmClockActivity : AppCompatActivity() {
 
         val request = Request.Builder()
                 .url("${getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
-                        "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}")
+                        "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&" +
+                        "latitude=1000&longitude=120.982002")
                 .build()
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
@@ -305,8 +305,8 @@ class AddAlarmClockActivity : AppCompatActivity() {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                                 pbDownloading.setProgress(10, true)
                             else
-                                pbDownloading.setProgress(10)
-                            tvDownloading.setText("10/100")
+                                pbDownloading.progress = 10
+                            tvDownloading.text = "10/100"
                             downloadSound()
                         } else {
                             Toast.makeText(this@AddAlarmClockActivity, "Error", Toast.LENGTH_SHORT).show()
@@ -326,22 +326,22 @@ class AddAlarmClockActivity : AppCompatActivity() {
     private fun downloadSound() {
         FileDownloader.setup(this)
         for (text in mTexts.textList) {
-            for (i in 0..text.part_count - 1) {
-                FileDownloader.getImpl().create("${getString(R.string.server_url)}sounds/${text.text_id}-${i}.wav")
-                        .setPath("${filesDir.absolutePath}/sounds/${text.text_id}-${i}.wav")
-                        .setTag(0, "${text.text_id}-${i}")
+            for (i in 0 until text.part_count) {
+                FileDownloader.getImpl().create("${getString(R.string.server_url)}sounds/${text.text_id}-$i.wav")
+                        .setPath("${filesDir.absolutePath}/sounds/${text.text_id}-$i.wav")
+                        .setTag(0, "${text.text_id}-$i")
                         .setTag(1, text)
                         .setCallbackProgressTimes(0)
-                        .setListener(queueTarget)
+                        .setListener(mQueueTarget)
                         .asInQueueTask()
                         .enqueue()
                 mNeedDownloadCount++
             }
         }
-        FileDownloader.getImpl().start(queueTarget, false)
+        FileDownloader.getImpl().start(mQueueTarget, false)
     }
 
-    val queueTarget: FileDownloadListener = object : FileDownloadListener() {
+    private val mQueueTarget: FileDownloadListener = object : FileDownloadListener() {
         override fun pending(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {}
 
         override fun connected(task: BaseDownloadTask?, etag: String?, isContinue: Boolean, soFarBytes: Int, totalBytes: Int) {}
@@ -361,13 +361,13 @@ class AddAlarmClockActivity : AppCompatActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                 pbDownloading.setProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt(), true)
             else
-                pbDownloading.setProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt())
+                pbDownloading.progress = 10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()
 
-            tvDownloading.setText("${10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()}/100")
+            tvDownloading.text = "${10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()}/100"
 
             if (mDownloadedCount == mNeedDownloadCount) {
-                pbDownloading.setProgress(100)
-                tvDownloading.setText("100/100")
+                pbDownloading.progress = 100
+                tvDownloading.text = "100/100"
 
                 Log.d("AddAlarmClockActivity", "Download Finish")
                 var uri: Uri? = null
@@ -432,7 +432,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
 
     private fun setAlarm() {
         val cal = Calendar.getInstance()
-        cal.add(Calendar.MINUTE, 1)
+        cal.add(Calendar.SECOND, 15)
         val intent = Intent(this, AlarmReceiver::class.java)
         intent.putExtra("ACId", mAlarmClock.acId)
         val pi = PendingIntent.getBroadcast(this, mAlarmClock.acId, intent, PendingIntent.FLAG_ONE_SHOT)

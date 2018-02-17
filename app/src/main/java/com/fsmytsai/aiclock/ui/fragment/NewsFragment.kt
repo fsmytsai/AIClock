@@ -19,6 +19,7 @@ import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.model.TextsList
 import com.fsmytsai.aiclock.ui.activity.MainActivity
 import com.google.gson.Gson
+import kotlinx.android.synthetic.main.fragment_news.view.*
 import java.io.File
 
 
@@ -51,7 +52,9 @@ class NewsFragment : Fragment() {
         mMPBGM.release()
     }
 
-    private fun initViews(view: View) {}
+    private fun initViews(view: View) {
+        view.tv_test.text ="sdfjdsiofosd"
+    }
 
     private fun getTexts() {
         val spDatas = mMainActivity.getSharedPreferences("Datas", Context.MODE_PRIVATE)
@@ -67,7 +70,7 @@ class NewsFragment : Fragment() {
 
         for (text in mTexts.textList) {
             if (text.completeDownloadCount == text.part_count)
-                for (i in 0..text.part_count - 1) {
+                for (i in 0 until text.part_count) {
                     mSoundList.add("${text.text_id}-$i")
                 }
         }
@@ -125,9 +128,9 @@ class NewsFragment : Fragment() {
         mMPBGM.prepare()
         mMPBGM.start()
 
-        Handler().postDelayed({
-            mMPBGM.setVolume(0.2f, 0.2f)
-            playNews(Uri.fromFile(File("${mMainActivity.filesDir}/sounds/${mSoundList[0]}.wav")))
-        }, 5000)
+//        Handler().postDelayed({
+//            mMPBGM.setVolume(0.2f, 0.2f)
+//            playNews(Uri.fromFile(File("${mMainActivity.filesDir}/sounds/${mSoundList[0]}.wav")))
+//        }, 5000)
     }
 }

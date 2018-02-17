@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AIClock.iml" filepath="$PROJECT_DIR$/AIClock.iml" />
+      <module fileurl="file://C:\AndroidProject\AIClock\AIClock.iml" filepath="C:\AndroidProject\AIClock\AIClock.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\AndroidProject\AIClock\app\app.iml" filepath="C:\AndroidProject\AIClock\app\app.iml" />
     </modules>
   </component>
 </project>

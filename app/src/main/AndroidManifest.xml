@@ -25,6 +25,7 @@
 
         <receiver
             android:name=".AlarmReceiver"
+            android:process=":newinst"
             android:enabled="true"
             android:exported="true"></receiver>
     </application>

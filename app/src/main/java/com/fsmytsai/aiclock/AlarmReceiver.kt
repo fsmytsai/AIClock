@@ -13,7 +13,7 @@ class AlarmReceiver : BroadcastReceiver() {
         if (acId != 0) {
             val intent = Intent(context, MainActivity::class.java)
             intent.putExtra("ACId", acId)
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             context.startActivity(intent)
         }
     }
