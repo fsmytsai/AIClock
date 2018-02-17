@@ -114,6 +114,7 @@ class AlarmService : Service() {
                 //結束播放
                 mIsCompletePlayNews = true
                 SharedService.isNewsPlaying = false
+                mMainActivity?.clearFlags()
             }
         }
         mMPNews.setVolume(1f, 1f)
