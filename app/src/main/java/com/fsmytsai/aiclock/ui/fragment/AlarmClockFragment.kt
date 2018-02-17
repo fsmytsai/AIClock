@@ -137,7 +137,7 @@ class AlarmClockFragment : Fragment() {
             val alarmClock = Gson().fromJson(data!!.getStringExtra("AlarmClockJsonStr"), AlarmClock::class.java)
 
             if (data.getBooleanExtra("IsDelete", false)) {
-                for (i in 0..alarmClocks.alarmClockList.size - 1)
+                for (i in 0 until alarmClocks.alarmClockList.size)
                     if (alarmClocks.alarmClockList[i].acId == alarmClock.acId) {
                         alarmClocks.alarmClockList.removeAt(i)
                         rvAlarmClock.adapter.notifyItemRemoved(i)
@@ -146,7 +146,7 @@ class AlarmClockFragment : Fragment() {
             }
 
             //檢查時間是否重複
-            for (i in 0..alarmClocks.alarmClockList.size - 1)
+            for (i in 0 until alarmClocks.alarmClockList.size)
                 if (alarmClock.hour == alarmClocks.alarmClockList[i].hour &&
                         alarmClock.minute == alarmClocks.alarmClockList[i].minute &&
                         alarmClock.acId != alarmClocks.alarmClockList[i].acId) {
@@ -188,7 +188,7 @@ class AlarmClockFragment : Fragment() {
             if (data.getBooleanExtra("IsNew", false) || isChangePosition) {
                 //取得應該插入的位置
                 var index = 0
-                for (i in 0..alarmClocks.alarmClockList.size - 1)
+                for (i in 0 until alarmClocks.alarmClockList.size)
                 //新小時大於當前alarmClock小時 或 (新小時等於當前alarmClock小時 且 新分鐘大於當前alarmClock分鐘則繼續找)
                     if (alarmClock.hour > alarmClocks.alarmClockList[i].hour ||
                             (alarmClock.hour == alarmClocks.alarmClockList[i].hour &&

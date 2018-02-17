@@ -58,7 +58,7 @@
             <TextView
                 android:layout_width="80dp"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"
                 android:text="鬧鐘時間"
                 android:textColor="@android:color/black"
                 android:textSize="18sp" />
@@ -67,7 +67,7 @@
                 android:id="@+id/et_Time"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
-                android:layout_marginRight="30dp"
+                android:layout_marginEnd="30dp"
                 android:layout_weight="1"
                 android:background="@null"
                 android:drawableBottom="@drawable/line"
@@ -87,7 +87,7 @@
             <TextView
                 android:layout_width="80dp"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"
                 android:text="播報者"
                 android:textColor="@android:color/black"
                 android:textSize="18sp" />
@@ -133,7 +133,32 @@
             <TextView
                 android:layout_width="80dp"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"
+                android:text="天氣預報"
+                android:textColor="@android:color/black"
+                android:textSize="18sp" />
+
+            <com.suke.widget.SwitchButton
+                android:id="@+id/sb_weather"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:sb_checked_color="@color/colorBlue"
+                app:sb_checkline_color="@color/colorMainYellow"
+                app:sb_checkline_width="2dp"
+                app:sb_uncheckcircle_color="@android:color/holo_red_dark" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <TextView
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
                 android:text="新聞類別"
                 android:textColor="@android:color/black"
                 android:textSize="18sp" />
@@ -149,13 +174,13 @@
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
                     android:checked="true"
-                    android:text="無" />
+                    android:text="關閉" />
 
                 <RadioButton
                     android:id="@+id/rb_general"
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="60dp"
+                    android:layout_marginStart="70dp"
                     android:layout_marginTop="-32dp"
                     android:text="綜合" />
 
@@ -163,7 +188,7 @@
                     android:id="@+id/rb_business"
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="120dp"
+                    android:layout_marginStart="140dp"
                     android:layout_marginTop="-32dp"
                     android:text="財經" />
 
@@ -171,21 +196,21 @@
                     android:id="@+id/rb_entertainment"
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="180dp"
-                    android:layout_marginTop="-32dp"
                     android:text="娛樂" />
 
                 <RadioButton
                     android:id="@+id/rb_health"
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="70dp"
+                    android:layout_marginTop="-32dp"
                     android:text="健康" />
 
                 <RadioButton
                     android:id="@+id/rb_science"
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="60dp"
+                    android:layout_marginStart="140dp"
                     android:layout_marginTop="-32dp"
                     android:text="科學" />
 
@@ -193,15 +218,13 @@
                     android:id="@+id/rb_sports"
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="120dp"
-                    android:layout_marginTop="-32dp"
                     android:text="體育" />
 
                 <RadioButton
                     android:id="@+id/rb_technology"
                     android:layout_width="60dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="180dp"
+                    android:layout_marginStart="70dp"
                     android:layout_marginTop="-32dp"
                     android:text="科技" />
             </RadioGroup>
@@ -217,95 +240,120 @@
             <TextView
                 android:layout_width="80dp"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"
                 android:text="重複天數"
                 android:textColor="@android:color/black"
                 android:textSize="18sp" />
 
-            <TextView
-                android:id="@+id/tv_sun"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/circle_textview"
-                android:gravity="center"
-                android:onClick="clickRepeat"
-                android:text="日"
-                android:textColor="@android:color/black"
-                android:textSize="18sp" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tv_mon"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/circle_textview"
-                android:gravity="center"
-                android:onClick="clickRepeat"
-                android:text="一"
-                android:textColor="@android:color/black"
-                android:textSize="18sp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/tv_tues"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/circle_textview"
-                android:gravity="center"
-                android:onClick="clickRepeat"
-                android:text="二"
-                android:textColor="@android:color/black"
-                android:textSize="18sp" />
+                    <TextView
+                        android:id="@+id/tv_sun"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/circle_textview"
+                        android:gravity="center"
+                        android:onClick="clickRepeat"
+                        android:text="日"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp" />
 
-            <TextView
-                android:id="@+id/tv_wednes"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/circle_textview"
-                android:gravity="center"
-                android:onClick="clickRepeat"
-                android:text="三"
-                android:textColor="@android:color/black"
-                android:textSize="18sp" />
+                    <TextView
+                        android:id="@+id/tv_mon"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/circle_textview"
+                        android:gravity="center"
+                        android:onClick="clickRepeat"
+                        android:text="一"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp" />
 
-            <TextView
-                android:id="@+id/tv_thurs"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/circle_textview"
-                android:gravity="center"
-                android:onClick="clickRepeat"
-                android:text="四"
-                android:textColor="@android:color/black"
-                android:textSize="18sp" />
+                    <TextView
+                        android:id="@+id/tv_tues"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/circle_textview"
+                        android:gravity="center"
+                        android:onClick="clickRepeat"
+                        android:text="二"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp" />
 
-            <TextView
-                android:id="@+id/tv_fri"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/circle_textview"
-                android:gravity="center"
-                android:onClick="clickRepeat"
-                android:text="五"
-                android:textColor="@android:color/black"
-                android:textSize="18sp" />
+                    <TextView
+                        android:id="@+id/tv_wednes"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/circle_textview"
+                        android:gravity="center"
+                        android:onClick="clickRepeat"
+                        android:text="三"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp" />
 
-            <TextView
-                android:id="@+id/tv_satur"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_marginRight="10dp"
-                android:background="@drawable/circle_textview"
-                android:gravity="center"
-                android:onClick="clickRepeat"
-                android:text="六"
-                android:textColor="@android:color/black"
-                android:textSize="18sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_thurs"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/circle_textview"
+                        android:gravity="center"
+                        android:onClick="clickRepeat"
+                        android:text="四"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/tv_fri"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/circle_textview"
+                        android:gravity="center"
+                        android:onClick="clickRepeat"
+                        android:text="五"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/tv_satur"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:background="@drawable/circle_textview"
+                        android:gravity="center"
+                        android:onClick="clickRepeat"
+                        android:text="六"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+
         </LinearLayout>
+
 
     </LinearLayout>
 
@@ -313,7 +361,7 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_gravity="end"
-        android:layout_marginRight="20dp"
+        android:layout_marginEnd="20dp"
         android:layout_marginTop="-70dp"
         android:background="@android:color/transparent"
         android:onClick="save"

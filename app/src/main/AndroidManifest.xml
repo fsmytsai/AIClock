@@ -4,6 +4,8 @@
     android:installLocation="internalOnly">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -25,9 +27,14 @@
 
         <receiver
             android:name=".AlarmReceiver"
-            android:process=":newinst"
             android:enabled="true"
-            android:exported="true"></receiver>
+            android:exported="true"
+            android:process=":newinst" />
+
+        <service
+            android:name=".AlarmService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

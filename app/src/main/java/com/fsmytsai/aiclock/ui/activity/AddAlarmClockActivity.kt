@@ -1,5 +1,6 @@
 package com.fsmytsai.aiclock.ui.activity
 
+import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.Activity
 import android.app.AlarmManager
@@ -7,6 +8,10 @@ import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Criteria
+import android.location.Location
+import android.location.LocationManager
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -14,6 +19,7 @@ import android.net.Uri
 import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.util.Log
@@ -23,7 +29,6 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.TimePicker
 import android.widget.Toast
 import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.model.AlarmClock
@@ -54,6 +59,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
     private lateinit var pbDownloading: ProgressBar
     private lateinit var tvDownloading: TextView
     private lateinit var dialogDownloading: AlertDialog
+    private val REQUEST_LOCATION = 888
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,6 +73,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
         mMPSpeaker.release()
     }
 
+    @TargetApi(Build.VERSION_CODES.M)
     private fun initViews() {
         if (mIsNew)
             tv_toolBar.text = "新增智能鬧鐘"
@@ -113,18 +120,32 @@ class AddAlarmClockActivity : AppCompatActivity() {
             when (checkedId) {
                 R.id.rb_f1 -> {
                     mAlarmClock.speaker = 0
-                    uri = Uri.parse("android.resource://${packageName}/raw/f1")
+                    uri = Uri.parse("android.resource://$packageName/raw/f1")
                 }
                 R.id.rb_f2 -> {
                     mAlarmClock.speaker = 1
-                    uri = Uri.parse("android.resource://${packageName}/raw/f2")
+                    uri = Uri.parse("android.resource://$packageName/raw/f2")
                 }
                 R.id.rb_m1 -> {
                     mAlarmClock.speaker = 2
-                    uri = Uri.parse("android.resource://${packageName}/raw/m1")
+                    uri = Uri.parse("android.resource://$packageName/raw/m1")
                 }
             }
             startPlaying(uri!!, false)
+        }
+
+        sb_weather.isChecked = mAlarmClock.latitude != 1000.0
+
+        sb_weather.setOnCheckedChangeListener { view, isChecked ->
+            if (isChecked) {
+                if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    locationServiceInitial()
+                } else {
+                    requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION), REQUEST_LOCATION)
+                }
+            } else
+                mAlarmClock.latitude = 1000.0
         }
 
         when (mAlarmClock.category) {
@@ -180,9 +201,45 @@ class AddAlarmClockActivity : AppCompatActivity() {
                     newCalendar.get(Calendar.HOUR_OF_DAY),
                     newCalendar.get(Calendar.MINUTE),
                     -1,
+                    1000.0,
+                    0.0,
                     -1,
                     booleanArrayOf(false, false, false, false, false, false, false),
                     true)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_LOCATION && grantResults.size == 2 &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+            locationServiceInitial()
+        } else {
+            sb_weather.isChecked = false
+            Toast.makeText(this, "取得位置權限失敗", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private lateinit var mLocationManager: LocationManager
+    @SuppressLint("MissingPermission")
+    private fun locationServiceInitial() {
+        mLocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val providers = mLocationManager.getProviders(true)
+        var bestLocation: Location? = null
+        for (provider in providers) {
+            val l = mLocationManager.getLastKnownLocation(provider) ?: continue
+            if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
+                bestLocation = l
+            }
+        }
+
+        if (bestLocation == null) {
+            Toast.makeText(this, "取得位置失敗", Toast.LENGTH_SHORT).show()
+            sb_weather.isChecked = false
+        } else {
+            mAlarmClock.latitude = bestLocation.latitude
+            mAlarmClock.longitude = bestLocation.longitude
         }
     }
 
@@ -286,7 +343,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
         val request = Request.Builder()
                 .url("${getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
                         "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&" +
-                        "latitude=1000&longitude=120.982002")
+                        "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}")
                 .build()
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
@@ -432,7 +489,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
 
     private fun setAlarm() {
         val cal = Calendar.getInstance()
-        cal.add(Calendar.SECOND, 15)
+        cal.add(Calendar.SECOND, 10)
         val intent = Intent(this, AlarmReceiver::class.java)
         intent.putExtra("ACId", mAlarmClock.acId)
         val pi = PendingIntent.getBroadcast(this, mAlarmClock.acId, intent, PendingIntent.FLAG_ONE_SHOT)

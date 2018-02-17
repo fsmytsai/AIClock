@@ -12,6 +12,8 @@ data class AlarmClock(
         var hour: Int,
         var minute: Int,
         var speaker: Int,
+        var latitude: Double,
+        var longitude: Double,
         var category: Int,
         var isRepeatArr: BooleanArray,
         var isOpen: Boolean
