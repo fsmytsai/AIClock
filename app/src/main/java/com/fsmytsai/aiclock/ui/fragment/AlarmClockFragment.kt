@@ -18,6 +18,7 @@ import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
+import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.activity.AddAlarmClockActivity
 import com.fsmytsai.aiclock.ui.activity.MainActivity
 import com.google.gson.Gson
@@ -112,10 +113,8 @@ class AlarmClockFragment : Fragment() {
                 spDatas.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
 
                 if (isChecked && !isAutoOn) {
-                    val intent = Intent(mMainActivity, AddAlarmClockActivity::class.java)
-                    intent.putExtra("AlarmClockJsonStr", Gson().toJson(alarmClocks.alarmClockList[position]))
-                    intent.putExtra("IsOpen", true)
-                    startActivityForResult(intent, ADD_ALARM_CLOCK)
+                    val speechDownloader = SpeechDownloader(mMainActivity, true)
+                    speechDownloader.setAlarmClock(alarmClocks.alarmClockList[position])
                 } else
                     SharedService.cancelAlarm(mMainActivity, alarmClocks.alarmClockList[position].acId)
 
@@ -175,8 +174,8 @@ class AlarmClockFragment : Fragment() {
                 for (i in 0 until alarmClocks.alarmClockList.size)
                     if (alarmClocks.alarmClockList[i].acId == alarmClock.acId) {
                         //避免自動開啟新增頁面
-                        if(alarmClock.isOpen != alarmClocks.alarmClockList[i].isOpen)
-                            isAutoOn =true
+                        if (alarmClock.isOpen != alarmClocks.alarmClockList[i].isOpen)
+                            isAutoOn = true
 
                         //非第一個alarmClock，新小時小於上一個alarmClock小時 或 新小時等於上一個alarmClock小時且新分鐘小於上一個alarmClock分鐘
                         if (i > 0 && (alarmClock.hour < alarmClocks.alarmClockList[i - 1].hour ||

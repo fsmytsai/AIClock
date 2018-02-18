@@ -5,6 +5,9 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import com.fsmytsai.aiclock.AlarmReceiver
+import com.fsmytsai.aiclock.model.Texts
+import com.fsmytsai.aiclock.model.TextsList
+import com.google.gson.Gson
 
 
 /**
@@ -15,12 +18,33 @@ class SharedService {
         var isNewsPlaying = false
         var reRunRunnable = false
 
-        fun cancelAlarm(context: Context,acId : Int) {
+        fun cancelAlarm(context: Context, acId: Int) {
             val intent = Intent(context, AlarmReceiver::class.java)
             intent.putExtra("ACId", acId)
             val pi = PendingIntent.getBroadcast(context, acId, intent, PendingIntent.FLAG_ONE_SHOT)
-            val am =context. getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             am.cancel(pi)
+        }
+
+        fun deleteOldTextsData(context: Context, deleteACId: Int, ChangeTexts: Texts, isAdd: Boolean) {
+            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            val textsList: TextsList
+            val textsListJsonStr = spDatas.getString("TextsListJsonStr", "")
+            if (textsListJsonStr != "") {
+                textsList = Gson().fromJson(textsListJsonStr, TextsList::class.java)
+                for (texts in textsList.textsList) {
+                    if (texts.acId == deleteACId)
+                        textsList.textsList.remove(texts)
+                }
+                if (!isAdd)
+                    spDatas.edit().putString("TextsListJsonStr", Gson().toJson(textsList)).apply()
+            } else {
+                textsList = TextsList(ArrayList())
+            }
+            if (isAdd) {
+                textsList.textsList.add(ChangeTexts)
+                spDatas.edit().putString("TextsListJsonStr", Gson().toJson(textsList)).apply()
+            }
         }
     }
 }
