@@ -70,7 +70,7 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
 //                }
 //    }
 
-    fun setAlarmClock(alarmClock: AlarmClock):Boolean {
+    fun setAlarmClock(alarmClock: AlarmClock): Boolean {
         mAlarmClock = alarmClock
 
         //僅代表是否成功取得提示，不代表音檔已下載完成
@@ -78,7 +78,7 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
         return isSuccess
     }
 
-    private fun getPrompt():Boolean {
+    private fun getPrompt(): Boolean {
         val nowCalendar = Calendar.getInstance()
         var addDate = 0
 
@@ -296,16 +296,18 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
         override fun retry(task: BaseDownloadTask?, ex: Throwable?, retryingTimes: Int, soFarBytes: Int) {}
 
         override fun completed(task: BaseDownloadTask) {
-            Log.d("AddAlarmClockActivity", "file ${task.getTag(0) as String}")
+            Log.d("SpeechDownloader", "file ${task.getTag(0) as String}")
 
             mDownloadedCount++
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                pbDownloading.setProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt(), true)
-            else
-                pbDownloading.progress = 10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()
+            if (mInActivity) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                    pbDownloading.setProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt(), true)
+                else
+                    pbDownloading.progress = 10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()
 
-            tvDownloading.text = "${10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()}/100"
+                tvDownloading.text = "${10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()}/100"
+            }
 
             if (mDownloadedCount == mNeedDownloadCount && mInActivity) {
                 mDownloadedCount = 0f
@@ -313,7 +315,7 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
                 pbDownloading.progress = 100
                 tvDownloading.text = "100/100"
 
-                Log.d("AddAlarmClockActivity", "Download Finish")
+                Log.d("SpeechDownloader", "Download Finish")
                 var uri: Uri? = null
                 when (mAlarmClock.speaker) {
                     0 -> uri = Uri.parse("android.resource://${mContext.packageName}/raw/setfinishf1")
@@ -327,7 +329,7 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
         override fun paused(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {}
 
         override fun error(task: BaseDownloadTask, e: Throwable) {
-            Log.d("AddAlarmClockActivity", "error file ${task.getTag(0) as String}")
+            Log.d("SpeechDownloader", "error file ${task.getTag(0) as String}")
         }
 
         override fun warn(task: BaseDownloadTask) {}
@@ -379,10 +381,10 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
         val pi = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, intent, PendingIntent.FLAG_ONE_SHOT)
         val am = mContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
-                val alarmClockInfo = AlarmManager.AlarmClockInfo(mAlarmCalendar.timeInMillis, pi)
-                am.setAlarmClock(alarmClockInfo, pi)
-            }
+//            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
+//                val alarmClockInfo = AlarmManager.AlarmClockInfo(mAlarmCalendar.timeInMillis, pi)
+//                am.setAlarmClock(alarmClockInfo, pi)
+//            }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
             else -> am.set(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
         }

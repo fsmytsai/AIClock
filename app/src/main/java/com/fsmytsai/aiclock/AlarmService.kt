@@ -37,8 +37,24 @@ class AlarmService : Service() {
         if (mIsFirstBind) {
             mIsFirstBind = false
             mTexts = Gson().fromJson(intent.getStringExtra("TextsJsonStr"), Texts::class.java)
-            mTexts.textList.filter { it.completeDownloadCount == it.part_count }
-                    .forEach { text -> (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it" } }
+
+            //檢查檔案是否存在
+            for (text in mTexts.textList) {
+                var addToSoundList = true
+                for (i in 0 until text.part_count) {
+                    val file = File("$filesDir/sounds/${text.text_id}-$i.wav")
+                    if (!file.exists()) {
+                        addToSoundList = false
+                        break
+                    }
+                }
+                if (addToSoundList)
+                    for (i in 0 until text.part_count) {
+                        mSoundList.add("${text.text_id}-$i")
+                    }
+            }
+//            mTexts.textList.filter { it.completeDownloadCount == it.part_count }
+//                    .forEach { text -> (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it" } }
             startBGM()
         } else if (SharedService.isNewsPlaying) {
             mMPBGM.start()

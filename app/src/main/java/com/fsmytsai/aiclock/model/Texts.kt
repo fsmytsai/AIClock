@@ -16,6 +16,5 @@ data class Text(
         val title: String,
         val description: String,
         val part_count: Int,
-        val created_at: String,
-        var completeDownloadCount: Int = 0
+        val created_at: String
 )

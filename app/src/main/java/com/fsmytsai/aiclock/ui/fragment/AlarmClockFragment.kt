@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -115,8 +116,11 @@ class AlarmClockFragment : Fragment() {
                 if (isChecked && !isAutoOn) {
                     val speechDownloader = SpeechDownloader(mMainActivity, true)
                     val isSuccess = speechDownloader.setAlarmClock(alarmClocks.alarmClockList[position])
-                    if(!isSuccess)
-                        view.isChecked = false
+                    if (!isSuccess)
+                        Handler().postDelayed({
+                            view.isChecked = false
+                        }, 1000)
+
                 } else
                     SharedService.cancelAlarm(mMainActivity, alarmClocks.alarmClockList[position].acId)
 

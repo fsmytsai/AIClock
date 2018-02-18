@@ -16,7 +16,9 @@ import com.fsmytsai.aiclock.AlarmService
 import android.content.ComponentName
 import android.os.IBinder
 import android.content.ServiceConnection
+import android.widget.Toast
 import com.fsmytsai.aiclock.service.app.SharedService
+import java.io.File
 
 
 class MainActivity : AppCompatActivity() {
@@ -28,6 +30,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initViews()
+        val file = File("$filesDir/test.txt")
+        if (file.exists())
+            Toast.makeText(this, "gdfgdf", Toast.LENGTH_SHORT).show()
     }
 
     override fun onStop() {

@@ -50,15 +50,15 @@ class NewsFragment : Fragment() {
         for (texts in textsList.textsList) {
             if (texts.acId == mMainActivity.acId) {
                 //關閉鬧鐘
-                val alarmClocksJsonStr = spDatas.getString("AlarmClocksJsonStr", "")
-                val alarmClocks = Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
-                for(alarmClock in alarmClocks.alarmClockList){
-                    if(alarmClock.acId == texts.acId) {
-                        alarmClock.isOpen = false
-                        break
-                    }
-                }
-                spDatas.edit().putString("AlarmClocksJsonStr",Gson().toJson(alarmClocks)).apply()
+//                val alarmClocksJsonStr = spDatas.getString("AlarmClocksJsonStr", "")
+//                val alarmClocks = Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
+//                for(alarmClock in alarmClocks.alarmClockList){
+//                    if(alarmClock.acId == texts.acId) {
+//                        alarmClock.isOpen = false
+//                        break
+//                    }
+//                }
+//                spDatas.edit().putString("AlarmClocksJsonStr",Gson().toJson(alarmClocks)).apply()
 
                 //綁定鬧鐘服務，開始播放
                 mMainActivity.bindAlarmService(texts)
