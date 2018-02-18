@@ -119,7 +119,7 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
                     .setMessage("時間需自少超過當前時間 30 秒。")
                     .setPositiveButton("知道了", null)
                     .show()
-            
+
             return false
         }
 

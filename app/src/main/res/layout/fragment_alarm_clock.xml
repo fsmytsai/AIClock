@@ -6,7 +6,7 @@
     tools:context="com.fsmytsai.aiclock.ui.fragment.AlarmClockFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/colorPaleYellow"
@@ -21,11 +21,11 @@
             android:id="@+id/iv_add_alarm_clock"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:layout_gravity="end"
-            android:layout_marginRight="20dp"
-            android:layout_marginTop="-70dp"
-            android:background="@android:color/transparent"
-            app:srcCompat="@drawable/add" />
-    </LinearLayout>
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginBottom="20dp"
+            android:layout_marginEnd="20dp"
+            android:src="@drawable/add" />
+    </RelativeLayout>
 
 </FrameLayout>
