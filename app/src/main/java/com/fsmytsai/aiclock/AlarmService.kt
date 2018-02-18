@@ -103,7 +103,6 @@ class AlarmService : Service() {
             } else if (!bye) {
                 //播放掰掰
                 bye = true
-                mMPBGM.stop()
                 var spk = "f1"
                 if (mTexts.textList[0].speaker == "HanHanRUS")
                     spk = "f2"
@@ -112,9 +111,9 @@ class AlarmService : Service() {
                 playNews(Uri.parse("android.resource://$packageName/raw/bye$spk"))
             } else {
                 //結束播放
+                mMPBGM.setVolume(1f, 1f)
                 mIsCompletePlayNews = true
                 SharedService.isNewsPlaying = false
-                mMainActivity?.clearFlags()
             }
         }
         mMPNews.setVolume(1f, 1f)
@@ -135,8 +134,7 @@ class AlarmService : Service() {
             mMPBGM.setAudioStreamType(AudioManager.STREAM_ALARM)
         }
         mMPBGM.setOnCompletionListener {
-            if (!mIsCompletePlayNews)
-                mMPBGM.start()
+            mMPBGM.start()
         }
         mMPBGM.setVolume(1f, 1f)
         mMPBGM.prepare()

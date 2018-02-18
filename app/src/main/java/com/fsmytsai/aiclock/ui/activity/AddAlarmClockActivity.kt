@@ -246,7 +246,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    private fun startPlaying(uri: Uri, isBye: Boolean, isPrompt: Boolean) {
+    private fun startPlaying(uri: Uri, isSetFinish: Boolean, isPrompt: Boolean) {
         mMPSpeaker = MediaPlayer()
         mMPSpeaker.setDataSource(this, uri)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -259,7 +259,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
         }
         mMPSpeaker.setOnCompletionListener {
             mIsSpeakerPlaying = false
-            if (isBye) {
+            if (isSetFinish) {
                 val promptUri = Uri.fromFile(File("$filesDir/sounds/${mPromptData!!.data.text_id}-0.wav"))
                 startPlaying(promptUri, false, true)
             }
