@@ -321,10 +321,8 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
                         else -> ""
                     })
                     startPlaying(uri!!, true)
-                } else {
-                    setAlarm()
-                    mFinishListener?.finish()
-                }
+                } else
+                    complete()
             }
         }
 
@@ -357,13 +355,18 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
                 startPlaying(promptUri, false)
             } else {
                 dialogDownloading.dismiss()
-                setAlarm()
-                mFinishListener?.finish()
+                complete()
             }
         }
         mMPFinish.setVolume(1f, 1f)
         mMPFinish.prepare()
         mMPFinish.start()
+    }
+
+    fun complete() {
+        setAlarm()
+        SharedService.deleteOldTextsData(mContext, mAlarmClock.acId, publicTexts, true)
+        mFinishListener?.finish()
     }
 
     private val mAlarmCalendar = Calendar.getInstance()

@@ -32,7 +32,6 @@ import java.util.*
 
 class AddAlarmClockActivity : AppCompatActivity() {
     private lateinit var mAlarmClock: AlarmClock
-    private lateinit var mSpeechDownloader: SpeechDownloader
     private var mIsNew = true
     private var mIsSpeakerPlaying = false
     private var mMPSpeaker = MediaPlayer()
@@ -320,17 +319,16 @@ class AddAlarmClockActivity : AppCompatActivity() {
             return
         }
 
-        mSpeechDownloader = SpeechDownloader(this, true)
-        mSpeechDownloader.setFinishListener(object : SpeechDownloader.FinishListener {
+        val speechDownloader = SpeechDownloader(this, true)
+        speechDownloader.setFinishListener(object : SpeechDownloader.FinishListener {
             override fun finish() {
                 returnData()
             }
         })
-        val isSuccess = mSpeechDownloader.setAlarmClock(mAlarmClock)
+        val isSuccess = speechDownloader.setAlarmClock(mAlarmClock)
     }
 
     private fun returnData() {
-        SharedService.deleteOldTextsData(this, mAlarmClock.acId, mSpeechDownloader.publicTexts, true)
         intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
         intent.putExtra("IsNew", mIsNew)
         setResult(Activity.RESULT_OK, intent)

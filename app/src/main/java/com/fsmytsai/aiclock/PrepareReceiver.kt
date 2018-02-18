@@ -12,16 +12,9 @@ class PrepareReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val acId = intent.getIntExtra("ACId", 0)
         if (acId != 0) {
-            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
-            val alarmClocksJsonStr = spDatas.getString("AlarmClocksJsonStr", "")
-            val alarmClocks = Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
-            for (alarmClock in alarmClocks.alarmClockList) {
-                if (alarmClock.acId == acId) {
-                    val speechDownloader = SpeechDownloader(context, false)
-                    speechDownloader.setAlarmClock(alarmClock)
-                }
-            }
-
+            val serviceIntent = Intent(context, PrepareService::class.java)
+            serviceIntent.putExtra("ACId", acId)
+            context.startService(serviceIntent)
         }
     }
 }

@@ -22,6 +22,7 @@ import com.fsmytsai.aiclock.service.app.SharedService
 import java.io.File
 import android.support.v7.app.AlertDialog
 import android.view.MenuItem
+import com.fsmytsai.aiclock.PrepareService
 
 
 class MainActivity : AppCompatActivity() {
@@ -33,13 +34,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initViews()
-        val file = File("$filesDir/test.txt")
-        if (file.exists())
-            Toast.makeText(this, "gdfgdf", Toast.LENGTH_SHORT).show()
-    }
-
-    override fun onStart() {
-        super.onStart()
     }
 
     override fun onStop() {
@@ -95,7 +89,7 @@ class MainActivity : AppCompatActivity() {
             R.id.item_About -> {
                 AlertDialog.Builder(this)
                         .setTitle("關於")
-                        .setMessage("本程式所有新聞來源皆為\nnewsapi.org")
+                        .setMessage("本程式所有新聞來源皆為\nnewsapi.org\n\n背景音樂來自 youtube 的創作者工具箱")
                         .setPositiveButton("知道了", null)
                         .show()
                 return true

@@ -15,8 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".ui.activity.MainActivity">
+        <activity android:name=".ui.activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -41,6 +40,11 @@
             android:enabled="true"
             android:exported="true"
             android:process=":newinst" />
+
+        <service
+            android:name=".PrepareService"
+            android:enabled="true"
+            android:exported="true" />
     </application>
 
 </manifest>
