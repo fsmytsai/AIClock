@@ -48,13 +48,12 @@ class AlarmService : Service() {
                         break
                     }
                 }
-                if (addToSoundList)
-                    for (i in 0 until text.part_count) {
+                if (addToSoundList) {
+                    for (i in 0 until text.part_count)
                         mSoundList.add("${text.text_id}-$i")
-                    }
+                }
             }
-//            mTexts.textList.filter { it.completeDownloadCount == it.part_count }
-//                    .forEach { text -> (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it" } }
+
             startBGM()
         } else if (SharedService.isNewsPlaying) {
             mMPBGM.start()
@@ -105,7 +104,6 @@ class AlarmService : Service() {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun playNews(uri: Uri) {
-        mMPNews = MediaPlayer()
         mMPNews.setDataSource(this, uri)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val audioAttributes = AudioAttributes.Builder()
@@ -116,11 +114,22 @@ class AlarmService : Service() {
             mMPNews.setAudioStreamType(AudioManager.STREAM_ALARM)
         }
         mMPNews.setOnCompletionListener {
-            if (!bye)
+            if (!bye) {
                 mSoundList.removeAt(0)
-            if (mSoundList.size != 0) {
+                var soundListStr = ""
+                for (soundStr in mSoundList) {
+                    soundListStr += "$soundStr "
+                }
+                Log.d("AlarmService", soundListStr)
+            }
+
+            if (mSoundList.size > 0) {
+                mMPNews.release()
+                mMPNews = MediaPlayer()
                 playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
             } else if (!bye) {
+                mMPNews.release()
+                mMPNews = MediaPlayer()
                 //播放掰掰
                 bye = true
                 var spk = "f1"
@@ -131,6 +140,7 @@ class AlarmService : Service() {
                 playNews(Uri.parse("android.resource://$packageName/raw/bye$spk"))
             } else {
                 //結束播放
+                mMPNews.release()
                 mMPBGM.setVolume(1f, 1f)
                 mIsCompletePlayNews = true
                 SharedService.isNewsPlaying = false

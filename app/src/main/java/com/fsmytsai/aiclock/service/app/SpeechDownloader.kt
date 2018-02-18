@@ -114,7 +114,12 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
         var differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
 
         if (differenceSecond < 40) {
-            Toast.makeText(mContext, "不可設置太接近當前時間", Toast.LENGTH_SHORT).show()
+            AlertDialog.Builder(mContext)
+                    .setTitle("錯誤")
+                    .setMessage("時間需自少超過當前時間 30 秒。")
+                    .setPositiveButton("知道了", null)
+                    .show()
+            
             return false
         }
 

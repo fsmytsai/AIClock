@@ -25,6 +25,7 @@ import android.widget.Toast
 import com.fsmytsai.aiclock.model.*
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
+import com.fsmytsai.aiclock.ui.view.MyRadioGroup
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
 import java.util.*
@@ -140,18 +141,21 @@ class AddAlarmClockActivity : AppCompatActivity() {
             6 -> rb_technology.isChecked = true
         }
 
-        rg_NewsType.setOnCheckedChangeListener { radioGroup, checkedId ->
-            when (checkedId) {
-                R.id.rb_no -> mAlarmClock.category = -1
-                R.id.rb_general -> mAlarmClock.category = 0
-                R.id.rb_business -> mAlarmClock.category = 1
-                R.id.rb_entertainment -> mAlarmClock.category = 2
-                R.id.rb_health -> mAlarmClock.category = 3
-                R.id.rb_science -> mAlarmClock.category = 4
-                R.id.rb_sports -> mAlarmClock.category = 5
-                R.id.rb_technology -> mAlarmClock.category = 6
+        rg_NewsType.setOnCheckedChangeListener(object:MyRadioGroup.OnCheckedChangeListener{
+            override fun onCheckedChanged(group: MyRadioGroup, checkedId: Int) {
+                when (checkedId) {
+                    R.id.rb_no -> mAlarmClock.category = -1
+                    R.id.rb_general -> mAlarmClock.category = 0
+                    R.id.rb_business -> mAlarmClock.category = 1
+                    R.id.rb_entertainment -> mAlarmClock.category = 2
+                    R.id.rb_health -> mAlarmClock.category = 3
+                    R.id.rb_science -> mAlarmClock.category = 4
+                    R.id.rb_sports -> mAlarmClock.category = 5
+                    R.id.rb_technology -> mAlarmClock.category = 6
+                }
             }
-        }
+
+        })
 
         val circleTextviewFull = ContextCompat.getDrawable(this, R.drawable.circle_textview_full)
         (0..6).filter { mAlarmClock.isRepeatArr[it] }
