@@ -66,7 +66,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
                         .setMessage("您確定要刪除嗎?")
                         .setPositiveButton("確定", { _, _ ->
                             SharedService.cancelAlarm(this, mAlarmClock.acId)
-                            SharedService.deleteOldTextsData(this, mAlarmClock.acId, mSpeechDownloader.publicTexts, false)
+                            SharedService.deleteOldTextsData(this, mAlarmClock.acId, null, false)
                             intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
                             intent.putExtra("IsDelete", true)
                             setResult(Activity.RESULT_OK, intent)

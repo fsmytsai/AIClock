@@ -34,15 +34,17 @@ class SharedService {
             am.cancel(pi)
         }
 
-        fun deleteOldTextsData(context: Context, deleteACId: Int, ChangeTexts: Texts, isAdd: Boolean) {
+        fun deleteOldTextsData(context: Context, deleteACId: Int, ChangeTexts: Texts?, isAdd: Boolean) {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             val textsList: TextsList
             val textsListJsonStr = spDatas.getString("TextsListJsonStr", "")
             if (textsListJsonStr != "") {
                 textsList = Gson().fromJson(textsListJsonStr, TextsList::class.java)
                 for (texts in textsList.textsList) {
-                    if (texts.acId == deleteACId)
+                    if (texts.acId == deleteACId) {
                         textsList.textsList.remove(texts)
+                        break
+                    }
                 }
                 if (!isAdd)
                     spDatas.edit().putString("TextsListJsonStr", Gson().toJson(textsList)).apply()
@@ -50,7 +52,7 @@ class SharedService {
                 textsList = TextsList(ArrayList())
             }
             if (isAdd) {
-                textsList.textsList.add(ChangeTexts)
+                textsList.textsList.add(ChangeTexts!!)
                 spDatas.edit().putString("TextsListJsonStr", Gson().toJson(textsList)).apply()
             }
         }

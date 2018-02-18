@@ -309,20 +309,22 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
                 tvDownloading.text = "${10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()}/100"
             }
 
-            if (mDownloadedCount == mNeedDownloadCount && mInActivity) {
-                mDownloadedCount = 0f
-                mNeedDownloadCount = 0f
-                pbDownloading.progress = 100
-                tvDownloading.text = "100/100"
-
+            if (mDownloadedCount == mNeedDownloadCount) {
                 Log.d("SpeechDownloader", "Download Finish")
-                var uri: Uri? = null
-                when (mAlarmClock.speaker) {
-                    0 -> uri = Uri.parse("android.resource://${mContext.packageName}/raw/setfinishf1")
-                    1 -> uri = Uri.parse("android.resource://${mContext.packageName}/raw/setfinishf2")
-                    2 -> uri = Uri.parse("android.resource://${mContext.packageName}/raw/setfinishm1")
+                if (mInActivity) {
+                    pbDownloading.progress = 100
+                    tvDownloading.text = "100/100"
+                    val uri = Uri.parse("android.resource://${mContext.packageName}/raw/" + when (mAlarmClock.speaker) {
+                        0 -> "setfinishf1"
+                        1 -> "setfinishf2"
+                        2 -> "setfinishm1"
+                        else -> ""
+                    })
+                    startPlaying(uri!!, true)
+                } else {
+                    setAlarm()
+                    mFinishListener?.finish()
                 }
-                startPlaying(uri!!, true)
             }
         }
 
@@ -366,8 +368,11 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
 
     private val mAlarmCalendar = Calendar.getInstance()
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @TargetApi(Build.VERSION_CODES.M)
     private fun setAlarm() {
+        //設置前先嘗試取消，避免重複設置
+        SharedService.cancelAlarm(mContext, mAlarmClock.acId)
+
         //超過30分鐘才響鈴則設置一個提前30分鐘的任務重新抓取新聞天氣
         val intent = if (mPromptDataList[0] > 0 || mPromptDataList[1] > 0 || mPromptDataList[2] > 30) {
             Log.d("SpeechDownloader", "設置鬧鐘成功，${mPromptDataList[0]}天${mPromptDataList[1]}小時${mPromptDataList[2]}分鐘${mPromptDataList[3]}秒後響鈴")
@@ -381,10 +386,7 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
         val pi = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, intent, PendingIntent.FLAG_ONE_SHOT)
         val am = mContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         when {
-//            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
-//                val alarmClockInfo = AlarmManager.AlarmClockInfo(mAlarmCalendar.timeInMillis, pi)
-//                am.setAlarmClock(alarmClockInfo, pi)
-//            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
             else -> am.set(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
         }

@@ -16,9 +16,12 @@ import com.fsmytsai.aiclock.AlarmService
 import android.content.ComponentName
 import android.os.IBinder
 import android.content.ServiceConnection
+import android.view.Menu
 import android.widget.Toast
 import com.fsmytsai.aiclock.service.app.SharedService
 import java.io.File
+import android.support.v7.app.AlertDialog
+import android.view.MenuItem
 
 
 class MainActivity : AppCompatActivity() {
@@ -35,6 +38,10 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "gdfgdf", Toast.LENGTH_SHORT).show()
     }
 
+    override fun onStart() {
+        super.onStart()
+    }
+
     override fun onStop() {
         if (bound) {
             alarmService.setMainActivity(null)
@@ -47,6 +54,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun initViews() {
         tv_toolBar.text = "AI 智能鬧鐘"
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+
         acId = intent.getIntExtra("ACId", 0)
         if (acId == 0 && !SharedService.isNewsPlaying && !SharedService.reRunRunnable) {
             stopAlarmService()
@@ -67,6 +77,30 @@ class MainActivity : AppCompatActivity() {
                     .replace(R.id.fl_main_container, NewsFragment(), "NewsFragment")
                     .commit()
 
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        acId = intent.getIntExtra("ACId", 0)
+        if (acId != 0 || SharedService.isNewsPlaying || SharedService.reRunRunnable) {
+            val inflater = menuInflater
+            inflater.inflate(R.menu.menu_news, menu)
+            return true
+        }
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.item_About -> {
+                AlertDialog.Builder(this)
+                        .setTitle("關於")
+                        .setMessage("本程式所有新聞來源皆為\nnewsapi.org")
+                        .setPositiveButton("知道了", null)
+                        .show()
+                return true
+            }
+            else -> return super.onOptionsItemSelected(item)
         }
     }
 

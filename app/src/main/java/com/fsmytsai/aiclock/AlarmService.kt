@@ -82,12 +82,13 @@ class AlarmService : Service() {
             mMPNews.pause()
         else if (!mIsCompletePlayNews) {
             SharedService.reRunRunnable = true
-            mHandler.removeCallbacks(mRunnable)
+            mHandler.removeCallbacksAndMessages(null)
         }
     }
 
     override fun onDestroy() {
         Log.d("AlarmService", "釋放")
+        mHandler.removeCallbacksAndMessages(null)
         mMPNews.release()
         mMPBGM.release()
         super.onDestroy()
