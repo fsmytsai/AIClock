@@ -65,7 +65,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
         setContentView(R.layout.activity_add_alarm_clock)
         getAlarmClockData()
         initViews()
-        if(intent.getBooleanExtra("IsOpen",false))
+        if (intent.getBooleanExtra("IsOpen", false))
             save(View(this))
     }
 
@@ -609,8 +609,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
         mAlarmCalendar.set(Calendar.HOUR_OF_DAY, mAlarmClock.hour)
         mAlarmCalendar.set(Calendar.MINUTE, mAlarmClock.minute)
         mAlarmCalendar.set(Calendar.SECOND, 0)
-
-        var promptStr = ""
+        
         var differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
 
         val promptDataList = ArrayList<Long>()
@@ -643,15 +642,19 @@ class AddAlarmClockActivity : AppCompatActivity() {
         return promptDataList
     }
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun setAlarm() {
         val intent = Intent(this, AlarmReceiver::class.java)
         intent.putExtra("ACId", mAlarmClock.acId)
         val pi = PendingIntent.getBroadcast(this, mAlarmClock.acId, intent, PendingIntent.FLAG_ONE_SHOT)
         val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        if (Build.VERSION.SDK_INT >= 19) {
-            am.setExact(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
-        } else {
-            am.set(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> {
+                val alarmClockInfo = AlarmManager.AlarmClockInfo(mAlarmCalendar.timeInMillis, pi)
+                am.setAlarmClock(alarmClockInfo, pi)
+            }
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
+            else -> am.set(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
         }
     }
 
