@@ -18,6 +18,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import com.fsmytsai.aiclock.AlarmReceiver
+import com.fsmytsai.aiclock.PrepareReceiver
 import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.PromptData
@@ -69,12 +70,15 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
 //                }
 //    }
 
-    fun setAlarmClock(alarmClock: AlarmClock) {
+    fun setAlarmClock(alarmClock: AlarmClock):Boolean {
         mAlarmClock = alarmClock
-        getPrompt()
+
+        //僅代表是否成功取得提示，不代表音檔已下載完成
+        val isSuccess = getPrompt()
+        return isSuccess
     }
 
-    private fun getPrompt() {
+    private fun getPrompt():Boolean {
         val nowCalendar = Calendar.getInstance()
         var addDate = 0
 
@@ -111,7 +115,7 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
 
         if (differenceSecond < 40) {
             Toast.makeText(mContext, "不可設置太接近當前時間", Toast.LENGTH_SHORT).show()
-            return
+            return false
         }
 
         if (differenceSecond > 60 * 60 * 24) {
@@ -140,6 +144,8 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
             getPromptData()
         else
             getTextData()
+
+        return true
     }
 
     private fun getPromptData() {
@@ -362,9 +368,11 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
     private fun setAlarm() {
         //超過30分鐘才響鈴則設置一個提前30分鐘的任務重新抓取新聞天氣
         val intent = if (mPromptDataList[0] > 0 || mPromptDataList[1] > 0 || mPromptDataList[2] > 30) {
+            Log.d("SpeechDownloader", "設置鬧鐘成功，${mPromptDataList[0]}天${mPromptDataList[1]}小時${mPromptDataList[2]}分鐘${mPromptDataList[3]}秒後響鈴")
             mAlarmCalendar.add(Calendar.MINUTE, -30)
-            Intent(mContext, AlarmReceiver::class.java)
+            Intent(mContext, PrepareReceiver::class.java)
         } else {
+            Log.d("SpeechDownloader", "設置鬧鐘成功，30分鐘內響鈴")
             Intent(mContext, AlarmReceiver::class.java)
         }
         intent.putExtra("ACId", mAlarmClock.acId)

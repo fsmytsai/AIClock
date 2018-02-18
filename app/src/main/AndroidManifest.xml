@@ -40,7 +40,8 @@
         <receiver
             android:name=".PrepareReceiver"
             android:enabled="true"
-            android:exported="true"></receiver>
+            android:exported="true"
+            android:process=":newinst" />
     </application>
 
 </manifest>

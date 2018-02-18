@@ -45,9 +45,8 @@ class NewsFragment : Fragment() {
 
     private fun getTexts() {
         val spDatas = mMainActivity.getSharedPreferences("Datas", Context.MODE_PRIVATE)
-        val textsList: TextsList
         val textsListJsonStr = spDatas.getString("TextsListJsonStr", "")
-        textsList = Gson().fromJson(textsListJsonStr, TextsList::class.java)
+        val textsList = Gson().fromJson(textsListJsonStr, TextsList::class.java)
         for (texts in textsList.textsList) {
             if (texts.acId == mMainActivity.acId) {
                 //關閉鬧鐘

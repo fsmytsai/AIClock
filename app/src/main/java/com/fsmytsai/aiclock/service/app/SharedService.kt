@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import com.fsmytsai.aiclock.AlarmReceiver
+import com.fsmytsai.aiclock.PrepareReceiver
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.model.TextsList
 import com.google.gson.Gson
@@ -19,10 +20,17 @@ class SharedService {
         var reRunRunnable = false
 
         fun cancelAlarm(context: Context, acId: Int) {
-            val intent = Intent(context, AlarmReceiver::class.java)
+            //取消準備
+            var intent = Intent(context, PrepareReceiver::class.java)
             intent.putExtra("ACId", acId)
-            val pi = PendingIntent.getBroadcast(context, acId, intent, PendingIntent.FLAG_ONE_SHOT)
+            var pi = PendingIntent.getBroadcast(context, acId, intent, PendingIntent.FLAG_ONE_SHOT)
             val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            am.cancel(pi)
+
+            //取消響鈴
+            intent = Intent(context, AlarmReceiver::class.java)
+            intent.putExtra("ACId", acId)
+            pi = PendingIntent.getBroadcast(context, acId, intent, PendingIntent.FLAG_ONE_SHOT)
             am.cancel(pi)
         }
 

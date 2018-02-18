@@ -326,7 +326,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
                 returnData()
             }
         })
-        mSpeechDownloader.setAlarmClock(mAlarmClock)
+        val isSuccess = mSpeechDownloader.setAlarmClock(mAlarmClock)
     }
 
     private fun returnData() {

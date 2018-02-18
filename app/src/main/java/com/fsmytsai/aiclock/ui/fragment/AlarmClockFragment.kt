@@ -114,7 +114,9 @@ class AlarmClockFragment : Fragment() {
 
                 if (isChecked && !isAutoOn) {
                     val speechDownloader = SpeechDownloader(mMainActivity, true)
-                    speechDownloader.setAlarmClock(alarmClocks.alarmClockList[position])
+                    val isSuccess = speechDownloader.setAlarmClock(alarmClocks.alarmClockList[position])
+                    if(!isSuccess)
+                        view.isChecked = false
                 } else
                     SharedService.cancelAlarm(mMainActivity, alarmClocks.alarmClockList[position].acId)
 
