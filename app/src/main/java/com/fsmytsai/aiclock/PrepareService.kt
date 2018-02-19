@@ -3,7 +3,6 @@ package com.fsmytsai.aiclock
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.os.Binder
 import android.os.IBinder
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -22,7 +21,7 @@ class PrepareService : Service() {
             val alarmClocks = Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
             for (alarmClock in alarmClocks.alarmClockList) {
                 if (alarmClock.acId == acId) {
-                    val speechDownloader = SpeechDownloader(this, false)
+                    val speechDownloader = SpeechDownloader(this, null)
                     speechDownloader.setAlarmClock(alarmClock)
                 }
             }

@@ -13,7 +13,6 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
@@ -31,7 +30,7 @@ import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
 import java.util.*
 
 
-class AddAlarmClockActivity : AppCompatActivity() {
+class AddAlarmClockActivity : DownloadSpeechActivity() {
     private lateinit var mAlarmClock: AlarmClock
     private var mIsNew = true
     private var mIsSpeakerPlaying = false
@@ -141,7 +140,7 @@ class AddAlarmClockActivity : AppCompatActivity() {
             6 -> rb_technology.isChecked = true
         }
 
-        rg_NewsType.setOnCheckedChangeListener(object:MyRadioGroup.OnCheckedChangeListener{
+        rg_NewsType.setOnCheckedChangeListener(object : MyRadioGroup.OnCheckedChangeListener {
             override fun onCheckedChanged(group: MyRadioGroup, checkedId: Int) {
                 when (checkedId) {
                     R.id.rb_no -> mAlarmClock.category = -1
@@ -323,13 +322,15 @@ class AddAlarmClockActivity : AppCompatActivity() {
             return
         }
 
-        val speechDownloader = SpeechDownloader(this, true)
-        speechDownloader.setFinishListener(object : SpeechDownloader.FinishListener {
-            override fun finish() {
-                returnData()
+        bindDownloadService(object: CanStartDownloadCallback{
+            override fun start() {
+                val isSuccess = startDownload(mAlarmClock, object : SpeechDownloader.FinishListener {
+                    override fun finish() {
+                        returnData()
+                    }
+                })
             }
         })
-        val isSuccess = speechDownloader.setAlarmClock(mAlarmClock)
     }
 
     private fun returnData() {

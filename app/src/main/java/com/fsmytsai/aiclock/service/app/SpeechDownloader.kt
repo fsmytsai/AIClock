@@ -1,7 +1,6 @@
 package com.fsmytsai.aiclock.service.app
 
 import android.annotation.TargetApi
-import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -13,9 +12,6 @@ import android.net.Uri
 import android.os.Build
 import android.support.v7.app.AlertDialog
 import android.util.Log
-import android.view.WindowManager
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.PrepareReceiver
@@ -23,11 +19,11 @@ import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.PromptData
 import com.fsmytsai.aiclock.model.Texts
+import com.fsmytsai.aiclock.ui.activity.DownloadSpeechActivity
 import com.google.gson.Gson
 import com.liulishuo.filedownloader.BaseDownloadTask
 import com.liulishuo.filedownloader.FileDownloadListener
 import com.liulishuo.filedownloader.FileDownloader
-import kotlinx.android.synthetic.main.block_download_dialog.view.*
 import okhttp3.*
 import java.io.File
 import java.io.IOException
@@ -38,18 +34,14 @@ import kotlin.collections.ArrayList
  * Created by tsaiminyuan on 2018/2/18.
  */
 
-class SpeechDownloader(context: Context, inActivity: Boolean) {
+class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private var mContext = context
-    private val mActivity: Activity? = if (inActivity) context as Activity else null
-    private var mInActivity = inActivity
+    private var mDownloadSpeechActivity = activity
     private var mNeedDownloadCount = 0f
     private var mDownloadedCount = 0f
     private lateinit var mAlarmClock: AlarmClock
     var publicTexts = Texts(0, ArrayList())
     private var mPromptData: PromptData? = null
-    private lateinit var pbDownloading: ProgressBar
-    private lateinit var tvDownloading: TextView
-    private lateinit var dialogDownloading: AlertDialog
     private val mPromptDataList = ArrayList<Long>()
 
     //    constructor(context: Context, inActivity: Boolean) {
@@ -114,11 +106,12 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
         var differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
 
         if (differenceSecond < 40) {
-            AlertDialog.Builder(mContext)
-                    .setTitle("錯誤")
-                    .setMessage("時間需自少超過當前時間 30 秒。")
-                    .setPositiveButton("知道了", null)
-                    .show()
+            if (mDownloadSpeechActivity != null)
+                AlertDialog.Builder(mDownloadSpeechActivity!!)
+                        .setTitle("錯誤")
+                        .setMessage("時間需自少超過當前時間 30 秒。")
+                        .setPositiveButton("知道了", null)
+                        .show()
 
             return false
         }
@@ -145,57 +138,41 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
         else
             mPromptDataList.add(0)
 
-        if (mInActivity)
-            getPromptData()
-        else
-            getTextData()
+        if (mDownloadSpeechActivity != null) getPromptData() else getTextData()
 
         return true
     }
 
     private fun getPromptData() {
-        val dialogView = mActivity!!.layoutInflater.inflate(R.layout.block_download_dialog, null)
-        pbDownloading = dialogView.pb_downloading
-        tvDownloading = dialogView.tv_downloading
-        dialogDownloading = AlertDialog.Builder(mActivity)
-                .setView(dialogView)
-                .create()
-        dialogDownloading.setCanceledOnTouchOutside(false)
-        dialogDownloading.show()
+        mDownloadSpeechActivity?.showDownloadingDialog()
 
         val request = Request.Builder()
-                .url("${mActivity.getString(R.string.server_url)}api/getPromptData?day=${mPromptDataList[0]}&hour=${mPromptDataList[1]}&" +
+                .url("${mDownloadSpeechActivity?.getString(R.string.server_url)}api/getPromptData?day=${mPromptDataList[0]}&hour=${mPromptDataList[1]}&" +
                         "minute=${mPromptDataList[2]}&second=${mPromptDataList[3]}&speaker=${mAlarmClock.speaker}")
                 .build()
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call?, e: IOException?) {
-                Toast.makeText(mActivity, "請檢察網路連線", Toast.LENGTH_SHORT).show()
+                Toast.makeText(mDownloadSpeechActivity, "請檢察網路連線", Toast.LENGTH_SHORT).show()
             }
 
             override fun onResponse(call: Call?, response: Response?) {
                 val statusCode = response?.code()
                 val resMessage = response?.body()?.string()
 
-                mActivity.runOnUiThread {
+                mDownloadSpeechActivity?.runOnUiThread {
                     if (statusCode == 200) {
                         mPromptData = Gson().fromJson(resMessage, PromptData::class.java)
                         if (mPromptData!!.is_success) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                                pbDownloading.setProgress(5, true)
-                            else
-                                pbDownloading.progress = 5
-                            tvDownloading.text = "5/100"
+                            mDownloadSpeechActivity?.setDownloadProgress(5)
                             getTextData()
                         } else {
-                            Toast.makeText(mActivity, "Error", Toast.LENGTH_SHORT).show()
-                            dialogDownloading.dismiss()
-                            mActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+                            Toast.makeText(mDownloadSpeechActivity, "無預期錯誤，請重試", Toast.LENGTH_SHORT).show()
+                            mDownloadSpeechActivity?.dismissDownloadingDialog()
                         }
                     } else {
-                        Toast.makeText(mActivity, "$statusCode Error", Toast.LENGTH_SHORT).show()
-                        dialogDownloading.dismiss()
-                        mActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+                        Toast.makeText(mDownloadSpeechActivity, "無預期 400 錯誤，請重試", Toast.LENGTH_SHORT).show()
+                        mDownloadSpeechActivity?.dismissDownloadingDialog()
                     }
                 }
 
@@ -223,27 +200,21 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
             override fun onResponse(call: Call?, response: Response?) {
                 val statusCode = response?.code()
                 val resMessage = response?.body()?.string()
-                if (mInActivity)
-                    mActivity!!.runOnUiThread {
+                if (mDownloadSpeechActivity != null)
+                    mDownloadSpeechActivity?.runOnUiThread {
                         if (statusCode == 200) {
                             publicTexts = Gson().fromJson(resMessage, Texts::class.java)
                             if (publicTexts.textList.size > 0) {
                                 publicTexts.acId = mAlarmClock.acId
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                                    pbDownloading.setProgress(10, true)
-                                else
-                                    pbDownloading.progress = 10
-                                tvDownloading.text = "10/100"
+                                mDownloadSpeechActivity?.setDownloadProgress(10)
                                 downloadSound()
                             } else {
-                                Toast.makeText(mActivity, "Error", Toast.LENGTH_SHORT).show()
-                                dialogDownloading.dismiss()
-                                mActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+                                Toast.makeText(mDownloadSpeechActivity, "無預期錯誤，請重試", Toast.LENGTH_SHORT).show()
+                                mDownloadSpeechActivity?.dismissDownloadingDialog()
                             }
                         } else {
-                            Toast.makeText(mActivity, "$statusCode Error", Toast.LENGTH_SHORT).show()
-                            dialogDownloading.dismiss()
-                            mActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+                            Toast.makeText(mDownloadSpeechActivity, "無預期 400 錯誤，請重試", Toast.LENGTH_SHORT).show()
+                            mDownloadSpeechActivity?.dismissDownloadingDialog()
                         }
                     }
                 else if (statusCode == 200) {
@@ -261,7 +232,7 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
     private fun downloadSound() {
         FileDownloader.setup(mContext)
 
-        if (mInActivity) {
+        if (mDownloadSpeechActivity != null) {
             FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${mPromptData!!.data.text_id}-0.wav")
                     .setPath("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0.wav")
                     .setTag(0, "${mPromptData!!.data.text_id}-0")
@@ -304,21 +275,12 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
             Log.d("SpeechDownloader", "file ${task.getTag(0) as String}")
 
             mDownloadedCount++
-
-            if (mInActivity) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                    pbDownloading.setProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt(), true)
-                else
-                    pbDownloading.progress = 10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()
-
-                tvDownloading.text = "${10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt()}/100"
-            }
+            mDownloadSpeechActivity?.setDownloadProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt())
 
             if (mDownloadedCount == mNeedDownloadCount) {
                 Log.d("SpeechDownloader", "Download Finish")
-                if (mInActivity) {
-                    pbDownloading.progress = 100
-                    tvDownloading.text = "100/100"
+                if (mDownloadSpeechActivity != null) {
+                    mDownloadSpeechActivity?.setDownloadProgress(100)
                     val uri = Uri.parse("android.resource://${mContext.packageName}/raw/" + when (mAlarmClock.speaker) {
                         0 -> "setfinishf1"
                         1 -> "setfinishf2"
@@ -359,7 +321,7 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
                 val promptUri = Uri.fromFile(File("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0.wav"))
                 startPlaying(promptUri, false)
             } else {
-                dialogDownloading.dismiss()
+                mDownloadSpeechActivity?.dismissDownloadingDialog()
                 complete()
             }
         }
@@ -401,7 +363,7 @@ class SpeechDownloader(context: Context, inActivity: Boolean) {
     }
 
     private var mFinishListener: FinishListener? = null
-    fun setFinishListener(finishListener: FinishListener) {
+    fun setFinishListener(finishListener: FinishListener?) {
         mFinishListener = finishListener
     }
 

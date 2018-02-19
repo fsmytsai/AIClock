@@ -14,13 +14,12 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
-import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.activity.AddAlarmClockActivity
+import com.fsmytsai.aiclock.ui.activity.DownloadSpeechActivity
 import com.fsmytsai.aiclock.ui.activity.MainActivity
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.block_alarm_clock.view.*
@@ -114,12 +113,15 @@ class AlarmClockFragment : Fragment() {
                 spDatas.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
 
                 if (isChecked && !isAutoOn) {
-                    val speechDownloader = SpeechDownloader(mMainActivity, true)
-                    val isSuccess = speechDownloader.setAlarmClock(alarmClocks.alarmClockList[position])
-                    if (!isSuccess)
-                        Handler().postDelayed({
-                            view.isChecked = false
-                        }, 1000)
+                    mMainActivity.bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
+                        override fun start() {
+                            val isSuccess = mMainActivity.startDownload(alarmClocks.alarmClockList[position], null)
+                            if (!isSuccess)
+                                Handler().postDelayed({
+                                    view.isChecked = false
+                                }, 1000)
+                        }
+                    })
 
                 } else
                     SharedService.cancelAlarm(mMainActivity, alarmClocks.alarmClockList[position].acId)

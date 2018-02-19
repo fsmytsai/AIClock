@@ -45,6 +45,12 @@
             android:name=".PrepareService"
             android:enabled="true"
             android:exported="true" />
+        <service
+            android:name=".StartDownloadService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <activity android:name=".ui.activity.DownloadSpeechActivity"></activity>
     </application>
 
 </manifest>

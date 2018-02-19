@@ -178,7 +178,7 @@ class AlarmService : Service() {
         val alarmClocks = Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
         for (alarmClock in alarmClocks.alarmClockList) {
             if (alarmClock.acId == mTexts.acId) {
-                val speechDownloader = SpeechDownloader(this, false)
+                val speechDownloader = SpeechDownloader(this, null)
                 speechDownloader.setAlarmClock(alarmClock)
             }
         }

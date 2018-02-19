@@ -3,7 +3,6 @@ package com.fsmytsai.aiclock.ui.activity
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.model.Texts
@@ -17,31 +16,31 @@ import android.content.ComponentName
 import android.os.IBinder
 import android.content.ServiceConnection
 import android.view.Menu
-import android.widget.Toast
 import com.fsmytsai.aiclock.service.app.SharedService
-import java.io.File
 import android.support.v7.app.AlertDialog
 import android.view.MenuItem
-import com.fsmytsai.aiclock.PrepareService
+import com.fsmytsai.aiclock.StartDownloadService
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : DownloadSpeechActivity() {
     var acId = 0
-    private var bound = false
-    lateinit var alarmService: AlarmService
+    private var mBoundAlarmService = false
+    private lateinit var mAlarmService: AlarmService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initViews()
+        val intent = Intent(this, StartDownloadService::class.java)
+        startService(intent)
     }
 
     override fun onStop() {
-        if (bound) {
-            alarmService.setMainActivity(null)
-            unbindService(serviceConnection)
-            alarmService.myUnBind()
-            bound = false
+        if (mBoundAlarmService) {
+            mAlarmService.setMainActivity(null)
+            unbindService(alarmServiceConnection)
+            mAlarmService.myUnBind()
+            mBoundAlarmService = false
         }
         super.onStop()
     }
@@ -85,16 +84,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
+        return when (item?.itemId) {
             R.id.item_About -> {
                 AlertDialog.Builder(this)
                         .setTitle("關於")
                         .setMessage("本程式所有新聞來源皆為\nnewsapi.org\n\n背景音樂來自 youtube 的創作者工具箱")
                         .setPositiveButton("知道了", null)
                         .show()
-                return true
+                true
             }
-            else -> return super.onOptionsItemSelected(item)
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
@@ -102,27 +101,27 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, AlarmService::class.java)
         intent.putExtra("TextsJsonStr", Gson().toJson(texts))
         startService(intent)
-        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+        bindService(intent, alarmServiceConnection, Context.BIND_AUTO_CREATE)
     }
 
-    private val serviceConnection = object : ServiceConnection {
+    private val alarmServiceConnection = object : ServiceConnection {
 
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as AlarmService.LocalBinder
-            alarmService = binder.service
-            bound = true
-            alarmService.setMainActivity(this@MainActivity) // register
-            alarmService.myReBind()
+            mAlarmService = binder.service
+            mBoundAlarmService = true
+            mAlarmService.setMainActivity(this@MainActivity) // register
+            mAlarmService.myReBind()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
-            bound = false
+            mBoundAlarmService = false
         }
     }
 
     fun stopAlarmService() {
         val intent = Intent(this, AlarmService::class.java)
-        bound = false
+        mBoundAlarmService = false
         stopService(intent)
         SharedService.isNewsPlaying = false
         SharedService.reRunRunnable = false
