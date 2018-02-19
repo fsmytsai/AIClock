@@ -14,6 +14,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
@@ -220,7 +221,10 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
         if (bestLocation == null) {
             Toast.makeText(this, "取得位置失敗", Toast.LENGTH_SHORT).show()
-            sb_weather.isChecked = false
+            Handler().postDelayed({
+                sb_weather.isChecked = false
+            }, 1000)
+
         } else {
             mAlarmClock.latitude = bestLocation.latitude
             mAlarmClock.longitude = bestLocation.longitude
