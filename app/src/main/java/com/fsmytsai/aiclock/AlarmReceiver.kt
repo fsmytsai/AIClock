@@ -11,10 +11,10 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val acId = intent.getIntExtra("ACId", 0)
         if (acId != 0) {
-            val intent = Intent(context, MainActivity::class.java)
-            intent.putExtra("ACId", acId)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            context.startActivity(intent)
+            val startMainIntent = Intent(context, MainActivity::class.java)
+            startMainIntent.putExtra("ACId", acId)
+            startMainIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(startMainIntent)
         }
     }
 }

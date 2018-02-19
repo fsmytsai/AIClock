@@ -96,7 +96,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             2 -> rb_m1.isChecked = true
         }
 
-        rg_speaker.setOnCheckedChangeListener { radioGroup, checkedId ->
+        rg_speaker.setOnCheckedChangeListener { _, checkedId ->
             if (mIsSpeakerPlaying)
                 mMPSpeaker.stop()
             var uri: Uri? = null

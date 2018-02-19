@@ -90,7 +90,7 @@ class MyRadioGroup : LinearLayout {
 
     override fun addView(child: View, index: Int, params: ViewGroup.LayoutParams) {
         val btns = getAllRadioButton(child)
-        if (btns != null && btns.size > 0) {
+        if (btns.isNotEmpty()) {
             for (button in btns) {
                 if (button.isChecked) {
                     mProtectFromCheckedChange = true
