@@ -4,9 +4,10 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.PrepareReceiver
+import com.fsmytsai.aiclock.model.AlarmClock
+import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.model.TextsList
 import com.google.gson.Gson
@@ -35,6 +36,42 @@ class SharedService {
             am.cancel(pi)
         }
 
+        fun getAlarmClocks(context: Context): AlarmClocks {
+            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            val alarmClocksJsonStr = spDatas.getString("AlarmClocksJsonStr", "")
+            return if (alarmClocksJsonStr != "")
+                Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
+            else
+                AlarmClocks(ArrayList())
+        }
+
+        fun getAlarmClock(context: Context, acId: Int): AlarmClock? {
+            val alarmClocks = getAlarmClocks(context)
+            return alarmClocks.alarmClockList.firstOrNull { it.acId == acId }
+        }
+
+        fun getTexts(context: Context, acId: Int): Texts? {
+            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            val textsListJsonStr = spDatas.getString("TextsListJsonStr", "")
+            val textsList = Gson().fromJson(textsListJsonStr, TextsList::class.java)
+            return textsList.textsList.firstOrNull { it.acId == acId }
+        }
+
+        fun updateAlarmClocks(context: Context, alarmClocks: AlarmClocks) {
+            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            spDatas.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
+        }
+
+        fun deleteAlarmClock(context: Context, acId: Int) {
+            val alarmClocks = getAlarmClocks(context)
+            for (i in 0 until alarmClocks.alarmClockList.size)
+                if (alarmClocks.alarmClockList[i].acId == acId) {
+                    alarmClocks.alarmClockList.removeAt(i)
+                    SharedService.updateAlarmClocks(context, alarmClocks)
+                    return
+                }
+        }
+
         fun deleteOldTextsData(context: Context, deleteACId: Int, ChangeTexts: Texts?, isAdd: Boolean) {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             val textsList: TextsList
@@ -55,7 +92,6 @@ class SharedService {
             if (isAdd) {
                 textsList.textsList.add(ChangeTexts!!)
                 spDatas.edit().putString("TextsListJsonStr", Gson().toJson(textsList)).apply()
-                Log.d("SpeechDownloader","成功更新資料")
             }
         }
     }

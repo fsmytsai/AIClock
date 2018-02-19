@@ -318,7 +318,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
             if (mDownloadedCount == mNeedDownloadCount) {
                 Log.d("SpeechDownloader", "Download Finish")
-                completeSetData()
+                setData()
                 if (mDownloadSpeechActivity != null) {
                     mDownloadSpeechActivity?.setDownloadProgress(100)
                     val uri = Uri.parse("android.resource://${mContext.packageName}/raw/" + when (mAlarmClock.speaker) {
@@ -371,7 +371,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         mpFinish.start()
     }
 
-    private fun completeSetData() {
+    private fun setData() {
+        mDownloadFinishListener?.startSetData()
         setAlarm()
         SharedService.deleteOldTextsData(mContext, mAlarmClock.acId, publicTexts, true)
     }
@@ -413,6 +414,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     interface DownloadFinishListener {
+        fun startSetData()
         fun finish()
     }
 }

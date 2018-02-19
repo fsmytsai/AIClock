@@ -19,7 +19,6 @@ import android.view.Menu
 import com.fsmytsai.aiclock.service.app.SharedService
 import android.support.v7.app.AlertDialog
 import android.view.MenuItem
-import com.fsmytsai.aiclock.StartDownloadService
 
 
 class MainActivity : DownloadSpeechActivity() {
@@ -31,8 +30,6 @@ class MainActivity : DownloadSpeechActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initViews()
-        val intent = Intent(this, StartDownloadService::class.java)
-        startService(intent)
     }
 
     override fun onStop() {

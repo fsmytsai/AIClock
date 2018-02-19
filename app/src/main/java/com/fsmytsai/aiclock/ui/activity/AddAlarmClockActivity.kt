@@ -43,7 +43,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_alarm_clock)
-        getAlarmClockData()
+        getAlarmClock()
         initViews()
         if (intent.getBooleanExtra("IsOpen", false))
             save(View(this))
@@ -66,6 +66,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                         .setMessage("您確定要刪除嗎?")
                         .setPositiveButton("確定", { _, _ ->
                             SharedService.cancelAlarm(this, mAlarmClock.acId)
+                            SharedService.deleteAlarmClock(this, mAlarmClock.acId)
                             SharedService.deleteOldTextsData(this, mAlarmClock.acId, null, false)
                             intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
                             intent.putExtra("IsDelete", true)
@@ -173,7 +174,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
     }
 
-    private fun getAlarmClockData() {
+    private fun getAlarmClock() {
         val alarmClockJsonStr = intent.getStringExtra("AlarmClockJsonStr")
         if (alarmClockJsonStr != null) {
             mIsNew = false
@@ -295,18 +296,14 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
     fun save(view: View) {
         //檢查時間是否重複
-        val spDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
-        val alarmClocksJsonStr = spDatas.getString("AlarmClocksJsonStr", "")
-        if (alarmClocksJsonStr != "") {
-            val alarmClocks = Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
-            for (i in 0 until alarmClocks.alarmClockList.size)
-                if (mAlarmClock.hour == alarmClocks.alarmClockList[i].hour &&
-                        mAlarmClock.minute == alarmClocks.alarmClockList[i].minute &&
-                        mAlarmClock.acId != alarmClocks.alarmClockList[i].acId) {
-                    Toast.makeText(this, "錯誤，已有相同時間。", Toast.LENGTH_SHORT).show()
-                    return
-                }
-        }
+        val alarmClocks = SharedService.getAlarmClocks(this)
+        for (i in 0 until alarmClocks.alarmClockList.size)
+            if (mAlarmClock.hour == alarmClocks.alarmClockList[i].hour &&
+                    mAlarmClock.minute == alarmClocks.alarmClockList[i].minute &&
+                    mAlarmClock.acId != alarmClocks.alarmClockList[i].acId) {
+                Toast.makeText(this, "錯誤，已有相同時間。", Toast.LENGTH_SHORT).show()
+                return
+            }
 
         if (mAlarmClock.speaker == -1) {
             Toast.makeText(this, "請選擇播報者", Toast.LENGTH_SHORT).show()
@@ -326,15 +323,77 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             return
         }
 
-        bindDownloadService(object: CanStartDownloadCallback{
+        bindDownloadService(object : CanStartDownloadCallback {
             override fun start() {
                 val isSuccess = startDownload(mAlarmClock, object : SpeechDownloader.DownloadFinishListener {
+                    override fun startSetData() {
+                        updateAlarmClock()
+                    }
+
                     override fun finish() {
                         returnData()
                     }
                 })
             }
         })
+    }
+
+    private fun updateAlarmClock() {
+        val alarmClocks = SharedService.getAlarmClocks(this)
+
+        //檢查修改後順序有沒有改變，有改變則刪掉舊資料
+        var isChangePosition = false
+        if (!mIsNew) {
+            for (i in 0 until alarmClocks.alarmClockList.size)
+                if (alarmClocks.alarmClockList[i].acId == mAlarmClock.acId) {
+                    //避免自動開啟造成的下載
+                    if (!alarmClocks.alarmClockList[i].isOpen)
+                        intent.putExtra("IsAutoOn", true)
+
+                    //非第一個alarmClock，新小時小於上一個alarmClock小時 或 新小時等於上一個alarmClock小時且新分鐘小於上一個alarmClock分鐘
+                    if (i > 0 && (mAlarmClock.hour < alarmClocks.alarmClockList[i - 1].hour ||
+                                    (mAlarmClock.hour == alarmClocks.alarmClockList[i - 1].hour &&
+                                            mAlarmClock.minute < alarmClocks.alarmClockList[i - 1].minute)))
+                        isChangePosition = true
+
+                    //非最後一個alarmClock，新小時大於下一個alarmClock小時 或 新小時等於下一個alarmClock小時且新分鐘大於下一個alarmClock分鐘
+                    if (i < alarmClocks.alarmClockList.size - 1 && (mAlarmClock.hour > alarmClocks.alarmClockList[i + 1].hour ||
+                                    (mAlarmClock.hour == alarmClocks.alarmClockList[i + 1].hour &&
+                                            mAlarmClock.minute > alarmClocks.alarmClockList[i + 1].minute)))
+                        isChangePosition = true
+
+                    if (isChangePosition) {
+                        intent.putExtra("IsChangePosition", true)
+                        alarmClocks.alarmClockList.removeAt(i)
+                    } else {
+                        //沒換位置則直接更新資料
+                        alarmClocks.alarmClockList[i] = mAlarmClock
+                    }
+                    break
+                }
+        }
+
+        //新資料或有更新位置則插入資料
+        if (mIsNew || isChangePosition) {
+            //取得應該插入的位置
+            var index = 0
+            for (i in 0 until alarmClocks.alarmClockList.size)
+            //新小時大於當前alarmClock小時 或 (新小時等於當前alarmClock小時 且 新分鐘大於當前alarmClock分鐘則繼續找)
+                if (mAlarmClock.hour > alarmClocks.alarmClockList[i].hour ||
+                        (mAlarmClock.hour == alarmClocks.alarmClockList[i].hour &&
+                                mAlarmClock.minute > alarmClocks.alarmClockList[i].minute))
+                    index = i + 1
+                //否則直接結束
+                else
+                    break
+
+            //插入此次資料
+            alarmClocks.alarmClockList.add(index, mAlarmClock)
+            intent.putExtra("NewPosition", index)
+        }
+
+        //更新資料儲存
+        SharedService.updateAlarmClocks(this, alarmClocks)
     }
 
     private fun returnData() {

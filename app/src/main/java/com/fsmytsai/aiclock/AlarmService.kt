@@ -2,7 +2,6 @@ package com.fsmytsai.aiclock
 
 import android.annotation.TargetApi
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioManager
@@ -13,7 +12,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.util.Log
-import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -27,7 +25,7 @@ class AlarmService : Service() {
     private var mMainActivity: MainActivity? = null
     private var mMPBGM = MediaPlayer()
     private var mMPNews = MediaPlayer()
-    private var bye = false
+    private var isByePlaying = false
     private lateinit var mTexts: Texts
     private val mSoundList = ArrayList<String>()
     private var mIsCompletePlayNews = false
@@ -70,6 +68,7 @@ class AlarmService : Service() {
             mMPNews.start()
         } else if (SharedService.reRunRunnable) {
             mMPBGM.start()
+            SharedService.reRunRunnable = false
             mHandler.postDelayed(mRunnable, 5000)
         }
     }
@@ -114,7 +113,7 @@ class AlarmService : Service() {
             mMPNews.setAudioStreamType(AudioManager.STREAM_ALARM)
         }
         mMPNews.setOnCompletionListener {
-            if (!bye) {
+            if (!isByePlaying) {
                 mSoundList.removeAt(0)
                 var soundListStr = ""
                 for (soundStr in mSoundList) {
@@ -123,15 +122,15 @@ class AlarmService : Service() {
                 Log.d("AlarmService", soundListStr)
             }
 
+            mMPNews.release()
+
             if (mSoundList.size > 0) {
-                mMPNews.release()
                 mMPNews = MediaPlayer()
                 playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
-            } else if (!bye) {
-                mMPNews.release()
+            } else if (!isByePlaying) {
                 mMPNews = MediaPlayer()
                 //播放掰掰
-                bye = true
+                isByePlaying = true
                 var spk = "f1"
                 if (mTexts.textList[0].speaker == "HanHanRUS")
                     spk = "f2"
@@ -140,7 +139,7 @@ class AlarmService : Service() {
                 playNews(Uri.parse("android.resource://$packageName/raw/bye$spk"))
             } else {
                 //結束播放
-                mMPNews.release()
+                isByePlaying = false
                 mMPBGM.setVolume(1f, 1f)
                 mIsCompletePlayNews = true
                 SharedService.isNewsPlaying = false
@@ -173,14 +172,10 @@ class AlarmService : Service() {
         mHandler.postDelayed(mRunnable, 5000)
 
         //準備此鬧鐘下一次的響鈴(最快24小時後響)
-        val spDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
-        val alarmClocksJsonStr = spDatas.getString("AlarmClocksJsonStr", "")
-        val alarmClocks = Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
-        for (alarmClock in alarmClocks.alarmClockList) {
-            if (alarmClock.acId == mTexts.acId) {
-                val speechDownloader = SpeechDownloader(this, null)
-                speechDownloader.setAlarmClock(alarmClock)
-            }
+        val alarmClock = SharedService.getAlarmClock(this, mTexts.acId)
+        if (alarmClock != null) {
+            val speechDownloader = SpeechDownloader(this, null)
+            speechDownloader.setAlarmClock(alarmClock)
         }
     }
 
