@@ -8,7 +8,6 @@ import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.IBinder
 import android.support.v7.app.AlertDialog
-import android.util.Log
 import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -19,9 +18,7 @@ import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import kotlinx.android.synthetic.main.block_download_dialog.view.*
 
 open class DownloadSpeechActivity : AppCompatActivity() {
-    //    private var mBoundDownloadService = false
     private var mDownloadService: StartDownloadService? = null
-
     private lateinit var pbDownloading: ProgressBar
     private lateinit var tvDownloading: TextView
     private lateinit var mDownloadingDialog: AlertDialog
@@ -38,9 +35,23 @@ open class DownloadSpeechActivity : AppCompatActivity() {
     }
 
     fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?): Boolean {
-        Log.d("DownloadSpeechActivity", "2")
-        val isSuccess = mDownloadService?.startDownload(alarmClock, dfl) ?: false
+        outDownloadFinishListener = dfl
+        val isSuccess = mDownloadService?.startDownload(alarmClock, inDownloadFinishListener) ?: false
         return isSuccess
+    }
+
+    var outDownloadFinishListener: SpeechDownloader.DownloadFinishListener? = null
+
+    private val inDownloadFinishListener = object : SpeechDownloader.DownloadFinishListener {
+        override fun startSetData() {
+            outDownloadFinishListener?.startSetData()
+        }
+
+        override fun finish() {
+            outDownloadFinishListener?.finish()
+            unbindService(mDownloadServiceConnection)
+            mDownloadService = null
+        }
     }
 
     private val mDownloadServiceConnection = object : ServiceConnection {
@@ -48,13 +59,11 @@ open class DownloadSpeechActivity : AppCompatActivity() {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as StartDownloadService.LocalBinder
             mDownloadService = binder.service
-//            mBoundDownloadService = true
             mDownloadService!!.setActivity(this@DownloadSpeechActivity) // register
             mCanStartDownloadCallback.start()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
-//            mBoundDownloadService = false
         }
     }
 

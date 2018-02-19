@@ -28,21 +28,10 @@ class StartDownloadService : Service() {
     }
 
     fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?): Boolean {
-        outDownloadFinishListener = dfl
         mSpeechDownloader = SpeechDownloader(this, mDownloadSpeechActivity)
-        mSpeechDownloader!!.setFinishListener(inDownloadFinishListener)
+        mSpeechDownloader!!.setFinishListener(dfl)
         val isSuccess = mSpeechDownloader!!.setAlarmClock(alarmClock)
         return isSuccess
-    }
-
-    var outDownloadFinishListener: SpeechDownloader.DownloadFinishListener? = null
-
-    private val inDownloadFinishListener = object : SpeechDownloader.DownloadFinishListener {
-        override fun finish() {
-            outDownloadFinishListener?.finish()
-            //沒用
-            stopSelf()
-        }
     }
 
     fun stopDownloadSound() {
