@@ -38,17 +38,11 @@ class AlarmService : Service() {
 
             //檢查檔案是否存在
             for (text in mTexts.textList) {
-                var addToSoundList = true
-                for (i in 0 until text.part_count) {
-                    val file = File("$filesDir/sounds/${text.text_id}-$i.wav")
-                    if (!file.exists()) {
-                        addToSoundList = false
-                        break
-                    }
-                }
+                val addToSoundList = (0 until text.part_count)
+                        .map { File("$filesDir/sounds/${text.text_id}-$it.wav") }
+                        .all { it.exists() }
                 if (addToSoundList) {
-                    for (i in 0 until text.part_count)
-                        mSoundList.add("${text.text_id}-$i")
+                    (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it" }
                 }
             }
 
@@ -115,11 +109,6 @@ class AlarmService : Service() {
         mMPNews.setOnCompletionListener {
             if (!isByePlaying) {
                 mSoundList.removeAt(0)
-                var soundListStr = ""
-                for (soundStr in mSoundList) {
-                    soundListStr += "$soundStr "
-                }
-                Log.d("AlarmService", soundListStr)
             }
 
             mMPNews.release()
