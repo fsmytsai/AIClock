@@ -12,6 +12,7 @@ import com.fsmytsai.aiclock.ui.activity.DownloadSpeechActivity
 class StartDownloadService : Service() {
     private val mBinder = LocalBinder()
     private var mDownloadSpeechActivity: DownloadSpeechActivity? = null
+    private var mSpeechDownloader: SpeechDownloader? = null
 
     override fun onBind(intent: Intent): IBinder? {
         return mBinder
@@ -28,9 +29,9 @@ class StartDownloadService : Service() {
 
     fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?): Boolean {
         outDownloadFinishListener = dfl
-        val speechDownloader = SpeechDownloader(this, mDownloadSpeechActivity)
-        speechDownloader.setFinishListener(inDownloadFinishListener)
-        val isSuccess = speechDownloader.setAlarmClock(alarmClock)
+        mSpeechDownloader = SpeechDownloader(this, mDownloadSpeechActivity)
+        mSpeechDownloader!!.setFinishListener(inDownloadFinishListener)
+        val isSuccess = mSpeechDownloader!!.setAlarmClock(alarmClock)
         return isSuccess
     }
 
@@ -39,7 +40,16 @@ class StartDownloadService : Service() {
     private val inDownloadFinishListener = object : SpeechDownloader.DownloadFinishListener {
         override fun finish() {
             outDownloadFinishListener?.finish()
+            //沒用
             stopSelf()
         }
+    }
+
+    fun stopDownloadSound() {
+        mSpeechDownloader?.stopDownloadSound()
+    }
+
+    fun resumeDownloadSound() {
+        mSpeechDownloader?.resumeDownloadSound()
     }
 }

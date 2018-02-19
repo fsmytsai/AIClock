@@ -19,39 +19,42 @@ import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import kotlinx.android.synthetic.main.block_download_dialog.view.*
 
 open class DownloadSpeechActivity : AppCompatActivity() {
-    private var mBoundDownloadService = false
-    private lateinit var mDownloadService: StartDownloadService
+    //    private var mBoundDownloadService = false
+    private var mDownloadService: StartDownloadService? = null
 
     private lateinit var pbDownloading: ProgressBar
     private lateinit var tvDownloading: TextView
     private lateinit var mDownloadingDialog: AlertDialog
-
     private lateinit var mCanStartDownloadCallback: CanStartDownloadCallback
+
     fun bindDownloadService(canStartDownloadCallback: CanStartDownloadCallback) {
         mCanStartDownloadCallback = canStartDownloadCallback
-        val intent = Intent(this, StartDownloadService::class.java)
-        bindService(intent, downloadServiceConnection, Context.BIND_AUTO_CREATE)
+        if (mDownloadService == null) {
+            val intent = Intent(this, StartDownloadService::class.java)
+            bindService(intent, mDownloadServiceConnection, Context.BIND_AUTO_CREATE)
+        } else {
+            mCanStartDownloadCallback.start()
+        }
     }
 
     fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?): Boolean {
         Log.d("DownloadSpeechActivity", "2")
-        val isSuccess = mDownloadService.startDownload(alarmClock, dfl)
+        val isSuccess = mDownloadService?.startDownload(alarmClock, dfl) ?: false
         return isSuccess
     }
 
-    private val downloadServiceConnection = object : ServiceConnection {
+    private val mDownloadServiceConnection = object : ServiceConnection {
 
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as StartDownloadService.LocalBinder
             mDownloadService = binder.service
-            mBoundDownloadService = true
-            Log.d("DownloadSpeechActivity", "1")
-            mDownloadService.setActivity(this@DownloadSpeechActivity) // register
+//            mBoundDownloadService = true
+            mDownloadService!!.setActivity(this@DownloadSpeechActivity) // register
             mCanStartDownloadCallback.start()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
-            mBoundDownloadService = false
+//            mBoundDownloadService = false
         }
     }
 
@@ -74,6 +77,16 @@ open class DownloadSpeechActivity : AppCompatActivity() {
         else
             pbDownloading.progress = p
         tvDownloading.text = "$p/100"
+    }
+
+    override fun onStop() {
+        mDownloadService?.stopDownloadSound()
+        super.onStop()
+    }
+
+    override fun onResume() {
+        mDownloadService?.resumeDownloadSound()
+        super.onResume()
     }
 
     fun dismissDownloadingDialog() {

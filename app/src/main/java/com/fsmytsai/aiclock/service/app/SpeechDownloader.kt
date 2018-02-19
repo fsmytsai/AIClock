@@ -43,6 +43,10 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     var publicTexts = Texts(0, ArrayList())
     private var mPromptData: PromptData? = null
     private val mPromptDataList = ArrayList<Long>()
+    private var mIsFinishGetData = false
+    private var mIsStartedDownloadSound = false
+    private var mIsStoppedDownloadSound = false
+    private val mPauseList = ArrayList<String>()
 
     //    constructor(context: Context, inActivity: Boolean) {
 //        mContext = context
@@ -236,8 +240,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${mPromptData!!.data.text_id}-0.wav")
                     .setPath("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0.wav")
                     .setTag(0, "${mPromptData!!.data.text_id}-0")
-                    .setTag(2, true)
                     .setCallbackProgressTimes(0)
+                    .setAutoRetryTimes(1)
                     .setListener(mQueueTarget)
                     .asInQueueTask()
                     .enqueue()
@@ -249,21 +253,56 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                 FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${text.text_id}-$i.wav")
                         .setPath("${mContext.filesDir}/sounds/${text.text_id}-$i.wav")
                         .setTag(0, "${text.text_id}-$i")
-                        .setTag(2, false)
                         .setCallbackProgressTimes(0)
+                        .setAutoRetryTimes(1)
                         .setListener(mQueueTarget)
                         .asInQueueTask()
                         .enqueue()
                 mNeedDownloadCount++
             }
         }
-        FileDownloader.getImpl().start(mQueueTarget, false)
+        mIsFinishGetData = true
+        if (!mIsStoppedDownloadSound)
+            FileDownloader.getImpl().start(mQueueTarget, false)
+    }
+
+    fun stopDownloadSound() {
+        if (mIsStartedDownloadSound) {
+            FileDownloader.getImpl().pause(mQueueTarget)
+        }
+        mIsStoppedDownloadSound = true
+    }
+
+    fun resumeDownloadSound() {
+        mIsStoppedDownloadSound = false
+
+        //完成取得資料但還沒開始下載
+        if (mIsFinishGetData && !mIsStartedDownloadSound)
+            FileDownloader.getImpl().start(mQueueTarget, false)
+
+        //已開始下載，恢復task
+        if (mIsStartedDownloadSound) {
+            while (mPauseList.size > 0) {
+                FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${mPauseList[0]}.wav")
+                        .setPath("${mContext.filesDir}/sounds/${mPauseList[0]}.wav")
+                        .setTag(0, mPauseList[0])
+                        .setCallbackProgressTimes(0)
+                        .setAutoRetryTimes(1)
+                        .setListener(mQueueTarget)
+                        .asInQueueTask()
+                        .enqueue()
+                mPauseList.removeAt(0)
+            }
+            FileDownloader.getImpl().start(mQueueTarget, false)
+        }
     }
 
     private val mQueueTarget: FileDownloadListener = object : FileDownloadListener() {
         override fun pending(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {}
 
-        override fun connected(task: BaseDownloadTask?, etag: String?, isContinue: Boolean, soFarBytes: Int, totalBytes: Int) {}
+        override fun connected(task: BaseDownloadTask?, etag: String?, isContinue: Boolean, soFarBytes: Int, totalBytes: Int) {
+            mIsStartedDownloadSound = true
+        }
 
         override fun progress(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {}
 
@@ -294,7 +333,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             }
         }
 
-        override fun paused(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {}
+        override fun paused(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {
+            mPauseList.add(task.getTag(0) as String)
+        }
 
         override fun error(task: BaseDownloadTask, e: Throwable) {
             Log.d("SpeechDownloader", "error file ${task.getTag(0) as String}")
@@ -318,7 +359,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         mpFinish.setOnCompletionListener {
             mpFinish.release()
             if (isSetFinish) {
-                val promptUri = Uri.fromFile(File("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0.wav"))
+                val file = File("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0.wav")
+                val promptUri = Uri.fromFile(file)
                 startPlaying(promptUri, false)
             } else {
                 realComplete()
