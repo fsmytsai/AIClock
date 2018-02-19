@@ -109,7 +109,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         var differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
 
-        if (differenceSecond < 40) {
+        if (differenceSecond < 30) {
             if (mDownloadSpeechActivity != null)
                 AlertDialog.Builder(mDownloadSpeechActivity!!)
                         .setTitle("錯誤")
