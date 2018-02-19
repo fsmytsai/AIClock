@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.PrepareReceiver
 import com.fsmytsai.aiclock.model.Texts
@@ -54,6 +55,7 @@ class SharedService {
             if (isAdd) {
                 textsList.textsList.add(ChangeTexts!!)
                 spDatas.edit().putString("TextsListJsonStr", Gson().toJson(textsList)).apply()
+                Log.d("SpeechDownloader","成功更新資料")
             }
         }
     }

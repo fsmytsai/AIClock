@@ -33,9 +33,9 @@ open class DownloadSpeechActivity : AppCompatActivity() {
         bindService(intent, downloadServiceConnection, Context.BIND_AUTO_CREATE)
     }
 
-    fun startDownload(alarmClock: AlarmClock, fl: SpeechDownloader.FinishListener?): Boolean {
+    fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?): Boolean {
         Log.d("DownloadSpeechActivity", "2")
-        val isSuccess = mDownloadService.startDownload(alarmClock, fl)
+        val isSuccess = mDownloadService.startDownload(alarmClock, dfl)
         return isSuccess
     }
 

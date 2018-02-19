@@ -100,7 +100,6 @@ class MainActivity : DownloadSpeechActivity() {
     fun bindAlarmService(texts: Texts?) {
         val intent = Intent(this, AlarmService::class.java)
         intent.putExtra("TextsJsonStr", Gson().toJson(texts))
-        startService(intent)
         bindService(intent, alarmServiceConnection, Context.BIND_AUTO_CREATE)
     }
 

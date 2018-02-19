@@ -181,7 +181,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun getTextData() {
-        val url = if (mPromptDataList[0] > 0 || mPromptDataList[1] > 0 || mPromptDataList[2] > 30)
+        val url = if (mPromptDataList[0] > 0 || mPromptDataList[1] > 0 || mPromptDataList[2] > 15)
             "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
                     "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=-1&latitude=1000&longitude=0"
         else
@@ -279,6 +279,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
             if (mDownloadedCount == mNeedDownloadCount) {
                 Log.d("SpeechDownloader", "Download Finish")
+                completeSetData()
                 if (mDownloadSpeechActivity != null) {
                     mDownloadSpeechActivity?.setDownloadProgress(100)
                     val uri = Uri.parse("android.resource://${mContext.packageName}/raw/" + when (mAlarmClock.speaker) {
@@ -289,7 +290,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                     })
                     startPlaying(uri!!, true)
                 } else
-                    complete()
+                    realComplete()
             }
         }
 
@@ -302,38 +303,40 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         override fun warn(task: BaseDownloadTask) {}
     }
 
-    private lateinit var mMPFinish: MediaPlayer
-
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun startPlaying(uri: Uri, isSetFinish: Boolean) {
-        mMPFinish = MediaPlayer()
-        mMPFinish.setDataSource(mContext, uri)
+        val mpFinish = MediaPlayer()
+        mpFinish.setDataSource(mContext, uri)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val audioAttributes = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
                     .build()
-            mMPFinish.setAudioAttributes(audioAttributes)
+            mpFinish.setAudioAttributes(audioAttributes)
         } else {
-            mMPFinish.setAudioStreamType(AudioManager.STREAM_ALARM)
+            mpFinish.setAudioStreamType(AudioManager.STREAM_ALARM)
         }
-        mMPFinish.setOnCompletionListener {
+        mpFinish.setOnCompletionListener {
+            mpFinish.release()
             if (isSetFinish) {
                 val promptUri = Uri.fromFile(File("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0.wav"))
                 startPlaying(promptUri, false)
             } else {
-                mDownloadSpeechActivity?.dismissDownloadingDialog()
-                complete()
+                realComplete()
             }
         }
-        mMPFinish.setVolume(1f, 1f)
-        mMPFinish.prepare()
-        mMPFinish.start()
+        mpFinish.setVolume(1f, 1f)
+        mpFinish.prepare()
+        mpFinish.start()
     }
 
-    fun complete() {
+    private fun completeSetData() {
         setAlarm()
         SharedService.deleteOldTextsData(mContext, mAlarmClock.acId, publicTexts, true)
-        mFinishListener?.finish()
+    }
+
+    private fun realComplete() {
+        mDownloadSpeechActivity?.dismissDownloadingDialog()
+        mDownloadFinishListener?.finish()
     }
 
     private val mAlarmCalendar = Calendar.getInstance()
@@ -343,13 +346,13 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //設置前先嘗試取消，避免重複設置
         SharedService.cancelAlarm(mContext, mAlarmClock.acId)
 
-        //超過30分鐘才響鈴則設置一個提前30分鐘的任務重新抓取新聞天氣
-        val intent = if (mPromptDataList[0] > 0 || mPromptDataList[1] > 0 || mPromptDataList[2] > 30) {
-            Log.d("SpeechDownloader", "設置鬧鐘成功，${mPromptDataList[0]}天${mPromptDataList[1]}小時${mPromptDataList[2]}分鐘${mPromptDataList[3]}秒後響鈴")
-            mAlarmCalendar.add(Calendar.MINUTE, -30)
+        //超過15分鐘才響鈴則設置一個提前15分鐘的任務重新抓取新聞天氣
+        val intent = if (mPromptDataList[0] > 0 || mPromptDataList[1] > 0 || mPromptDataList[2] > 15) {
+            Log.d("SpeechDownloader", "設置鬧鐘成功，${mPromptDataList[0]}天${mPromptDataList[1]}小時${mPromptDataList[2]}分鐘後響鈴")
+            mAlarmCalendar.add(Calendar.MINUTE, -15)
             Intent(mContext, PrepareReceiver::class.java)
         } else {
-            Log.d("SpeechDownloader", "設置鬧鐘成功，30分鐘內響鈴")
+            Log.d("SpeechDownloader", "設置鬧鐘成功，15分鐘內響鈴，${mPromptDataList[2]}分鐘${mPromptDataList[3]}秒後響鈴")
             Intent(mContext, AlarmReceiver::class.java)
         }
         intent.putExtra("ACId", mAlarmClock.acId)
@@ -362,12 +365,12 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         }
     }
 
-    private var mFinishListener: FinishListener? = null
-    fun setFinishListener(finishListener: FinishListener?) {
-        mFinishListener = finishListener
+    private var mDownloadFinishListener: DownloadFinishListener? = null
+    fun setFinishListener(downloadFinishListener: DownloadFinishListener?) {
+        mDownloadFinishListener = downloadFinishListener
     }
 
-    interface FinishListener {
+    interface DownloadFinishListener {
         fun finish()
     }
 }

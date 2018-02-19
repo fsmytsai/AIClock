@@ -22,6 +22,11 @@ class PrepareService : Service() {
             for (alarmClock in alarmClocks.alarmClockList) {
                 if (alarmClock.acId == acId) {
                     val speechDownloader = SpeechDownloader(this, null)
+                    speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
+                        override fun finish() {
+                            stopSelf()
+                        }
+                    })
                     speechDownloader.setAlarmClock(alarmClock)
                 }
             }
