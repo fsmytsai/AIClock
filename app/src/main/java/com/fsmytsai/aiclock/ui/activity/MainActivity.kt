@@ -23,8 +23,7 @@ import android.view.MenuItem
 
 class MainActivity : DownloadSpeechActivity() {
     var acId = 0
-    private var mBoundAlarmService = false
-    private lateinit var mAlarmService: AlarmService
+    private var mAlarmService: AlarmService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,13 +32,14 @@ class MainActivity : DownloadSpeechActivity() {
     }
 
     override fun onStop() {
-        if (mBoundAlarmService) {
-            mAlarmService.setMainActivity(null)
-            unbindService(alarmServiceConnection)
-            mAlarmService.myUnBind()
-            mBoundAlarmService = false
-        }
+        mAlarmService?.pausePlay()
         super.onStop()
+    }
+
+    override fun onResume() {
+        //重開時 mAlarmService 還是 null
+        mAlarmService?.resumePlay()
+        super.onResume()
     }
 
     private fun initViews() {
@@ -94,10 +94,11 @@ class MainActivity : DownloadSpeechActivity() {
         }
     }
 
-    fun bindAlarmService(texts: Texts?) {
+    fun startAlarmService(texts: Texts?) {
         val intent = Intent(this, AlarmService::class.java)
         intent.putExtra("TextsJsonStr", Gson().toJson(texts))
-        bindService(intent, alarmServiceConnection, Context.BIND_AUTO_CREATE)
+        startService(intent)
+        bindService(intent, alarmServiceConnection, 0)
     }
 
     private val alarmServiceConnection = object : ServiceConnection {
@@ -105,22 +106,30 @@ class MainActivity : DownloadSpeechActivity() {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             val binder = service as AlarmService.LocalBinder
             mAlarmService = binder.service
-            mBoundAlarmService = true
-            mAlarmService.setMainActivity(this@MainActivity) // register
-            mAlarmService.myReBind()
+            mAlarmService!!.setMainActivity(this@MainActivity) // register
+            //內部會自動判斷是否在暫停狀態
+            mAlarmService!!.resumePlay()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
-            mBoundAlarmService = false
         }
     }
 
+    override fun onDestroy() {
+        if (mAlarmService != null) {
+            unbindService(alarmServiceConnection)
+        }
+        super.onDestroy()
+    }
+
     fun stopAlarmService() {
+        mAlarmService?.setMainActivity(null)
+        if (mAlarmService != null) {
+            unbindService(alarmServiceConnection)
+        }
         val intent = Intent(this, AlarmService::class.java)
-        mBoundAlarmService = false
         stopService(intent)
-        SharedService.isNewsPlaying = false
-        SharedService.reRunRunnable = false
+        mAlarmService = null
     }
 
     fun clearFlags() {

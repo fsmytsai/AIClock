@@ -24,7 +24,7 @@ class NewsFragment : Fragment() {
         mMainActivity = activity as MainActivity
         initViews(view)
         if (SharedService.isNewsPlaying || SharedService.reRunRunnable)
-            mMainActivity.bindAlarmService(null)
+            mMainActivity.startAlarmService(null)
         else
             getTexts()
         return view
@@ -40,9 +40,9 @@ class NewsFragment : Fragment() {
     }
 
     private fun getTexts() {
-        val texts = SharedService.getTexts(mMainActivity,mMainActivity.acId)
+        val texts = SharedService.getTexts(mMainActivity, mMainActivity.acId)
         //綁定鬧鐘服務，開始播放
-        mMainActivity.bindAlarmService(texts)
+        mMainActivity.startAlarmService(texts)
     }
 
 }

@@ -20,69 +20,71 @@ import com.google.gson.Gson
 import java.io.File
 
 class AlarmService : Service() {
-    private var mIsFirstBind = true
     private val mBinder = LocalBinder()
     private var mMainActivity: MainActivity? = null
     private var mMPBGM = MediaPlayer()
     private var mMPNews = MediaPlayer()
-    private var isByePlaying = false
+    private var mIsByePlaying = false
+    private var mIsPausing = false
     private lateinit var mTexts: Texts
     private val mSoundList = ArrayList<String>()
-    private var mIsCompletePlayNews = false
 
     override fun onBind(intent: Intent): IBinder? {
-        Log.d("AlarmService", "${SharedService.isNewsPlaying}")
-        if (mIsFirstBind) {
-            mIsFirstBind = false
-            mTexts = Gson().fromJson(intent.getStringExtra("TextsJsonStr"), Texts::class.java)
+        //測試到目前為止發現，僅第一次綁定會呼叫(從startService後)
 
-            //檢查檔案是否存在
-            for (text in mTexts.textList) {
-                val addToSoundList = (0 until text.part_count)
-                        .map { File("$filesDir/sounds/${text.text_id}-$it.wav") }
-                        .all { it.exists() }
-                if (addToSoundList) {
-                    (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it" }
-                }
+        mTexts = Gson().fromJson(intent.getStringExtra("TextsJsonStr"), Texts::class.java)
+
+        //檢查檔案是否存在
+        for (text in mTexts.textList) {
+            val addToSoundList = (0 until text.part_count)
+                    .map { File("$filesDir/sounds/${text.text_id}-$it.wav") }
+                    .all { it.exists() }
+            if (addToSoundList) {
+                (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it" }
             }
-
-            startBGM()
-        } else if (SharedService.isNewsPlaying) {
-            mMPBGM.start()
-            mMPNews.start()
         }
+
+        startBGM()
 
         return mBinder
     }
 
-    fun myReBind() {
-        Log.d("AlarmService", "${SharedService.isNewsPlaying}")
+    fun resumePlay() {
+        if (!mIsPausing)
+            return
+
+        Log.d("AlarmService", "resumePlay")
         if (SharedService.isNewsPlaying) {
+            mIsPausing = false
             mMPBGM.start()
             mMPNews.start()
         } else if (SharedService.reRunRunnable) {
+            mIsPausing = false
             mMPBGM.start()
             SharedService.reRunRunnable = false
             mHandler.postDelayed(mRunnable, 5000)
         }
     }
 
-    fun myUnBind() {
-        Log.d("AlarmService", "暫停")
+    fun pausePlay() {
+        Log.d("AlarmService", "pausePlay")
+        mIsPausing = true
         mMPBGM.pause()
         if (SharedService.isNewsPlaying)
             mMPNews.pause()
-        else if (!mIsCompletePlayNews) {
+        else {
             SharedService.reRunRunnable = true
             mHandler.removeCallbacksAndMessages(null)
         }
     }
 
     override fun onDestroy() {
-        Log.d("AlarmService", "釋放")
+        Log.d("AlarmService", "onDestroy")
         mHandler.removeCallbacksAndMessages(null)
         mMPNews.release()
         mMPBGM.release()
+        SharedService.isNewsPlaying = false
+        SharedService.reRunRunnable = false
         super.onDestroy()
     }
 
@@ -107,7 +109,7 @@ class AlarmService : Service() {
             mMPNews.setAudioStreamType(AudioManager.STREAM_ALARM)
         }
         mMPNews.setOnCompletionListener {
-            if (!isByePlaying) {
+            if (!mIsByePlaying) {
                 mSoundList.removeAt(0)
             }
 
@@ -116,10 +118,10 @@ class AlarmService : Service() {
             if (mSoundList.size > 0) {
                 mMPNews = MediaPlayer()
                 playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
-            } else if (!isByePlaying) {
+            } else if (!mIsByePlaying) {
                 mMPNews = MediaPlayer()
                 //播放掰掰
-                isByePlaying = true
+                mIsByePlaying = true
                 var spk = "f1"
                 if (mTexts.textList[0].speaker == "HanHanRUS")
                     spk = "f2"
@@ -128,9 +130,8 @@ class AlarmService : Service() {
                 playNews(Uri.parse("android.resource://$packageName/raw/bye$spk"))
             } else {
                 //結束播放
-                isByePlaying = false
+                mIsByePlaying = false
                 mMPBGM.setVolume(1f, 1f)
-                mIsCompletePlayNews = true
                 SharedService.isNewsPlaying = false
             }
         }
