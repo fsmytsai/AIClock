@@ -28,6 +28,7 @@ class AlarmService : Service() {
     private var mIsPausing = false
     private lateinit var mTexts: Texts
     private val mSoundList = ArrayList<String>()
+    private var mNewsCount = 0
 
     override fun onBind(intent: Intent): IBinder? {
         //測試到目前為止發現，僅第一次綁定會呼叫(從startService後)
@@ -40,6 +41,11 @@ class AlarmService : Service() {
                     .map { File("$filesDir/sounds/${text.text_id}-$it.wav") }
                     .all { it.exists() }
             if (addToSoundList) {
+                if (text.description != "time" && text.description != "weather") {
+                    mNewsCount++
+                    mSoundList.add("news$mNewsCount")
+                }
+
                 (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it" }
             }
         }
@@ -117,7 +123,15 @@ class AlarmService : Service() {
 
             if (mSoundList.size > 0) {
                 mMPNews = MediaPlayer()
-                playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
+                if (mSoundList[0].startsWith("news")) {
+                    var spk = "f1"
+                    if (mTexts.textList[0].speaker == "HanHanRUS")
+                        spk = "f2"
+                    else if (mTexts.textList[0].speaker == "Zhiwei, Apollo")
+                        spk = "m1"
+                    playNews(Uri.parse("android.resource://$packageName/raw/${spk}_${mSoundList[0]}"))
+                } else
+                    playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
             } else if (!mIsByePlaying) {
                 mMPNews = MediaPlayer()
                 //播放掰掰
@@ -127,7 +141,7 @@ class AlarmService : Service() {
                     spk = "f2"
                 else if (mTexts.textList[0].speaker == "Zhiwei, Apollo")
                     spk = "m1"
-                playNews(Uri.parse("android.resource://$packageName/raw/bye$spk"))
+                playNews(Uri.parse("android.resource://$packageName/raw/${spk}_bye"))
             } else {
                 //結束播放
                 mIsByePlaying = false
