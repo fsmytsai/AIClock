@@ -9,7 +9,6 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
         android:layout_marginBottom="10dp"
         android:text="設置智能鬧鐘中..."
         android:textColor="@color/colorBlue"
