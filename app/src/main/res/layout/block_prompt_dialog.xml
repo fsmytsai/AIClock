@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:padding="10dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="警告"
+        android:textColor="@color/colorBlue"
+        android:textSize="20sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:gravity="center"
+        android:text="如果您的網路不是吃到飽，建議改為使用免費的 WIFI 網路"
+        android:textColor="@color/colorBlue"
+        android:textSize="16sp" />
+
+    <CheckBox
+        android:id="@+id/cb_never_prompt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="不再提示"/>
+</LinearLayout>

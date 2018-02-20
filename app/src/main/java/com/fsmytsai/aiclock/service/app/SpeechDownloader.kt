@@ -25,6 +25,7 @@ import com.google.gson.Gson
 import com.liulishuo.filedownloader.BaseDownloadTask
 import com.liulishuo.filedownloader.FileDownloadListener
 import com.liulishuo.filedownloader.FileDownloader
+import kotlinx.android.synthetic.main.block_prompt_dialog.view.*
 import okhttp3.*
 import java.io.File
 import java.io.IOException
@@ -72,9 +73,30 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     fun setAlarmClock(alarmClock: AlarmClock) {
         mAlarmClock = alarmClock
 
-        //沒網路或離響鈴時間小於30秒取消下載
-        if (!SharedService.checkNetWork(mContext) || !getPrompt())
-            mDownloadFinishListener?.cancel()
+        val spDatas = mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+        if (mDownloadSpeechActivity != null && !spDatas.getBoolean("NeverPrompt", false)) {
+            val dialogView = mDownloadSpeechActivity!!.layoutInflater.inflate(R.layout.block_prompt_dialog, null)
+            AlertDialog.Builder(mDownloadSpeechActivity!!)
+                    .setCancelable(false)
+                    .setView(dialogView)
+                    .setPositiveButton("開始設置鬧鐘", { _, _ ->
+                        if (dialogView.cb_never_prompt.isChecked) {
+                            spDatas.edit().putBoolean("NeverPrompt", true).apply()
+                        }
+
+                        //沒網路或離響鈴時間小於30秒取消下載
+                        if (!SharedService.checkNetWork(mContext) || !getPrompt())
+                            mDownloadFinishListener?.cancel()
+                    })
+                    .setNegativeButton("取消", { _, _ ->
+                        mDownloadFinishListener?.cancel()
+                    })
+                    .show()
+        } else {
+            //沒網路或離響鈴時間小於30秒取消下載
+            if (!SharedService.checkNetWork(mContext) || !getPrompt())
+                mDownloadFinishListener?.cancel()
+        }
     }
 
     private fun getPrompt(): Boolean {
