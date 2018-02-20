@@ -11,7 +11,6 @@ import android.os.Binder
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
-import android.util.Log
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -59,7 +58,7 @@ class AlarmService : Service() {
         if (!mIsPausing)
             return
 
-        Log.d("AlarmService", "resumePlay")
+        SharedService.writeDebugLog("AlarmService resumePlay")
         if (SharedService.isNewsPlaying) {
             mIsPausing = false
             mMPBGM.start()
@@ -73,7 +72,7 @@ class AlarmService : Service() {
     }
 
     fun pausePlay() {
-        Log.d("AlarmService", "pausePlay")
+        SharedService.writeDebugLog("AlarmService pausePlay")
         mIsPausing = true
         mMPBGM.pause()
         if (SharedService.isNewsPlaying)
@@ -85,7 +84,7 @@ class AlarmService : Service() {
     }
 
     override fun onDestroy() {
-        Log.d("AlarmService", "onDestroy")
+        SharedService.writeDebugLog("AlarmService onDestroy")
         mHandler.removeCallbacksAndMessages(null)
         mMPNews.release()
         mMPBGM.release()

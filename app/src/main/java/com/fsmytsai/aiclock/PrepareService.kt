@@ -3,13 +3,12 @@ package com.fsmytsai.aiclock
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import android.util.Log
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 
 class PrepareService : Service() {
-    override fun onBind(intent: Intent?): IBinder {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -41,7 +40,7 @@ class PrepareService : Service() {
     }
 
     override fun onDestroy() {
-        Log.d("PrepareService", "onDestroy")
+        SharedService.writeDebugLog("PrepareService onDestroy")
         super.onDestroy()
     }
 }

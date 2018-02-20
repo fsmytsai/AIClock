@@ -16,8 +16,8 @@ import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.model.TextsList
 import com.google.gson.Gson
 import android.widget.Toast
-import android.net.NetworkInfo
 import android.net.ConnectivityManager
+import android.util.Log
 
 
 /**
@@ -114,7 +114,7 @@ class SharedService {
 
         private lateinit var mLocationManager: LocationManager
         @SuppressLint("MissingPermission")
-        fun setLocation(context: Context,alarmClock: AlarmClock):Boolean {
+        fun setLocation(context: Context, alarmClock: AlarmClock): Boolean {
             mLocationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             val providers = mLocationManager.getProviders(true)
             var bestLocation: Location? = null
@@ -132,6 +132,10 @@ class SharedService {
                 alarmClock.longitude = bestLocation.longitude
                 return true
             }
+        }
+
+        fun writeDebugLog(logContent: String) {
+            Log.d("AIClockDebugLog", logContent)
         }
 
         //避免重複Toast

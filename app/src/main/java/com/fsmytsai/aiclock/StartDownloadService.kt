@@ -4,8 +4,8 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.os.Binder
-import android.util.Log
 import com.fsmytsai.aiclock.model.AlarmClock
+import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.activity.DownloadSpeechActivity
 
@@ -47,7 +47,7 @@ class StartDownloadService : Service() {
     }
 
     override fun onDestroy() {
-        Log.d("StartDownloadService", "onDestroy")
+        SharedService.writeDebugLog("StartDownloadService onDestroy")
         super.onDestroy()
     }
 }
