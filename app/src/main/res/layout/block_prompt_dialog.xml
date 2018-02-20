@@ -2,15 +2,15 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
     android:gravity="center_horizontal"
+    android:orientation="vertical"
     android:padding="10dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
-        android:text="警告"
+        android:text="提示"
         android:textColor="@color/colorBlue"
         android:textSize="20sp" />
 
@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
         android:gravity="center"
-        android:text="如果您的網路不是吃到飽，建議改為使用免費的 WIFI 網路"
+        android:text="設定鬧鐘會使用少許網路，用於取得天氣及新聞資料。"
         android:textColor="@color/colorBlue"
         android:textSize="16sp" />
 
@@ -27,5 +27,5 @@
         android:id="@+id/cb_never_prompt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="不再提示"/>
+        android:text="不再提示" />
 </LinearLayout>
