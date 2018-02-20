@@ -5,11 +5,13 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
+import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
 import android.util.Log
 import com.fsmytsai.aiclock.AlarmReceiver
@@ -186,6 +188,17 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun getTextData() {
+        //抓取位置
+        if (ActivityCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            val isSuccess = SharedService.setLocation(mContext, mAlarmClock)
+            if (!isSuccess) {
+                Log.d("SpeechDownloader", "setLocation failed")
+            }
+        } else {
+            Log.d("SpeechDownloader", "no location permission")
+        }
+
         val url = if (mPromptDataList[0] > 0 || mPromptDataList[1] > 0 || mPromptDataList[2] > 15)
             "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
                     "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=-1&latitude=1000&longitude=0"
@@ -193,6 +206,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
                     "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&" +
                     "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}"
+
         val request = Request.Builder()
                 .url(url)
                 .build()

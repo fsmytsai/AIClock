@@ -1,13 +1,9 @@
 package com.fsmytsai.aiclock.ui.activity
 
-import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.Activity
 import android.app.TimePickerDialog
-import android.content.Context
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationManager
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -102,15 +98,15 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             when (checkedId) {
                 R.id.rb_f1 -> {
                     mAlarmClock.speaker = 0
-                    uri = Uri.parse("android.resource://$packageName/raw/f1")
+                    uri = Uri.parse("android.resource://$packageName/raw/f1_hello")
                 }
                 R.id.rb_f2 -> {
                     mAlarmClock.speaker = 1
-                    uri = Uri.parse("android.resource://$packageName/raw/f2")
+                    uri = Uri.parse("android.resource://$packageName/raw/f2_hello")
                 }
                 R.id.rb_m1 -> {
                     mAlarmClock.speaker = 2
-                    uri = Uri.parse("android.resource://$packageName/raw/m1")
+                    uri = Uri.parse("android.resource://$packageName/raw/m1_hello")
                 }
             }
             startPlaying(uri!!)
@@ -122,7 +118,13 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             if (isChecked) {
                 if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    locationServiceInitial()
+                    val isSuccess = SharedService.setLocation(this, mAlarmClock)
+                    if(!isSuccess){
+                        SharedService.showTextToast(this, "取得位置失敗")
+                        Handler().postDelayed({
+                            sb_weather.isChecked = false
+                        }, 1000)
+                    }
                 } else {
                     requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION), REQUEST_LOCATION)
                 }
@@ -199,35 +201,16 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         if (requestCode == REQUEST_LOCATION && grantResults.size == 2 &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED &&
                 grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-            locationServiceInitial()
+            val isSuccess = SharedService.setLocation(this, mAlarmClock)
+            if(!isSuccess){
+                SharedService.showTextToast(this, "取得位置失敗")
+                Handler().postDelayed({
+                    sb_weather.isChecked = false
+                }, 1000)
+            }
         } else {
             sb_weather.isChecked = false
             SharedService.showTextToast(this, "您拒絕了天氣播報權限")
-        }
-    }
-
-    private lateinit var mLocationManager: LocationManager
-    @SuppressLint("MissingPermission")
-    private fun locationServiceInitial() {
-        mLocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val providers = mLocationManager.getProviders(true)
-        var bestLocation: Location? = null
-        for (provider in providers) {
-            val l = mLocationManager.getLastKnownLocation(provider) ?: continue
-            if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
-                bestLocation = l
-            }
-        }
-
-        if (bestLocation == null) {
-            SharedService.showTextToast(this, "取得位置失敗")
-            Handler().postDelayed({
-                sb_weather.isChecked = false
-            }, 1000)
-
-        } else {
-            mAlarmClock.latitude = bestLocation.latitude
-            mAlarmClock.longitude = bestLocation.longitude
         }
     }
 
