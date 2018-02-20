@@ -73,6 +73,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     fun setAlarmClock(alarmClock: AlarmClock) {
         mAlarmClock = alarmClock
 
+        cleanAllOldSound()
+
         val spDatas = mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE)
         if (mDownloadSpeechActivity != null && !spDatas.getBoolean("NeverPrompt", false)) {
             val dialogView = mDownloadSpeechActivity!!.layoutInflater.inflate(R.layout.block_prompt_dialog, null)
@@ -96,6 +98,29 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             //沒網路或離響鈴時間小於30秒取消下載
             if (!SharedService.checkNetWork(mContext) || !getPrompt())
                 mDownloadFinishListener?.cancel()
+        }
+    }
+
+    private fun cleanAllOldSound() {
+        //雖然設置完鬧鐘並更新 TextsList 後再刪才完全正確，但太麻煩了
+        //先抓到所有還需要的檔名
+        val allNeedFileName = ArrayList<String>()
+        val textsList = SharedService.getTextsList(mContext)
+        for (texts in textsList.textsList) {
+            for (text in texts.textList)
+                for (i in 0 until text.part_count)
+                    allNeedFileName.add("${text.text_id}")
+        }
+
+        //遍歷所有檔案，檔名不在 allNeedFileName 裡的直接刪除
+        val directory = File("${mContext.filesDir}/sounds")
+        for (file in directory.listFiles()) {
+            if (file.name !in allNeedFileName) {
+                if (file.delete())
+                    SharedService.writeDebugLog("SpeechDownloader delete oldSound ${file.name}")
+                else
+                    SharedService.writeDebugLog("SpeechDownloader delete failed ${file.name}")
+            }
         }
     }
 
@@ -356,7 +381,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         override fun retry(task: BaseDownloadTask?, ex: Throwable?, retryingTimes: Int, soFarBytes: Int) {}
 
         override fun completed(task: BaseDownloadTask) {
-            SharedService.writeDebugLog("SpeechDownloader complete file ${task.getTag(0) as String}")
+            SharedService.writeDebugLog("SpeechDownloader download complete ${task.getTag(0) as String}")
             completeOrErrorDownload()
         }
 
@@ -365,7 +390,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         }
 
         override fun error(task: BaseDownloadTask, e: Throwable) {
-            SharedService.writeDebugLog("SpeechDownloader error file ${task.getTag(0) as String}")
+            SharedService.writeDebugLog("SpeechDownloader download error ${task.getTag(0) as String}")
             mErrorDownloadCount++
             //超過 1/4 失敗則取消
             if (mErrorDownloadCount > mNeedDownloadCount / 4) {

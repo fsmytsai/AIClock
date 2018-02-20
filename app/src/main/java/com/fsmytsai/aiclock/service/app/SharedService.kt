@@ -57,10 +57,15 @@ class SharedService {
             return alarmClocks.alarmClockList.firstOrNull { it.acId == acId }
         }
 
-        fun getTexts(context: Context, acId: Int): Texts? {
+        fun getTextsList(context: Context): TextsList {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             val textsListJsonStr = spDatas.getString("TextsListJsonStr", "")
             val textsList = Gson().fromJson(textsListJsonStr, TextsList::class.java)
+            return textsList
+        }
+
+        fun getTexts(context: Context, acId: Int): Texts? {
+            val textsList = getTextsList(context)
             return textsList.textsList.firstOrNull { it.acId == acId }
         }
 
