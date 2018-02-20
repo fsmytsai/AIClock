@@ -317,7 +317,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     }
 
                     override fun finish() {
-                        returnData()
+                        finish()
                     }
                 })
             }
@@ -380,13 +380,11 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
         //更新資料儲存
         SharedService.updateAlarmClocks(this, alarmClocks)
-    }
 
-    private fun returnData() {
+        //已正確設置資料
         intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
         intent.putExtra("IsNew", mIsNew)
         setResult(Activity.RESULT_OK, intent)
-        finish()
     }
 
 }

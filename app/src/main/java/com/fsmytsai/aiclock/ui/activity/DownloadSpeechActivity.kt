@@ -11,6 +11,7 @@ import android.widget.TextView
 import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.StartDownloadService
 import com.fsmytsai.aiclock.model.AlarmClock
+import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import kotlinx.android.synthetic.main.block_download_dialog.view.*
 
@@ -20,6 +21,8 @@ open class DownloadSpeechActivity : AppCompatActivity() {
     private lateinit var tvDownloading: TextView
     private lateinit var mDownloadingDialog: AlertDialog
     private lateinit var mCanStartDownloadCallback: CanStartDownloadCallback
+    private var mIsStartedSetData = false
+    private var mIsAccidentCanceled = false
 
     fun bindDownloadService(canStartDownloadCallback: CanStartDownloadCallback) {
         mCanStartDownloadCallback = canStartDownloadCallback
@@ -34,25 +37,33 @@ open class DownloadSpeechActivity : AppCompatActivity() {
     fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?) {
         outDownloadFinishListener = dfl
         mDownloadService?.startDownload(alarmClock, inDownloadFinishListener)
-
     }
 
     var outDownloadFinishListener: SpeechDownloader.DownloadFinishListener? = null
 
     private val inDownloadFinishListener = object : SpeechDownloader.DownloadFinishListener {
         override fun cancel() {
-            outDownloadFinishListener?.cancel()
-            unbindService(mDownloadServiceConnection)
-            mDownloadService = null
+            if (mIsStartedSetData) {
+                mIsAccidentCanceled = true
+                SharedService.showTextToast(this@DownloadSpeechActivity, "已完成設置，無法取消")
+            } else {
+                outDownloadFinishListener?.cancel()
+                unbindService(mDownloadServiceConnection)
+                mDownloadService = null
+            }
         }
 
         override fun startSetData() {
+            mIsStartedSetData = true
             outDownloadFinishListener?.startSetData()
         }
 
         override fun finish() {
-            outDownloadFinishListener?.finish()
-            unbindService(mDownloadServiceConnection)
+            //避免在 AddAlarmClockActivity 已完成後才按取消，且 destroy 頁面造成 service 自殺，再次 unbind 造成的 crash
+            if (!mIsAccidentCanceled) {
+                outDownloadFinishListener?.finish()
+                unbindService(mDownloadServiceConnection)
+            }
             mDownloadService = null
         }
     }
