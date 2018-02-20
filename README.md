@@ -3,12 +3,10 @@
 # To Do
 | State      | Description                 |
 |------------|-----------------------------|
-| unfinished | 重開機重新設置 | 
 | unfinished | 響鈴頁面 |
 | unfinished | 刪除舊音檔 |
 | unfinished | 修改後端，避免超過1000次抓取新聞 |
 | unfinished | 時間用滾動選擇 |
-| unfinished | 簡化使用網路提示 |
 | finished   | 第幾則新聞提示 |
 | finished   | 使用網路提示 |
 | finished   | 判斷時間多判斷星期幾 |
@@ -20,6 +18,8 @@
 | finished   | 播報天氣新增地名 |
 | finished   | 修正沒網路時新建鬧鐘崩潰 |
 | finished   | 取消下載 |
+| finished   | 簡化使用網路提示 |
+| finished   | 重開機重新設置 | 
 
 
 # Release Note
