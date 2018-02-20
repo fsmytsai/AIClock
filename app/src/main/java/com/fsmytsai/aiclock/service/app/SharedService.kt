@@ -1,9 +1,12 @@
 package com.fsmytsai.aiclock.service.app
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.location.Location
+import android.location.LocationManager
 import android.support.v7.app.AlertDialog
 import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.PrepareReceiver
@@ -107,6 +110,28 @@ class SharedService {
                 return false
             }
             return true
+        }
+
+        private lateinit var mLocationManager: LocationManager
+        @SuppressLint("MissingPermission")
+        fun setLocation(context: Context,alarmClock: AlarmClock):Boolean {
+            mLocationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val providers = mLocationManager.getProviders(true)
+            var bestLocation: Location? = null
+            for (provider in providers) {
+                val l = mLocationManager.getLastKnownLocation(provider) ?: continue
+                if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
+                    bestLocation = l
+                }
+            }
+
+            if (bestLocation == null) {
+                return false
+            } else {
+                alarmClock.latitude = bestLocation.latitude
+                alarmClock.longitude = bestLocation.longitude
+                return true
+            }
         }
 
         //避免重複Toast
