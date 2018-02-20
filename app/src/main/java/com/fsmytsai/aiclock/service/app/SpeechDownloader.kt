@@ -345,6 +345,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     fun cancelDownloadSound() {
         mIsCanceledDownloadSound = true
         FileDownloader.getImpl().pause(mQueueTarget)
+        //多檔下載失敗則直接關閉 dialog
         mDownloadSpeechActivity?.dismissDownloadingDialog()
         mDownloadFinishListener?.cancel()
     }
@@ -380,7 +381,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                 if (mDownloadSpeechActivity != null)
                     SharedService.showTextToast(mDownloadSpeechActivity!!, "下載失敗")
 
-                //避免重複呼叫取消
+                //避免多個檔案失敗造成重複呼叫取消
                 if (!mIsCanceledDownloadSound)
                     cancelDownloadSound()
             } else
