@@ -119,7 +119,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     val isSuccess = SharedService.setLocation(this, mAlarmClock)
-                    if(!isSuccess){
+                    if (!isSuccess) {
                         SharedService.showTextToast(this, "取得位置失敗")
                         Handler().postDelayed({
                             sb_weather.isChecked = false
@@ -202,7 +202,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 grantResults[0] == PackageManager.PERMISSION_GRANTED &&
                 grantResults[1] == PackageManager.PERMISSION_GRANTED) {
             val isSuccess = SharedService.setLocation(this, mAlarmClock)
-            if(!isSuccess){
+            if (!isSuccess) {
                 SharedService.showTextToast(this, "取得位置失敗")
                 Handler().postDelayed({
                     sb_weather.isChecked = false
@@ -283,8 +283,14 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             if (mAlarmClock.hour == alarmClocks.alarmClockList[i].hour &&
                     mAlarmClock.minute == alarmClocks.alarmClockList[i].minute &&
                     mAlarmClock.acId != alarmClocks.alarmClockList[i].acId) {
-                SharedService.showTextToast(this, "錯誤，已有相同時間。")
-                return
+                //時間完全一樣則判斷天數是否有重複
+                for (day in 0..6) {
+                    if (mAlarmClock.isRepeatArr[day] && alarmClocks.alarmClockList[i].isRepeatArr[day]) {
+                        SharedService.showTextToast(this, "錯誤，已有相同時間。")
+                        return
+                    }
+                }
+
             }
 
         if (mAlarmClock.speaker == -1) {
@@ -316,7 +322,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                         updateAlarmClock()
                     }
 
-                    override fun finish() {
+                    override fun allFinished() {
                         finish()
                     }
                 })
