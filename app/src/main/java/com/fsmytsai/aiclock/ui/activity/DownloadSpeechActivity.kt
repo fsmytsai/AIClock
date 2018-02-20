@@ -1,9 +1,6 @@
 package com.fsmytsai.aiclock.ui.activity
 
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.IBinder
@@ -34,15 +31,21 @@ open class DownloadSpeechActivity : AppCompatActivity() {
         }
     }
 
-    fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?): Boolean {
+    fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?) {
         outDownloadFinishListener = dfl
-        val isSuccess = mDownloadService?.startDownload(alarmClock, inDownloadFinishListener) ?: false
-        return isSuccess
+        mDownloadService?.startDownload(alarmClock, inDownloadFinishListener)
+
     }
 
     var outDownloadFinishListener: SpeechDownloader.DownloadFinishListener? = null
 
     private val inDownloadFinishListener = object : SpeechDownloader.DownloadFinishListener {
+        override fun cancel() {
+            outDownloadFinishListener?.cancel()
+            unbindService(mDownloadServiceConnection)
+            mDownloadService = null
+        }
+
         override fun startSetData() {
             outDownloadFinishListener?.startSetData()
         }
@@ -75,6 +78,13 @@ open class DownloadSpeechActivity : AppCompatActivity() {
         mDownloadingDialog = AlertDialog.Builder(this)
                 .setCancelable(false)
                 .setView(dialogView)
+                .setNegativeButton("取消", { dialog, which ->
+                    mDownloadService?.cancelDownloadSound()
+
+                    //已在 inDownloadFinishListener 中解除綁定
+//                    unbindService(mDownloadServiceConnection)
+//                    mDownloadService = null
+                })
                 .show()
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

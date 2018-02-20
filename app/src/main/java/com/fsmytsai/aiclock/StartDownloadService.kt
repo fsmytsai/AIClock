@@ -4,6 +4,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.os.Binder
+import android.util.Log
 import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.activity.DownloadSpeechActivity
@@ -27,11 +28,10 @@ class StartDownloadService : Service() {
         mDownloadSpeechActivity = activity
     }
 
-    fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?): Boolean {
+    fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?) {
         mSpeechDownloader = SpeechDownloader(this, mDownloadSpeechActivity)
         mSpeechDownloader!!.setFinishListener(dfl)
-        val isSuccess = mSpeechDownloader!!.setAlarmClock(alarmClock)
-        return isSuccess
+        mSpeechDownloader!!.setAlarmClock(alarmClock)
     }
 
     fun stopDownloadSound() {
@@ -40,5 +40,14 @@ class StartDownloadService : Service() {
 
     fun resumeDownloadSound() {
         mSpeechDownloader?.resumeDownloadSound()
+    }
+
+    fun cancelDownloadSound() {
+        mSpeechDownloader?.cancelDownloadSound()
+    }
+
+    override fun onDestroy() {
+        Log.d("StartDownloadService", "onDestroy")
+        super.onDestroy()
     }
 }

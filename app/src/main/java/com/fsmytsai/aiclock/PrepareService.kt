@@ -21,6 +21,10 @@ class PrepareService : Service() {
             else {
                 val speechDownloader = SpeechDownloader(this, null)
                 speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
+                    override fun cancel() {
+                        stopSelf()
+                    }
+
                     override fun startSetData() {
 
                     }

@@ -324,7 +324,11 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
         bindDownloadService(object : CanStartDownloadCallback {
             override fun start() {
-                val isSuccess = startDownload(mAlarmClock, object : SpeechDownloader.DownloadFinishListener {
+                startDownload(mAlarmClock, object : SpeechDownloader.DownloadFinishListener {
+                    override fun cancel() {
+
+                    }
+
                     override fun startSetData() {
                         updateAlarmClock()
                     }

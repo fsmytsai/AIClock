@@ -16,6 +16,7 @@ import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
+import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.activity.AddAlarmClockActivity
 import com.fsmytsai.aiclock.ui.activity.DownloadSpeechActivity
 import com.fsmytsai.aiclock.ui.activity.MainActivity
@@ -106,11 +107,21 @@ class AlarmClockFragment : Fragment() {
                 if (isChecked && !isAutoOn) {
                     mMainActivity.bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
                         override fun start() {
-                            val isSuccess = mMainActivity.startDownload(mAlarmClocks.alarmClockList[position], null)
-                            if (!isSuccess)
-                                Handler().postDelayed({
-                                    view.isChecked = false
-                                }, 1000)
+                            mMainActivity.startDownload(mAlarmClocks.alarmClockList[position], object : SpeechDownloader.DownloadFinishListener{
+                                override fun cancel() {
+                                    Handler().postDelayed({
+                                        view.isChecked = false
+                                    }, 1000)
+                                }
+
+                                override fun startSetData() {
+
+                                }
+
+                                override fun finish() {
+
+                                }
+                            })
                         }
                     })
 

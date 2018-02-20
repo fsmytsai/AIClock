@@ -37,6 +37,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private var mContext = context
     private var mDownloadSpeechActivity = activity
     private var mNeedDownloadCount = 0f
+    private var mErrorDownloadCount = 0
     private var mDownloadedCount = 0f
     private lateinit var mAlarmClock: AlarmClock
     var publicTexts = Texts(0, ArrayList())
@@ -45,6 +46,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private var mIsFinishGetData = false
     private var mIsStartedDownloadSound = false
     private var mIsStoppedDownloadSound = false
+    private var mIsCanceledDownloadSound = false
     private val mPauseList = ArrayList<String>()
 
     //    constructor(context: Context, inActivity: Boolean) {
@@ -65,15 +67,12 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 //                }
 //    }
 
-    fun setAlarmClock(alarmClock: AlarmClock): Boolean {
+    fun setAlarmClock(alarmClock: AlarmClock) {
         mAlarmClock = alarmClock
 
-        if (SharedService.checkNetWork(mContext)) {
-            //僅代表是否成功取得提示，不代表音檔已下載完成
-            val isSuccess = getPrompt()
-            return isSuccess
-        }
-        return false
+        //沒網路或離響鈴時間小於30秒取消下載
+        if (!SharedService.checkNetWork(mContext) || !getPrompt())
+            mDownloadFinishListener?.cancel()
     }
 
     private fun getPrompt(): Boolean {
@@ -161,6 +160,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             override fun onFailure(call: Call?, e: IOException?) {
                 mDownloadSpeechActivity?.runOnUiThread {
                     SharedService.showTextToast(mDownloadSpeechActivity!!, "請檢查網路連線")
+                    mDownloadFinishListener?.cancel()
                     mDownloadSpeechActivity?.dismissDownloadingDialog()
                 }
             }
@@ -176,6 +176,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                         getTextData()
                     } else {
                         SharedService.handleError(mDownloadSpeechActivity!!, statusCode!!, resMessage!!)
+                        mDownloadFinishListener?.cancel()
                         mDownloadSpeechActivity?.dismissDownloadingDialog()
                     }
                 }
@@ -200,6 +201,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             override fun onFailure(call: Call?, e: IOException?) {
                 mDownloadSpeechActivity?.runOnUiThread {
                     SharedService.showTextToast(mDownloadSpeechActivity!!, "請檢查網路連線")
+                    mDownloadFinishListener?.cancel()
                     mDownloadSpeechActivity?.dismissDownloadingDialog()
                 }
             }
@@ -221,6 +223,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                             }
                         } else {
                             SharedService.handleError(mDownloadSpeechActivity!!, statusCode!!, resMessage!!)
+                            mDownloadFinishListener?.cancel()
                             mDownloadSpeechActivity?.dismissDownloadingDialog()
                         }
                     }
@@ -265,7 +268,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             }
         }
         mIsFinishGetData = true
-        if (!mIsStoppedDownloadSound)
+        if (!mIsStoppedDownloadSound && !mIsCanceledDownloadSound)
             FileDownloader.getImpl().start(mQueueTarget, false)
     }
 
@@ -278,6 +281,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     fun resumeDownloadSound() {
         mIsStoppedDownloadSound = false
+
+        if (mIsCanceledDownloadSound)
+            return
 
         //完成取得資料但還沒開始下載
         if (mIsFinishGetData && !mIsStartedDownloadSound)
@@ -300,6 +306,13 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         }
     }
 
+    fun cancelDownloadSound() {
+        mIsCanceledDownloadSound = true
+        FileDownloader.getImpl().pause(mQueueTarget)
+        mDownloadSpeechActivity?.dismissDownloadingDialog()
+        mDownloadFinishListener?.cancel()
+    }
+
     private val mQueueTarget: FileDownloadListener = object : FileDownloadListener() {
         override fun pending(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {}
 
@@ -314,26 +327,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         override fun retry(task: BaseDownloadTask?, ex: Throwable?, retryingTimes: Int, soFarBytes: Int) {}
 
         override fun completed(task: BaseDownloadTask) {
-            Log.d("SpeechDownloader", "file ${task.getTag(0) as String}")
+            Log.d("SpeechDownloader", "complete file ${task.getTag(0) as String}")
 
-            mDownloadedCount++
-            mDownloadSpeechActivity?.setDownloadProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt())
-
-            if (mDownloadedCount == mNeedDownloadCount) {
-                Log.d("SpeechDownloader", "Download Finish")
-                setData()
-                if (mDownloadSpeechActivity != null) {
-                    mDownloadSpeechActivity?.setDownloadProgress(100)
-                    val uri = Uri.parse("android.resource://${mContext.packageName}/raw/" + when (mAlarmClock.speaker) {
-                        0 -> "setfinishf1"
-                        1 -> "setfinishf2"
-                        2 -> "setfinishm1"
-                        else -> ""
-                    })
-                    startPlaying(uri!!, true)
-                } else
-                    realComplete()
-            }
+            completeOrErrorDownload()
         }
 
         override fun paused(task: BaseDownloadTask, soFarBytes: Int, totalBytes: Int) {
@@ -342,9 +338,41 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         override fun error(task: BaseDownloadTask, e: Throwable) {
             Log.d("SpeechDownloader", "error file ${task.getTag(0) as String}")
+            mErrorDownloadCount++
+            //超過 1/4 失敗則取消
+            if (mErrorDownloadCount > mNeedDownloadCount / 4) {
+                if (mDownloadSpeechActivity != null)
+                    SharedService.showTextToast(mDownloadSpeechActivity!!, "下載失敗")
+
+                //避免重複呼叫取消
+                if (!mIsCanceledDownloadSound)
+                    cancelDownloadSound()
+            } else
+                completeOrErrorDownload()
         }
 
         override fun warn(task: BaseDownloadTask) {}
+    }
+
+    fun completeOrErrorDownload() {
+        mDownloadedCount++
+        mDownloadSpeechActivity?.setDownloadProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt())
+
+        if (mDownloadedCount == mNeedDownloadCount) {
+            Log.d("SpeechDownloader", "Download Finish")
+            setData()
+            if (mDownloadSpeechActivity != null) {
+                mDownloadSpeechActivity?.setDownloadProgress(100)
+                val uri = Uri.parse("android.resource://${mContext.packageName}/raw/" + when (mAlarmClock.speaker) {
+                    0 -> "setfinishf1"
+                    1 -> "setfinishf2"
+                    2 -> "setfinishm1"
+                    else -> ""
+                })
+                startPlaying(uri!!, true)
+            } else
+                realComplete()
+        }
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -417,6 +445,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     interface DownloadFinishListener {
+        fun cancel()
         fun startSetData()
         fun finish()
     }
