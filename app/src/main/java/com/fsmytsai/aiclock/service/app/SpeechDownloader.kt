@@ -12,7 +12,6 @@ import android.net.Uri
 import android.os.Build
 import android.support.v7.app.AlertDialog
 import android.util.Log
-import android.widget.Toast
 import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.PrepareReceiver
 import com.fsmytsai.aiclock.R
@@ -69,9 +68,12 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     fun setAlarmClock(alarmClock: AlarmClock): Boolean {
         mAlarmClock = alarmClock
 
-        //僅代表是否成功取得提示，不代表音檔已下載完成
-        val isSuccess = getPrompt()
-        return isSuccess
+        if (SharedService.checkNetWork(mContext)) {
+            //僅代表是否成功取得提示，不代表音檔已下載完成
+            val isSuccess = getPrompt()
+            return isSuccess
+        }
+        return false
     }
 
     private fun getPrompt(): Boolean {
@@ -157,7 +159,10 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call?, e: IOException?) {
-                Toast.makeText(mDownloadSpeechActivity, "請檢察網路連線", Toast.LENGTH_SHORT).show()
+                mDownloadSpeechActivity?.runOnUiThread {
+                    SharedService.showTextToast(mDownloadSpeechActivity!!, "請檢查網路連線")
+                    mDownloadSpeechActivity?.dismissDownloadingDialog()
+                }
             }
 
             override fun onResponse(call: Call?, response: Response?) {
@@ -167,15 +172,10 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                 mDownloadSpeechActivity?.runOnUiThread {
                     if (statusCode == 200) {
                         mPromptData = Gson().fromJson(resMessage, PromptData::class.java)
-                        if (mPromptData!!.is_success) {
-                            mDownloadSpeechActivity?.setDownloadProgress(5)
-                            getTextData()
-                        } else {
-                            Toast.makeText(mDownloadSpeechActivity, "無預期錯誤，請重試", Toast.LENGTH_SHORT).show()
-                            mDownloadSpeechActivity?.dismissDownloadingDialog()
-                        }
+                        mDownloadSpeechActivity?.setDownloadProgress(5)
+                        getTextData()
                     } else {
-                        Toast.makeText(mDownloadSpeechActivity, "無預期 400 錯誤，請重試", Toast.LENGTH_SHORT).show()
+                        SharedService.handleError(mDownloadSpeechActivity!!, statusCode!!, resMessage!!)
                         mDownloadSpeechActivity?.dismissDownloadingDialog()
                     }
                 }
@@ -198,7 +198,10 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call?, e: IOException?) {
-                Toast.makeText(mContext, "請檢察網路連線", Toast.LENGTH_SHORT).show()
+                mDownloadSpeechActivity?.runOnUiThread {
+                    SharedService.showTextToast(mDownloadSpeechActivity!!, "請檢查網路連線")
+                    mDownloadSpeechActivity?.dismissDownloadingDialog()
+                }
             }
 
             override fun onResponse(call: Call?, response: Response?) {
@@ -213,11 +216,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                                 mDownloadSpeechActivity?.setDownloadProgress(10)
                                 downloadSound()
                             } else {
-                                Toast.makeText(mDownloadSpeechActivity, "無預期錯誤，請重試", Toast.LENGTH_SHORT).show()
+                                SharedService.showTextToast(mDownloadSpeechActivity!!, "無預期錯誤，請重試")
                                 mDownloadSpeechActivity?.dismissDownloadingDialog()
                             }
                         } else {
-                            Toast.makeText(mDownloadSpeechActivity, "無預期 400 錯誤，請重試", Toast.LENGTH_SHORT).show()
+                            SharedService.handleError(mDownloadSpeechActivity!!, statusCode!!, resMessage!!)
                             mDownloadSpeechActivity?.dismissDownloadingDialog()
                         }
                     }

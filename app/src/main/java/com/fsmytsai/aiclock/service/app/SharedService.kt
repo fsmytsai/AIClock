@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.support.v7.app.AlertDialog
 import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.PrepareReceiver
 import com.fsmytsai.aiclock.model.AlarmClock
@@ -11,6 +12,9 @@ import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.model.TextsList
 import com.google.gson.Gson
+import android.widget.Toast
+import android.net.NetworkInfo
+import android.net.ConnectivityManager
 
 
 /**
@@ -93,6 +97,54 @@ class SharedService {
                 textsList.textsList.add(ChangeTexts!!)
                 spDatas.edit().putString("TextsListJsonStr", Gson().toJson(textsList)).apply()
             }
+        }
+
+        fun checkNetWork(context: Context): Boolean {
+            val connManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val networkInfo = connManager.activeNetworkInfo
+            if (networkInfo == null || !networkInfo.isConnected || !networkInfo.isAvailable) {
+                showTextToast(context, "請檢查網路連線")
+                return false
+            }
+            return true
+        }
+
+        //避免重複Toast
+        private var toast: Toast? = null
+
+        fun showTextToast(context: Context, content: String) {
+            if (toast == null) {
+                toast = Toast.makeText(context, content, Toast.LENGTH_SHORT)
+            } else {
+                toast!!.setText(content)
+            }
+            toast!!.show()
+        }
+
+        fun handleError(context: Context, statusCode: Int, responseMessage: String) {
+            val errorMessageList = ArrayList<String>()
+            if (statusCode == 400) {
+                errorMessageList.addAll(Gson().fromJson(responseMessage, ArrayList<String>()::class.java))
+                SharedService.showErrorDialog(context, errorMessageList)
+            } else {
+                errorMessageList.add("ERROR:$statusCode\n請告知開發人員")
+                SharedService.showErrorDialog(context, errorMessageList)
+            }
+        }
+
+        fun showErrorDialog(context: Context, errorMessageList: ArrayList<String>) {
+            var errorMessage = ""
+            for (i in errorMessageList.indices) {
+                errorMessage += errorMessageList[i]
+                if (i != errorMessageList.size - 1) {
+                    errorMessage += "\n"
+                }
+            }
+            AlertDialog.Builder(context)
+                    .setTitle("錯誤訊息")
+                    .setMessage(errorMessage)
+                    .setPositiveButton("知道了", null)
+                    .show()
         }
     }
 }

@@ -21,7 +21,6 @@ import android.support.v7.app.AlertDialog
 import com.fsmytsai.aiclock.R
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
 import com.fsmytsai.aiclock.model.*
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -203,7 +202,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             locationServiceInitial()
         } else {
             sb_weather.isChecked = false
-            Toast.makeText(this, "取得位置權限失敗", Toast.LENGTH_SHORT).show()
+            SharedService.showTextToast(this, "您拒絕了天氣播報權限")
         }
     }
 
@@ -221,7 +220,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         }
 
         if (bestLocation == null) {
-            Toast.makeText(this, "取得位置失敗", Toast.LENGTH_SHORT).show()
+            SharedService.showTextToast(this, "取得位置失敗")
             Handler().postDelayed({
                 sb_weather.isChecked = false
             }, 1000)
@@ -301,12 +300,12 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             if (mAlarmClock.hour == alarmClocks.alarmClockList[i].hour &&
                     mAlarmClock.minute == alarmClocks.alarmClockList[i].minute &&
                     mAlarmClock.acId != alarmClocks.alarmClockList[i].acId) {
-                Toast.makeText(this, "錯誤，已有相同時間。", Toast.LENGTH_SHORT).show()
+                SharedService.showTextToast(this, "錯誤，已有相同時間。")
                 return
             }
 
         if (mAlarmClock.speaker == -1) {
-            Toast.makeText(this, "請選擇播報者", Toast.LENGTH_SHORT).show()
+            SharedService.showTextToast(this, "請選擇播報者")
             return
         }
 
@@ -319,7 +318,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         }
 
         if (!isRepeatChoose) {
-            Toast.makeText(this, "請選擇重複天數", Toast.LENGTH_SHORT).show()
+            SharedService.showTextToast(this, "請選擇重複天數")
             return
         }
 
