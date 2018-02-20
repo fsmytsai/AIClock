@@ -28,9 +28,10 @@ class ResetAlarmService : Service() {
             if (alarmClock.isOpen) {
                 if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground){
                     mIsStartedForeground = true
-                    val CHANNEL_ID = "reset"
+                    SharedService.writeDebugLog("ResetAlarmService resetAlarm in Android O")
+                    val CHANNEL_ID = "resetAlarm"
                     val channel = NotificationChannel(CHANNEL_ID,
-                            "Channel human readable title",
+                            "AI Clock NotificationChannel Name",
                             NotificationManager.IMPORTANCE_DEFAULT)
 
                     (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
@@ -41,12 +42,15 @@ class ResetAlarmService : Service() {
 
                     startForeground(1, notification)
                 }
+
                 mNeedResetCount++
+                SharedService.writeDebugLog("ResetAlarmService start download mNeedResetCount = $mNeedResetCount")
+
                 val speechDownloader = SpeechDownloader(this, null)
                 speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
                     override fun cancel() {
-                        SharedService.writeDebugLog("ResetAlarmService cancel download mNeedResetCount = $mNeedResetCount")
                         mNeedResetCount--
+                        SharedService.writeDebugLog("ResetAlarmService cancel download mNeedResetCount = $mNeedResetCount")
                         if (mNeedResetCount == 0)
                             stopSelf()
                     }
@@ -56,8 +60,8 @@ class ResetAlarmService : Service() {
                     }
 
                     override fun allFinished() {
-                        SharedService.writeDebugLog("ResetAlarmService finish download mNeedResetCount = $mNeedResetCount")
                         mNeedResetCount--
+                        SharedService.writeDebugLog("ResetAlarmService finish download mNeedResetCount = $mNeedResetCount")
                         if (mNeedResetCount == 0)
                             stopSelf()
                     }
