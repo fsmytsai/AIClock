@@ -107,7 +107,7 @@ class AlarmClockFragment : Fragment() {
                 if (isChecked && !isAutoOn) {
                     mMainActivity.bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
                         override fun start() {
-                            mMainActivity.startDownload(mAlarmClocks.alarmClockList[position], object : SpeechDownloader.DownloadFinishListener{
+                            mMainActivity.startDownload(mAlarmClocks.alarmClockList[position], object : SpeechDownloader.DownloadFinishListener {
                                 override fun cancel() {
                                     Handler().postDelayed({
                                         view.isChecked = false
@@ -160,6 +160,7 @@ class AlarmClockFragment : Fragment() {
             if (data!!.getBooleanExtra("IsDelete", false)) {
                 mAlarmClocks.alarmClockList.removeAt(mNowPosition)
                 rvAlarmClock.adapter.notifyItemRemoved(mNowPosition)
+                rvAlarmClock.adapter.notifyItemRangeChanged(mNowPosition, mAlarmClocks.alarmClockList.size - mNowPosition)
                 return
             }
 
@@ -172,13 +173,17 @@ class AlarmClockFragment : Fragment() {
                 mAlarmClocks.alarmClockList.removeAt(mNowPosition)
                 mAlarmClocks.alarmClockList.add(newPosition, alarmClock)
                 rvAlarmClock.adapter.notifyItemMoved(mNowPosition, newPosition)
-                rvAlarmClock.adapter.notifyItemChanged(newPosition)
+                if (newPosition < mNowPosition)
+                    rvAlarmClock.adapter.notifyItemRangeChanged(newPosition, mAlarmClocks.alarmClockList.size - newPosition)
+                else
+                    rvAlarmClock.adapter.notifyItemRangeChanged(mNowPosition, mAlarmClocks.alarmClockList.size - mNowPosition)
                 return
             }
 
             if (data.getBooleanExtra("IsNew", false)) {
                 mAlarmClocks.alarmClockList.add(newPosition, alarmClock)
                 rvAlarmClock.adapter.notifyItemInserted(newPosition)
+                rvAlarmClock.adapter.notifyItemRangeChanged(newPosition, mAlarmClocks.alarmClockList.size - newPosition)
             } else {
                 mAlarmClocks.alarmClockList[mNowPosition] = alarmClock
                 rvAlarmClock.adapter.notifyDataSetChanged()
