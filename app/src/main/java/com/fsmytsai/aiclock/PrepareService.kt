@@ -29,7 +29,7 @@ class PrepareService : Service() {
 
                     }
 
-                    override fun finish() {
+                    override fun allFinished() {
                         stopSelf()
                     }
                 })

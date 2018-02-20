@@ -58,12 +58,13 @@ open class DownloadSpeechActivity : AppCompatActivity() {
             outDownloadFinishListener?.startSetData()
         }
 
-        override fun finish() {
+        override fun allFinished() {
+            outDownloadFinishListener?.allFinished()
+
             //避免在 AddAlarmClockActivity 已完成後才按取消，且 destroy 頁面造成 service 自殺，再次 unbind 造成的 crash
-            if (!mIsAccidentCanceled) {
-                outDownloadFinishListener?.finish()
+            if (!mIsAccidentCanceled)
                 unbindService(mDownloadServiceConnection)
-            }
+
             mDownloadService = null
         }
     }

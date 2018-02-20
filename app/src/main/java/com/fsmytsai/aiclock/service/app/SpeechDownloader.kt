@@ -447,7 +447,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private fun realComplete() {
         mDownloadSpeechActivity?.dismissDownloadingDialog()
-        mDownloadFinishListener?.finish()
+        mDownloadFinishListener?.allFinished()
     }
 
     private val mAlarmCalendar = Calendar.getInstance()
@@ -484,6 +484,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     interface DownloadFinishListener {
         fun cancel()
         fun startSetData()
-        fun finish()
+        fun allFinished()
     }
 }

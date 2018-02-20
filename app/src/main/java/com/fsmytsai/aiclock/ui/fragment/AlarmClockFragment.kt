@@ -118,7 +118,7 @@ class AlarmClockFragment : Fragment() {
 
                                 }
 
-                                override fun finish() {
+                                override fun allFinished() {
 
                                 }
                             })
