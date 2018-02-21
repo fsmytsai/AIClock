@@ -5,7 +5,6 @@
 |------------|-----------------------------|
 | unfinished | 響鈴頁面 |
 | unfinished | 修改後端，避免超過1000次抓取新聞 |
-| unfinished | 時間用滾動選擇 |
 | finished   | 第幾則新聞提示 |
 | finished   | 使用網路提示 |
 | finished   | 判斷時間多判斷星期幾 |
@@ -21,6 +20,7 @@
 | finished   | 重開機重新設置 | 
 | finished   | 刪除舊音檔 |
 | finished   | 修復背景下載失敗造成整個鬧鐘失效 |
+| finished   | 時間用滾動選擇 |
 
 
 # Version Features
