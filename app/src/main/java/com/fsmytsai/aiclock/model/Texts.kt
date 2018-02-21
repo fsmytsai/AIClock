@@ -11,11 +11,13 @@ data class Texts(
 )
 
 data class Text(
-        val text_id: Int,
-        val speaker: String,
-        val category: String,
-        val title: String,
-        val description: String,
-        val part_count: Int,
-        val created_at: String
+        val text_id: Int = 0,
+        val speaker: String = "",
+        val category: String = "",
+        val title: String = "",
+        val description: String = "",
+        val part_count: Int = 0,
+        val url: String = "",
+        val preview_image: String = "",
+        val created_at: String = ""
 )

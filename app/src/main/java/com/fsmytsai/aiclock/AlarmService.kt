@@ -14,13 +14,13 @@ import android.os.IBinder
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
-import com.fsmytsai.aiclock.ui.activity.MainActivity
+import com.fsmytsai.aiclock.ui.activity.AlarmActivity
 import com.google.gson.Gson
 import java.io.File
 
 class AlarmService : Service() {
     private val mBinder = LocalBinder()
-    private var mMainActivity: MainActivity? = null
+    private var mAlarmActivity: AlarmActivity? = null
     private var mMPBGM = MediaPlayer()
     private var mMPNews = MediaPlayer()
     private var mIsByePlaying = false
@@ -31,7 +31,6 @@ class AlarmService : Service() {
 
     override fun onBind(intent: Intent): IBinder? {
         //測試到目前為止發現，僅第一次綁定會呼叫(從startService後)
-
         mTexts = Gson().fromJson(intent.getStringExtra("TextsJsonStr"), Texts::class.java)
 
         //檢查檔案是否存在
@@ -111,8 +110,8 @@ class AlarmService : Service() {
             get() = this@AlarmService
     }
 
-    fun setMainActivity(activity: MainActivity?) {
-        mMainActivity = activity
+    fun setAlarmActivity(activity: AlarmActivity?) {
+        mAlarmActivity = activity
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
