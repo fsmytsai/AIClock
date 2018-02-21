@@ -84,7 +84,7 @@ class AlarmClockFragment : Fragment() {
         override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
             if (getItemViewType(position) == TYPE_FOOTER) {
                 if (mAlarmClocks.alarmClockList.size == 0)
-                    holder!!.tvFooter.text = "快點新增智能鬧鐘吧!"
+                    holder!!.tvFooter.text = "點右下角新增智能鬧鐘!"
                 else
                     holder!!.tvFooter.text = "沒有更多鬧鐘囉!"
                 return
