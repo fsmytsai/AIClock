@@ -125,8 +125,10 @@ class AlarmClockFragment : Fragment() {
                         }
                     })
 
-                } else
+                } else {
                     SharedService.cancelAlarm(mMainActivity, mAlarmClocks.alarmClockList[position].acId)
+                    SharedService.deleteOldTextsData(mMainActivity, mAlarmClocks.alarmClockList[position].acId, null, false)
+                }
 
                 if (isAutoOn)
                     isAutoOn = false
