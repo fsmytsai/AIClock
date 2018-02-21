@@ -20,6 +20,7 @@
 | finished   | 簡化使用網路提示 |
 | finished   | 重開機重新設置 | 
 | finished   | 刪除舊音檔 |
+| finished   | 修復背景下載失敗造成整個鬧鐘失效 |
 
 
 # Version Features
