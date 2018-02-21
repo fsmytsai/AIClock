@@ -40,8 +40,6 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         setContentView(R.layout.activity_add_alarm_clock)
         getAlarmClock()
         initViews()
-        if (intent.getBooleanExtra("IsOpen", false))
-            save(View(this))
     }
 
     override fun onStop() {
