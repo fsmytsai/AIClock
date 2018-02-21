@@ -47,6 +47,7 @@ open class DownloadSpeechActivity : AppCompatActivity() {
                 mIsAccidentCanceled = true
                 SharedService.showTextToast(this@DownloadSpeechActivity, "已完成設置，無法取消")
             } else {
+                dismissDownloadingDialog()
                 unbindService(mDownloadServiceConnection)
                 mDownloadService = null
                 outDownloadFinishListener?.cancel()
