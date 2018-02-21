@@ -3,7 +3,7 @@
 # To Do
 | State      | Description                 |
 |------------|-----------------------------|
-| unfinished | 響鈴頁面 |
+| unfinished | 修改後端，加上圖片 |
 | unfinished | 修改後端，避免超過1000次抓取新聞 |
 | finished   | 第幾則新聞提示 |
 | finished   | 使用網路提示 |
@@ -21,6 +21,8 @@
 | finished   | 刪除舊音檔 |
 | finished   | 修復背景下載失敗造成整個鬧鐘失效 |
 | finished   | 時間用滾動選擇 |
+| finished   | 提示詳細溫度 |
+| finished   | 響鈴頁面 |
 
 
 # Version Features
