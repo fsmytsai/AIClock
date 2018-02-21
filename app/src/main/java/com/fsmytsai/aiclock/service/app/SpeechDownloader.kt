@@ -11,6 +11,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
+import android.support.annotation.RequiresApi
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
 import com.fsmytsai.aiclock.AlarmReceiver
@@ -39,13 +40,13 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private var mContext = context
     private var mDownloadSpeechActivity = activity
     private lateinit var mAlarmClock: AlarmClock
-    private val mAlarmCalendar = Calendar.getInstance()
+    private val mAlarmTimeCalendar = Calendar.getInstance()
     private var mNeedDownloadCount = 0f
     private var mErrorDownloadCount = 0
     private var mDownloadedCount = 0f
-    var publicTexts = Texts(0, ArrayList())
+    var publicTexts = Texts()
     private var mPromptData: PromptData? = null
-    private val mPromptDataList = ArrayList<Long>()
+    private val mAlarmTimeList = ArrayList<Long>()
     private var mIsFinishGetData = false
     private var mIsStartedDownloadSound = false
     private var mIsStoppedDownloadSound = false
@@ -72,32 +73,43 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     fun setAlarmClock(alarmClock: AlarmClock) {
         mAlarmClock = alarmClock
-
         cleanAllOldSound()
 
-        val spDatas = mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE)
-        if (mDownloadSpeechActivity != null && !spDatas.getBoolean("NeverPrompt", false)) {
-            val dialogView = mDownloadSpeechActivity!!.layoutInflater.inflate(R.layout.block_prompt_dialog, null)
-            AlertDialog.Builder(mDownloadSpeechActivity!!)
-                    .setCancelable(false)
-                    .setView(dialogView)
-                    .setPositiveButton("開始設置鬧鐘", { _, _ ->
-                        if (dialogView.cb_never_prompt.isChecked) {
-                            spDatas.edit().putBoolean("NeverPrompt", true).apply()
-                        }
+        //初始化 FileDownloader
+        FileDownloader.setup(mContext)
 
-                        //沒網路或離響鈴時間小於30秒取消下載
-                        if (!SharedService.checkNetWork(mContext) || !getPrompt())
-                            mDownloadFinishListener?.cancel()
-                    })
-                    .setNegativeButton("取消", { _, _ ->
-                        mDownloadFinishListener?.cancel()
-                    })
-                    .show()
+        if (mDownloadSpeechActivity != null) {
+            //前景
+            val spDatas = mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            if (!spDatas.getBoolean("NeverPrompt", false)) {
+                val dialogView = mDownloadSpeechActivity!!.layoutInflater.inflate(R.layout.block_prompt_dialog, null)
+                AlertDialog.Builder(mDownloadSpeechActivity!!)
+                        .setCancelable(false)
+                        .setView(dialogView)
+                        .setPositiveButton("開始設置鬧鐘", { _, _ ->
+                            if (dialogView.cb_never_prompt.isChecked) {
+                                spDatas.edit().putBoolean("NeverPrompt", true).apply()
+                            }
+
+                            //沒網路或離響鈴時間小於30秒取消下載
+                            if (!SharedService.checkNetWork(mContext) || !getAlarmTime())
+                                foregroundCancelDownloadSound()
+                        })
+                        .setNegativeButton("取消", { _, _ ->
+                            foregroundCancelDownloadSound()
+                        })
+                        .show()
+            } else {
+                //沒網路或離響鈴時間小於30秒取消下載(先抓取時間供重設使用)
+                if (!getAlarmTime() || !SharedService.checkNetWork(mContext))
+                    foregroundCancelDownloadSound()
+            }
+
         } else {
-            //沒網路或離響鈴時間小於30秒取消下載
-            if (!SharedService.checkNetWork(mContext) || !getPrompt())
-                mDownloadFinishListener?.cancel()
+            //背景
+            //沒網路或離響鈴時間小於30秒取消下載(先抓取時間供重設使用)
+            if (!getAlarmTime() || !SharedService.checkNetWork(mContext))
+                backgroundCancelDownloadSound()
         }
     }
 
@@ -106,10 +118,14 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //先抓到所有還需要的檔名
         val allNeedFileName = ArrayList<String>()
         val textsList = SharedService.getTextsList(mContext)
+
+        if(textsList == null)
+            return
+
         for (texts in textsList.textsList) {
             for (text in texts.textList)
                 for (i in 0 until text.part_count)
-                    allNeedFileName.add("${text.text_id}")
+                    allNeedFileName.add("${text.text_id}-$i.wav")
         }
 
         //遍歷所有檔案，檔名不在 allNeedFileName 裡的直接刪除
@@ -124,7 +140,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         }
     }
 
-    private fun getPrompt(): Boolean {
+    private fun getAlarmTime(): Boolean {
         val nowCalendar = Calendar.getInstance()
         var addDate = 0
 
@@ -152,12 +168,12 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                 addDate++
         }
 
-        mAlarmCalendar.add(Calendar.DATE, addDate)
-        mAlarmCalendar.set(Calendar.HOUR_OF_DAY, mAlarmClock.hour)
-        mAlarmCalendar.set(Calendar.MINUTE, mAlarmClock.minute)
-        mAlarmCalendar.set(Calendar.SECOND, 0)
+        mAlarmTimeCalendar.add(Calendar.DATE, addDate)
+        mAlarmTimeCalendar.set(Calendar.HOUR_OF_DAY, mAlarmClock.hour)
+        mAlarmTimeCalendar.set(Calendar.MINUTE, mAlarmClock.minute)
+        mAlarmTimeCalendar.set(Calendar.SECOND, 0)
 
-        var differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
+        var differenceSecond = (mAlarmTimeCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
 
         if (differenceSecond < 30) {
             if (mDownloadSpeechActivity != null)
@@ -171,26 +187,26 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         }
 
         if (differenceSecond > 60 * 60 * 24) {
-            mPromptDataList.add(differenceSecond / (60 * 60 * 24))
+            mAlarmTimeList.add(differenceSecond / (60 * 60 * 24))
             differenceSecond %= (60 * 60 * 24)
         } else
-            mPromptDataList.add(0)
+            mAlarmTimeList.add(0)
 
         if (differenceSecond > 60 * 60) {
-            mPromptDataList.add(differenceSecond / (60 * 60))
+            mAlarmTimeList.add(differenceSecond / (60 * 60))
             differenceSecond %= (60 * 60)
         } else
-            mPromptDataList.add(0)
+            mAlarmTimeList.add(0)
 
         if (differenceSecond > 60)
-            mPromptDataList.add(differenceSecond / 60)
+            mAlarmTimeList.add(differenceSecond / 60)
         else
-            mPromptDataList.add(0)
+            mAlarmTimeList.add(0)
 
-        if (differenceSecond > 0 && mPromptDataList[0] == 0L && mPromptDataList[1] == 0L && mPromptDataList[2] == 0L)
-            mPromptDataList.add(differenceSecond)
+        if (differenceSecond > 0 && mAlarmTimeList[0] == 0L && mAlarmTimeList[1] == 0L && mAlarmTimeList[2] == 0L)
+            mAlarmTimeList.add(differenceSecond)
         else
-            mPromptDataList.add(0)
+            mAlarmTimeList.add(0)
 
         if (mDownloadSpeechActivity != null) getPromptData() else getTextData()
 
@@ -201,16 +217,15 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         mDownloadSpeechActivity?.showDownloadingDialog()
 
         val request = Request.Builder()
-                .url("${mDownloadSpeechActivity?.getString(R.string.server_url)}api/getPromptData?day=${mPromptDataList[0]}&hour=${mPromptDataList[1]}&" +
-                        "minute=${mPromptDataList[2]}&second=${mPromptDataList[3]}&speaker=${mAlarmClock.speaker}")
+                .url("${mDownloadSpeechActivity?.getString(R.string.server_url)}api/getPromptData?day=${mAlarmTimeList[0]}&hour=${mAlarmTimeList[1]}&" +
+                        "minute=${mAlarmTimeList[2]}&second=${mAlarmTimeList[3]}&speaker=${mAlarmClock.speaker}")
                 .build()
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call?, e: IOException?) {
                 mDownloadSpeechActivity?.runOnUiThread {
                     SharedService.showTextToast(mDownloadSpeechActivity!!, "請檢查網路連線")
-                    mDownloadFinishListener?.cancel()
-                    mDownloadSpeechActivity?.dismissDownloadingDialog()
+                    foregroundCancelDownloadSound()
                 }
             }
 
@@ -225,8 +240,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                         getTextData()
                     } else {
                         SharedService.handleError(mDownloadSpeechActivity!!, statusCode!!, resMessage!!)
-                        mDownloadFinishListener?.cancel()
-                        mDownloadSpeechActivity?.dismissDownloadingDialog()
+                        foregroundCancelDownloadSound()
                     }
                 }
 
@@ -246,13 +260,13 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             SharedService.writeDebugLog("SpeechDownloader no location permission")
         }
 
-        val url = if (mPromptDataList[0] > 0 || mPromptDataList[1] > 0 || mPromptDataList[2] > 15)
-            "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
-                    "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=-1&latitude=1000&longitude=0"
-        else
-            "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
-                    "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&" +
-                    "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}"
+//        val url = if (mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 15)
+//            "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
+//                    "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=-1&latitude=1000&longitude=0"
+//        else
+        val url = "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
+                "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&" +
+                "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}"
 
         val request = Request.Builder()
                 .url(url)
@@ -262,8 +276,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             override fun onFailure(call: Call?, e: IOException?) {
                 mDownloadSpeechActivity?.runOnUiThread {
                     SharedService.showTextToast(mDownloadSpeechActivity!!, "請檢查網路連線")
-                    mDownloadFinishListener?.cancel()
-                    mDownloadSpeechActivity?.dismissDownloadingDialog()
+                    foregroundCancelDownloadSound()
                 }
             }
 
@@ -280,12 +293,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                                 downloadSound()
                             } else {
                                 SharedService.showTextToast(mDownloadSpeechActivity!!, "無預期錯誤，請重試")
-                                mDownloadSpeechActivity?.dismissDownloadingDialog()
+                                foregroundCancelDownloadSound()
                             }
                         } else {
                             SharedService.handleError(mDownloadSpeechActivity!!, statusCode!!, resMessage!!)
-                            mDownloadFinishListener?.cancel()
-                            mDownloadSpeechActivity?.dismissDownloadingDialog()
+                            foregroundCancelDownloadSound()
                         }
                     }
                 else if (statusCode == 200) {
@@ -294,6 +306,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                         publicTexts.acId = mAlarmClock.acId
                         downloadSound()
                     }
+                } else {
+                    //背景失敗
+                    backgroundCancelDownloadSound()
                 }
 
             }
@@ -301,8 +316,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun downloadSound() {
-        FileDownloader.setup(mContext)
-
         if (mDownloadSpeechActivity != null) {
             FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${mPromptData!!.data.text_id}-0.wav")
                     .setPath("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0.wav")
@@ -394,12 +407,16 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             mErrorDownloadCount++
             //超過 1/4 失敗則取消
             if (mErrorDownloadCount > mNeedDownloadCount / 4) {
-                if (mDownloadSpeechActivity != null)
-                    SharedService.showTextToast(mDownloadSpeechActivity!!, "下載失敗")
 
                 //避免多個檔案失敗造成重複呼叫取消
-                if (!mIsCanceledDownloadSound)
-                    cancelDownloadSound()
+                if (!mIsCanceledDownloadSound) {
+                    mIsCanceledDownloadSound = true
+                    if (mDownloadSpeechActivity != null) {
+                        SharedService.showTextToast(mDownloadSpeechActivity!!, "下載失敗，網路不穩")
+                        foregroundCancelDownloadSound()
+                    } else
+                        backgroundCancelDownloadSound()
+                }
             } else
                 completeOrErrorDownload()
         }
@@ -407,15 +424,58 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         override fun warn(task: BaseDownloadTask) {}
     }
 
-    fun cancelDownloadSound() {
-        mIsCanceledDownloadSound = true
+    fun foregroundCancelDownloadSound() {
         FileDownloader.getImpl().pause(mQueueTarget)
-        //多檔下載失敗則直接關閉 dialog
-        mDownloadSpeechActivity?.dismissDownloadingDialog()
         mDownloadFinishListener?.cancel()
     }
 
-    fun completeOrErrorDownload() {
+    @TargetApi(Build.VERSION_CODES.M)
+    private fun backgroundCancelDownloadSound() {
+        FileDownloader.getImpl().pause(mQueueTarget)
+        //離響鈴小於 30 秒(重開機時造成)， 10 分鐘後重試
+        if (mAlarmTimeList.size == 0) {
+            SharedService.writeDebugLog("SpeechDownloader 背景取消下載，離響鈴小於 30 秒， 10 分鐘後重試")
+            retryDownloadSound(10)
+        } else {
+            //距離響鈴時間的分鐘數
+            val alarmMinute = mAlarmTimeList[0] * 24 * 60 + mAlarmTimeList[1] * 60 + mAlarmTimeList[2]
+            //離響鈴還超過 15 分鐘(重開機或響鈴的瞬間可能會取得超大分鐘數)， X 分鐘後重試(距離響鈴時間的 1/3 ，小於 10 分鐘的話則使用 10 分鐘)
+            if (alarmMinute > 15) {
+                val retryMinute = if (alarmMinute / 3 > 10) alarmMinute / 3 else 10
+                SharedService.writeDebugLog("SpeechDownloader 背景取消下載，離響鈴超過 15 分鐘 $retryMinute 分鐘後重試")
+                retryDownloadSound(retryMinute.toInt())
+            } else {
+                //剩下不到 15 分鐘響鈴，直接播放舊資料及音檔
+                SharedService.writeDebugLog("SpeechDownloader 背景取消下載，離響鈴不到 15 分鐘，直接播放舊資料及音檔")
+                setAlarm(true)
+            }
+        }
+
+        mDownloadFinishListener?.cancel()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun retryDownloadSound(retryMinute: Int) {
+        val alarmIntent = Intent(mContext, PrepareReceiver::class.java)
+        alarmIntent.putExtra("ACId", mAlarmClock.acId)
+
+        //設置前先嘗試取消，避免重複設置
+        SharedService.cancelAlarm(mContext, mAlarmClock.acId)
+
+        val pi = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+        val am = mContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val tenMinuteLaterCalendar = Calendar.getInstance()
+        tenMinuteLaterCalendar.add(Calendar.MINUTE, retryMinute)
+
+        when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, tenMinuteLaterCalendar.timeInMillis, pi)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, tenMinuteLaterCalendar.timeInMillis, pi)
+            else -> am.set(AlarmManager.RTC_WAKEUP, tenMinuteLaterCalendar.timeInMillis, pi)
+        }
+    }
+
+    private fun completeOrErrorDownload() {
         mDownloadedCount++
         mDownloadSpeechActivity?.setDownloadProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt())
 
@@ -432,37 +492,41 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                 })
                 startPlaying(uri!!, true)
             } else
-                realComplete()
+                allFinished()
         }
     }
 
     private fun setData() {
         mDownloadFinishListener?.startSetData()
-        setAlarm()
+        //先設置響鈴，看 publicTexts 是不是舊資料
+        setAlarm(false)
         SharedService.deleteOldTextsData(mContext, mAlarmClock.acId, publicTexts, true)
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private fun setAlarm() {
+    private fun setAlarm(isAbandon: Boolean) {
+        //超過 40 分鐘才響鈴則設置一個提前 40 分鐘的任務重新抓取新聞天氣
+        val alarmIntent = if (mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 40) {
+            SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，${mAlarmTimeList[0]}天${mAlarmTimeList[1]}小時${mAlarmTimeList[2]}分鐘後響鈴")
+            mAlarmTimeCalendar.add(Calendar.MINUTE, -40)
+            Intent(mContext, PrepareReceiver::class.java)
+        } else {
+            if (!isAbandon)
+                publicTexts.isOldData = false
+            SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，40分鐘內響鈴，${mAlarmTimeList[2]}分鐘${mAlarmTimeList[3]}秒後響鈴")
+            Intent(mContext, AlarmReceiver::class.java)
+        }
+        alarmIntent.putExtra("ACId", mAlarmClock.acId)
+
         //設置前先嘗試取消，避免重複設置
         SharedService.cancelAlarm(mContext, mAlarmClock.acId)
 
-        //超過15分鐘才響鈴則設置一個提前15分鐘的任務重新抓取新聞天氣
-        val intent = if (mPromptDataList[0] > 0 || mPromptDataList[1] > 0 || mPromptDataList[2] > 15) {
-            SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，${mPromptDataList[0]}天${mPromptDataList[1]}小時${mPromptDataList[2]}分鐘後響鈴")
-            mAlarmCalendar.add(Calendar.MINUTE, -15)
-            Intent(mContext, PrepareReceiver::class.java)
-        } else {
-            SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，15分鐘內響鈴，${mPromptDataList[2]}分鐘${mPromptDataList[3]}秒後響鈴")
-            Intent(mContext, AlarmReceiver::class.java)
-        }
-        intent.putExtra("ACId", mAlarmClock.acId)
-        val pi = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, intent, PendingIntent.FLAG_ONE_SHOT)
+        val pi = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_CANCEL_CURRENT)
         val am = mContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
-            else -> am.set(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, mAlarmTimeCalendar.timeInMillis, pi)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, mAlarmTimeCalendar.timeInMillis, pi)
+            else -> am.set(AlarmManager.RTC_WAKEUP, mAlarmTimeCalendar.timeInMillis, pi)
         }
     }
 
@@ -485,7 +549,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                 val promptUri = Uri.fromFile(file)
                 startPlaying(promptUri, false)
             } else {
-                realComplete()
+                allFinished()
             }
         }
         mpFinish.setVolume(1f, 1f)
@@ -493,8 +557,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         mpFinish.start()
     }
 
-    private fun realComplete() {
-        mDownloadSpeechActivity?.dismissDownloadingDialog()
+    private fun allFinished() {
         mDownloadFinishListener?.allFinished()
     }
 

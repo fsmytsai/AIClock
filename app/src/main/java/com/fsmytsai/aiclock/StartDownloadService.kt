@@ -43,7 +43,7 @@ class StartDownloadService : Service() {
     }
 
     fun cancelDownloadSound() {
-        mSpeechDownloader?.cancelDownloadSound()
+        mSpeechDownloader?.foregroundCancelDownloadSound()
     }
 
     override fun onDestroy() {

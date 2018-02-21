@@ -49,6 +49,19 @@ class AlarmService : Service() {
             }
         }
 
+        //判斷是否為舊資料
+        if (mTexts.isOldData) {
+            //第一個播放的如果是 time 則把提示加入 time 之後
+            if (mTexts.textList[0].description == "time" && "${mTexts.textList[0].text_id}-0" == mSoundList[0]) {
+                SharedService.writeDebugLog("AlarmService insert olddata after time")
+                mSoundList.add(1, "olddata")
+            } else {
+                //否則第一個播放提示
+                SharedService.writeDebugLog("AlarmService insert olddata to first")
+                mSoundList.add(0, "olddata")
+            }
+        }
+
         startBGM()
 
         return mBinder
@@ -122,7 +135,7 @@ class AlarmService : Service() {
 
             if (mSoundList.size > 0) {
                 mMPNews = MediaPlayer()
-                if (mSoundList[0].startsWith("news")) {
+                if (mSoundList[0].startsWith("news") || mSoundList[0] == "olddata") {
                     var spk = "f1"
                     if (mTexts.textList[0].speaker == "HanHanRUS")
                         spk = "f2"
