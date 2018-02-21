@@ -119,7 +119,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         val allNeedFileName = ArrayList<String>()
         val textsList = SharedService.getTextsList(mContext)
 
-        if(textsList == null)
+        if (textsList == null)
             return
 
         for (texts in textsList.textsList) {
@@ -505,8 +505,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     @TargetApi(Build.VERSION_CODES.M)
     private fun setAlarm(isAbandon: Boolean) {
-        //超過 40 分鐘才響鈴則設置一個提前 40 分鐘的任務重新抓取新聞天氣
-        val alarmIntent = if (mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 40) {
+        //超過 40 分鐘才響鈴且需要更新資料及音檔(天氣或新聞)，則設置一個提前 40 分鐘的任務重新抓取新聞天氣
+        val alarmIntent = if ((mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 40) &&
+                (mAlarmClock.latitude != 1000.0 || mAlarmClock.category != -1)) {
             SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，${mAlarmTimeList[0]}天${mAlarmTimeList[1]}小時${mAlarmTimeList[2]}分鐘後響鈴")
             mAlarmTimeCalendar.add(Calendar.MINUTE, -40)
             Intent(mContext, PrepareReceiver::class.java)
