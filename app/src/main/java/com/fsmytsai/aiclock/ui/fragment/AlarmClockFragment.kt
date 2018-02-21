@@ -48,8 +48,7 @@ class AlarmClockFragment : Fragment() {
     private fun initViews(view: View) {
         rvAlarmClock = view.rv_alarm_clock
         rvAlarmClock.layoutManager = LinearLayoutManager(mMainActivity, LinearLayoutManager.VERTICAL, false)
-        val alarmClockAdapter = AlarmClockAdapter()
-        rvAlarmClock.adapter = alarmClockAdapter
+        rvAlarmClock.adapter = AlarmClockAdapter()
         view.iv_add_alarm_clock.setOnClickListener {
             val intent = Intent(mMainActivity, AddAlarmClockActivity::class.java)
             var biggestACId = 0
