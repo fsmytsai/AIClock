@@ -2,8 +2,8 @@ package com.fsmytsai.aiclock.ui.activity
 
 import android.annotation.TargetApi
 import android.app.Activity
-import android.app.TimePickerDialog
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -24,6 +24,7 @@ import com.fsmytsai.aiclock.ui.view.MyRadioGroup
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
 import java.util.*
+import com.bigkoo.pickerview.TimePickerView
 
 
 class AddAlarmClockActivity : DownloadSpeechActivity() {
@@ -31,7 +32,6 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
     private var mIsNew = true
     private var mIsSpeakerPlaying = false
     private var mMPSpeaker = MediaPlayer()
-    private lateinit var mTimePickerDialog: TimePickerDialog
 
     private val REQUEST_LOCATION = 888
 
@@ -79,11 +79,8 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         supportActionBar?.setHomeButtonEnabled(true)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        et_Time.setText("${String.format("%02d", mAlarmClock.hour)}:${String.format("%02d", mAlarmClock.minute)}")
-        setTimeField()
-        et_Time.setOnClickListener {
-            mTimePickerDialog.show()
-        }
+        pvTime.setKeyBackCancelable(false)
+        pvTime.show(ll_time)
 
         when (mAlarmClock.speaker) {
             0 -> rb_f1.isChecked = true
@@ -196,6 +193,38 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         }
     }
 
+    private val pvTime by lazy {
+        val mAlarmTimeCalendar = Calendar.getInstance()
+        mAlarmTimeCalendar.set(Calendar.HOUR_OF_DAY, mAlarmClock.hour)
+        mAlarmTimeCalendar.set(Calendar.MINUTE, mAlarmClock.minute)
+        TimePickerView.Builder(this, object : TimePickerView.OnTimeSelectListener {
+
+            override fun onTimeSelect(date: Date, v: View) {
+                val calendar = Calendar.getInstance()
+                calendar.time = date
+                mAlarmClock.hour = calendar.get(Calendar.HOUR_OF_DAY)
+                mAlarmClock.minute = calendar.get(Calendar.MINUTE)
+            }
+        }).setType(booleanArrayOf(false, false, false, true, true, false))
+                .setLayoutRes(R.layout.block_time_picker, { v ->
+
+                })
+                .setContentSize(24)
+                .setLineSpacingMultiplier(1.5f)
+                .setOutSideCancelable(false)
+                .isCyclic(true)
+                .setDividerColor(ContextCompat.getColor(this, R.color.colorPaleBlue))
+                .setTextColorCenter(ContextCompat.getColor(this, R.color.colorBlue))
+                .setTextColorOut(Color.BLACK)
+                .setBgColor(ContextCompat.getColor(this, R.color.colorPaleYellow))
+                .setDate(mAlarmTimeCalendar)
+                .setLabel(null, null, null, "點", "分", null)
+                .isCenterLabel(true)
+                .setDecorView(ll_time)
+                .isDialog(false)
+                .build()
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_LOCATION && grantResults.size == 2 &&
@@ -235,14 +264,6 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         mIsSpeakerPlaying = true
     }
 
-    private fun setTimeField() {
-        mTimePickerDialog = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { p0, p1, p2 ->
-            et_Time.setText("${String.format("%02d", p1)}:${String.format("%02d", p2)}")
-            mAlarmClock.hour = p1
-            mAlarmClock.minute = p2
-        }, mAlarmClock.hour, mAlarmClock.minute, true)
-    }
-
     fun clickRepeat(view: View) {
         val index = when (view) {
             tv_sun -> 0
@@ -277,6 +298,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
     }
 
     fun save(view: View) {
+        pvTime.returnData()
         //檢查時間是否重複
         val alarmClocks = SharedService.getAlarmClocks(this)
         for (i in 0 until alarmClocks.alarmClockList.size)
@@ -344,14 +366,14 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
                     //非第一個alarmClock，新小時小於上一個alarmClock小時 或 新小時等於上一個alarmClock小時且新分鐘小於上一個alarmClock分鐘
                     if (i > 0 && (mAlarmClock.hour < alarmClocks.alarmClockList[i - 1].hour ||
-                                    (mAlarmClock.hour == alarmClocks.alarmClockList[i - 1].hour &&
-                                            mAlarmClock.minute < alarmClocks.alarmClockList[i - 1].minute)))
+                            (mAlarmClock.hour == alarmClocks.alarmClockList[i - 1].hour &&
+                                    mAlarmClock.minute < alarmClocks.alarmClockList[i - 1].minute)))
                         isChangePosition = true
 
                     //非最後一個alarmClock，新小時大於下一個alarmClock小時 或 新小時等於下一個alarmClock小時且新分鐘大於下一個alarmClock分鐘
                     if (i < alarmClocks.alarmClockList.size - 1 && (mAlarmClock.hour > alarmClocks.alarmClockList[i + 1].hour ||
-                                    (mAlarmClock.hour == alarmClocks.alarmClockList[i + 1].hour &&
-                                            mAlarmClock.minute > alarmClocks.alarmClockList[i + 1].minute)))
+                            (mAlarmClock.hour == alarmClocks.alarmClockList[i + 1].hour &&
+                                    mAlarmClock.minute > alarmClocks.alarmClockList[i + 1].minute)))
                         isChangePosition = true
 
                     if (isChangePosition) {
