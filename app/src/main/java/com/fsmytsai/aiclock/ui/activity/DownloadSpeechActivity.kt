@@ -19,7 +19,7 @@ open class DownloadSpeechActivity : AppCompatActivity() {
     private var mDownloadService: StartDownloadService? = null
     private lateinit var pbDownloading: ProgressBar
     private lateinit var tvDownloading: TextView
-    private lateinit var mDownloadingDialog: AlertDialog
+    private var mDownloadingDialog: AlertDialog? = null
     private lateinit var mCanStartDownloadCallback: CanStartDownloadCallback
     private var mIsStartedSetData = false
     private var mIsAccidentCanceled = false
@@ -122,7 +122,7 @@ open class DownloadSpeechActivity : AppCompatActivity() {
     }
 
     private fun dismissDownloadingDialog() {
-        mDownloadingDialog.dismiss()
+        mDownloadingDialog?.dismiss()
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
