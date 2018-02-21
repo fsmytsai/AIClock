@@ -117,14 +117,13 @@ class SharedService {
             return true
         }
 
-        private lateinit var mLocationManager: LocationManager
         @SuppressLint("MissingPermission")
         fun setLocation(context: Context, alarmClock: AlarmClock): Boolean {
-            mLocationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            val providers = mLocationManager.getProviders(true)
+            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val providers = locationManager.getProviders(true)
             var bestLocation: Location? = null
             for (provider in providers) {
-                val l = mLocationManager.getLastKnownLocation(provider) ?: continue
+                val l = locationManager.getLastKnownLocation(provider) ?: continue
                 if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
                     bestLocation = l
                 }

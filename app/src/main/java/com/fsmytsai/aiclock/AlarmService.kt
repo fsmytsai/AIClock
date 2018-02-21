@@ -161,7 +161,6 @@ class AlarmService : Service() {
                 SharedService.isNewsPlaying = false
             }
         }
-        mMPNews.setVolume(1f, 1f)
         mMPNews.prepare()
         mMPNews.start()
         SharedService.isNewsPlaying = true

@@ -552,7 +552,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                 allFinished()
             }
         }
-        mpFinish.setVolume(1f, 1f)
         mpFinish.prepare()
         mpFinish.start()
     }
