@@ -101,13 +101,13 @@ class AlarmClockFragment : Fragment() {
             holder.tvRepeat.setTextColor(Color.BLUE)
             holder.sbSwitch.isChecked = ac.isOpen
             holder.sbSwitch.setOnCheckedChangeListener { view, isChecked ->
-                mAlarmClocks.alarmClockList[position].isOpen = isChecked
+                ac.isOpen = isChecked
                 SharedService.updateAlarmClocks(mMainActivity, mAlarmClocks)
 
                 if (isChecked && !isAutoOn) {
                     mMainActivity.bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
                         override fun start() {
-                            mMainActivity.startDownload(mAlarmClocks.alarmClockList[position], object : SpeechDownloader.DownloadFinishListener {
+                            mMainActivity.startDownload(ac, object : SpeechDownloader.DownloadFinishListener {
                                 override fun cancel() {
                                     Handler().postDelayed({
                                         view.isChecked = false
@@ -126,8 +126,8 @@ class AlarmClockFragment : Fragment() {
                     })
 
                 } else {
-                    SharedService.cancelAlarm(mMainActivity, mAlarmClocks.alarmClockList[position].acId)
-                    SharedService.deleteOldTextsData(mMainActivity, mAlarmClocks.alarmClockList[position].acId, null, false)
+                    SharedService.cancelAlarm(mMainActivity, ac.acId)
+                    SharedService.deleteOldTextsData(mMainActivity, ac.acId, null, false)
                 }
 
                 if (isAutoOn)
@@ -136,7 +136,7 @@ class AlarmClockFragment : Fragment() {
 
             holder.rlAlarmClockBlock.setOnClickListener {
                 val intent = Intent(mMainActivity, AddAlarmClockActivity::class.java)
-                intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClocks.alarmClockList[position]))
+                intent.putExtra("AlarmClockJsonStr", Gson().toJson(ac))
                 mNowPosition = position
                 startActivityForResult(intent, ADD_ALARM_CLOCK)
             }
@@ -150,7 +150,9 @@ class AlarmClockFragment : Fragment() {
                             mAlarmClocks.alarmClockList.removeAt(position)
                             rvAlarmClock.adapter.notifyItemRemoved(position)
                             rvAlarmClock.adapter.notifyItemRangeChanged(position, mAlarmClocks.alarmClockList.size - position)
-                            SharedService.updateAlarmClocks(mMainActivity, mAlarmClocks)
+                            SharedService.cancelAlarm(mMainActivity, ac.acId)
+                            SharedService.deleteAlarmClock(mMainActivity, ac.acId)
+                            SharedService.deleteOldTextsData(mMainActivity, ac.acId, null, false)
                         })
                         .show()
 
