@@ -3,6 +3,7 @@ package com.fsmytsai.aiclock.ui.activity
 import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
@@ -43,7 +44,7 @@ class WebViewActivity : AppCompatActivity() {
         mAgentWeb = AgentWeb.with(this)
                 .setAgentWebParent(ll_container, LinearLayout.LayoutParams(-1, -1))
                 .useDefaultIndicator()
-                .defaultProgressBarColor()
+                .setIndicatorColor(ContextCompat.getColor(this, R.color.colorBlue))
                 .setReceivedTitleCallback(object : ChromeClientCallbackManager.ReceivedTitleCallback {
                     override fun onReceivedTitle(view: WebView, title: String) {
                         tv_toolBar.text = title
