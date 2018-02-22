@@ -2,6 +2,7 @@ package com.fsmytsai.aiclock.ui.fragment
 
 
 import android.app.Activity.RESULT_OK
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -138,6 +139,22 @@ class AlarmClockFragment : Fragment() {
                 intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClocks.alarmClockList[position]))
                 mNowPosition = position
                 startActivityForResult(intent, ADD_ALARM_CLOCK)
+            }
+
+            holder.rlAlarmClockBlock.setOnLongClickListener {
+                AlertDialog.Builder(mMainActivity)
+                        .setTitle("刪除鬧鐘")
+                        .setMessage("您確定要刪除 ${String.format("%02d", ac.hour)}:${String.format("%02d", ac.minute)} 的鬧鐘嗎?")
+                        .setNegativeButton("取消", null)
+                        .setPositiveButton("刪除", { text, listener ->
+                            mAlarmClocks.alarmClockList.removeAt(position)
+                            rvAlarmClock.adapter.notifyItemRemoved(position)
+                            rvAlarmClock.adapter.notifyItemRangeChanged(position, mAlarmClocks.alarmClockList.size - position)
+                            SharedService.updateAlarmClocks(mMainActivity, mAlarmClocks)
+                        })
+                        .show()
+
+                true
             }
         }
 
