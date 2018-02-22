@@ -27,7 +27,6 @@ class MainActivity : DownloadSpeechActivity() {
 //    }
 
     private fun initViews() {
-        tv_toolBar.text = "AI 智能鬧鐘"
 //        setSupportActionBar(toolbar)
 //        supportActionBar?.setDisplayShowTitleEnabled(false)
         supportFragmentManager
