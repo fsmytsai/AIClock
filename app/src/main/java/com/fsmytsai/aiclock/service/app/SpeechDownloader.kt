@@ -425,7 +425,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     fun foregroundCancelDownloadSound() {
-        FileDownloader.getImpl().pause(mQueueTarget)
+        stopDownloadSound()
         mDownloadFinishListener?.cancel()
     }
 
