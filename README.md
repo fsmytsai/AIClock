@@ -24,6 +24,7 @@
 | finished   | 提示詳細溫度 |
 | finished   | 修改後端，加上來源網址及圖片 |
 | finished   | 響鈴頁面 |
+| finished   | 長按刪除鬧鐘 |
 
 
 # Version Features
