@@ -37,17 +37,17 @@ class AlarmActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= 27) {
+            setShowWhenLocked(true)
+            setTurnScreenOn(true)
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
         hideBottomUIMenu()
         setContentView(R.layout.activity_alarm)
         mACId = intent.getIntExtra("ACId", 0)
         if (mACId != 0) {
-            if (Build.VERSION.SDK_INT >= 27) {
-                setShowWhenLocked(true)
-                setTurnScreenOn(true)
-                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            } else {
-                window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            }
             initCache()
             mTexts = SharedService.getTexts(this, mACId)!!
             mIgnoreCount = mTexts.textList.filter { it.description == "time" || it.description == "weather" }.size
@@ -61,7 +61,7 @@ class AlarmActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT < 19) {
             val v = this.window.decorView
             v.systemUiVisibility = View.GONE
-        } else if (Build.VERSION.SDK_INT >= 19) {
+        } else {
             val decorView = window.decorView
             val uiOptions = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                     or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN)
@@ -280,6 +280,6 @@ class AlarmActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        SharedService.showTextToast(this,"請點叉叉關閉")
+        SharedService.showTextToast(this, "請點叉叉關閉")
     }
 }
