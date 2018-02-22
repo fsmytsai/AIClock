@@ -4,7 +4,6 @@
 | State      | Description                 |
 |------------|-----------------------------|
 | unfinished | 修改後端，避免超過1000次抓取新聞 |
-| unfinished | 新聞詳細頁面 |
 | finished   | 第幾則新聞提示 |
 | finished   | 使用網路提示 |
 | finished   | 判斷時間多判斷星期幾 |
@@ -25,7 +24,7 @@
 | finished   | 修改後端，加上來源網址及圖片 |
 | finished   | 響鈴頁面 |
 | finished   | 長按刪除鬧鐘 |
-
+| finished   | 新聞詳細頁面 |
 
 # Version Features
 ## 第一版包含以下功能：
@@ -35,6 +34,10 @@
 4. 支持大字體手機不跑版
 
 # Release Note
+## 1.4.0 versionCode = 9
+1. 新增詳細新聞頁面
+2. 新增長按刪除鬧鐘，現在不必點開修改鬧鐘頁面就能刪除囉
+
 ## 1.3.0 versionCode = 8
 1. 設定時間的方式改成滾輪
 2. 完成響鈴頁面，包含了新聞標題、簡介、預覽圖
