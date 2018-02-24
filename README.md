@@ -3,7 +3,7 @@
 # To Do
 | State      | Description                 |
 |------------|-----------------------------|
-| unfinished | 修改後端，避免超過1000次抓取新聞 |
+| unfinished | 新增設置取得幾則新聞 |
 | finished   | 第幾則新聞提示 |
 | finished   | 使用網路提示 |
 | finished   | 判斷時間多判斷星期幾 |
@@ -25,6 +25,7 @@
 | finished   | 響鈴頁面 |
 | finished   | 長按刪除鬧鐘 |
 | finished   | 新聞詳細頁面 |
+| finished   | 修改後端，避免超過1000次抓取新聞 |
 
 # Version Features
 ## 第一版包含以下功能：
@@ -32,6 +33,7 @@
 2. 天氣播報及溫馨提醒
 3. 播報 7 種新聞類別
 4. 支持大字體手機不跑版
+5. 可查看正在播報新聞
 
 # Release Note
 ## 1.2.1 versionCode = 8
