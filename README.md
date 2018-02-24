@@ -36,6 +36,9 @@
 5. 可查看正在播報新聞
 
 # Release Note
+## 1.2.2 versionCode = 9
+1. 修正大字體時，首頁可能跑版的問題
+
 ## 1.2.1 versionCode = 8
 1. 智能鬧鐘更加穩定
 
