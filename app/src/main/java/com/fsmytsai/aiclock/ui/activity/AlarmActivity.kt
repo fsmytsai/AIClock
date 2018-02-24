@@ -206,30 +206,34 @@ class AlarmActivity : AppCompatActivity() {
     private val loadingImgNameList = ArrayList<String>()
     private val mOkHttpClient = OkHttpClient()
 
-    private fun showImage(imageView: ImageView, url: String, pb: ProgressBar) {
+    private fun showImage(imageView: ImageView, url: String, progressBar: ProgressBar) {
         val bitmap = getBitmapFromLrucache(url)
         if (bitmap == null) {
             loadImgByOkHttp(
                     imageView,
                     url,
-                    pb)
-        } else imageView.setImageBitmap(bitmap)
+                    progressBar)
+        } else {
+            progressBar.visibility = View.GONE
+            imageView.visibility = View.VISIBLE
+            imageView.setImageBitmap(bitmap)
+        }
     }
 
-    private fun loadImgByOkHttp(imageView: ImageView, url: String, pb: ProgressBar) {
+    private fun loadImgByOkHttp(imageView: ImageView, url: String, progressBar: ProgressBar) {
         for (mImgView in wImageViewList) {
             if (mImgView == imageView)
                 return
         }
         wImageViewList.add(imageView)
 
-
         for (imgName in loadingImgNameList) {
             if (imgName == url)
                 return
         }
         loadingImgNameList.add(url)
-        pb.visibility = View.VISIBLE
+
+        progressBar.visibility = View.VISIBLE
         imageView.visibility = View.GONE
 
         val request = Request.Builder()
@@ -261,7 +265,7 @@ class AlarmActivity : AppCompatActivity() {
                             var i = 0
                             while (i < wImageViewList.size) {
                                 if (wImageViewList[i].tag == url) {
-                                    pb.visibility = View.GONE
+                                    progressBar.visibility = View.GONE
                                     imageView.visibility = View.VISIBLE
                                     wImageViewList[i].setImageBitmap(bitmap)
                                     wImageViewList.removeAt(i)
