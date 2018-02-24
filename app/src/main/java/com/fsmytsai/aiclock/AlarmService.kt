@@ -11,6 +11,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
+import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -25,6 +26,7 @@ class AlarmService : Service() {
     private var mMPNews = MediaPlayer()
     private var mIsByePlaying = false
     private var mIsPausing = false
+    private lateinit var mAlarmClock: AlarmClock
     private lateinit var mTexts: Texts
     private val mSoundList = ArrayList<String>()
     private var mNewsCount = 0
@@ -32,11 +34,12 @@ class AlarmService : Service() {
     override fun onBind(intent: Intent): IBinder? {
         //測試到目前為止發現，僅第一次綁定會呼叫(從startService後)
         mTexts = Gson().fromJson(intent.getStringExtra("TextsJsonStr"), Texts::class.java)
+        mAlarmClock = SharedService.getAlarmClock(this, mTexts.acId)!!
 
         //檢查檔案是否存在
         for (text in mTexts.textList) {
             val addToSoundList = (0 until text.part_count)
-                    .map { File("$filesDir/sounds/${text.text_id}-$it.wav") }
+                    .map { File("$filesDir/sounds/${text.text_id}-$it-${mAlarmClock.speaker}.wav") }
                     .all { it.exists() }
             if (addToSoundList) {
                 if (text.description != "time" && text.description != "weather") {
@@ -44,7 +47,7 @@ class AlarmService : Service() {
                     mSoundList.add("news$mNewsCount")
                 }
 
-                (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it" }
+                (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it-${mAlarmClock.speaker}" }
             }
         }
 
@@ -136,9 +139,9 @@ class AlarmService : Service() {
                 mMPNews = MediaPlayer()
                 if (mSoundList[0].startsWith("news") || mSoundList[0] == "olddata") {
                     var spk = "f1"
-                    if (mTexts.textList[0].speaker == "HanHanRUS")
+                    if (mAlarmClock.speaker == 1)
                         spk = "f2"
-                    else if (mTexts.textList[0].speaker == "Zhiwei, Apollo")
+                    else if (mAlarmClock.speaker == 2)
                         spk = "m1"
                     playNews(Uri.parse("android.resource://$packageName/raw/${spk}_${mSoundList[0]}"))
                 } else
@@ -148,9 +151,9 @@ class AlarmService : Service() {
                 //播放掰掰
                 mIsByePlaying = true
                 var spk = "f1"
-                if (mTexts.textList[0].speaker == "HanHanRUS")
+                if (mAlarmClock.speaker == 1)
                     spk = "f2"
-                else if (mTexts.textList[0].speaker == "Zhiwei, Apollo")
+                else if (mAlarmClock.speaker == 2)
                     spk = "m1"
                 playNews(Uri.parse("android.resource://$packageName/raw/${spk}_bye"))
             } else {

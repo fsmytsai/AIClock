@@ -125,7 +125,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         for (texts in textsList.textsList) {
             for (text in texts.textList)
                 for (i in 0 until text.part_count)
-                    allNeedFileName.add("${text.text_id}-$i.wav")
+                    allNeedFileName.add("${text.text_id}-$i-${mAlarmClock.speaker}.wav")
         }
 
         //遍歷所有檔案，檔名不在 allNeedFileName 裡的直接刪除
@@ -218,7 +218,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         val request = Request.Builder()
                 .url("${mDownloadSpeechActivity?.getString(R.string.server_url)}api/getPromptData?day=${mAlarmTimeList[0]}&hour=${mAlarmTimeList[1]}&" +
-                        "minute=${mAlarmTimeList[2]}&second=${mAlarmTimeList[3]}&speaker=${mAlarmClock.speaker}")
+                        "minute=${mAlarmTimeList[2]}&second=${mAlarmTimeList[3]}&speaker=${mAlarmClock.speaker}&version_code=${SharedService.getVersionCode(mContext)}")
                 .build()
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
@@ -266,7 +266,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 //        else
         val url = "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
                 "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&" +
-                "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}"
+                "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}&version_code=${SharedService.getVersionCode(mContext)}"
 
         val request = Request.Builder()
                 .url(url)
@@ -288,8 +288,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                         if (statusCode == 200) {
                             publicTexts = Gson().fromJson(resMessage, Texts::class.java)
                             if (publicTexts.textList.size > 0) {
-                                publicTexts.acId = mAlarmClock.acId
                                 mDownloadSpeechActivity?.setDownloadProgress(10)
+                                publicTexts.acId = mAlarmClock.acId
                                 downloadSound()
                             } else {
                                 SharedService.showTextToast(mDownloadSpeechActivity!!, "無預期錯誤，請重試")
@@ -317,9 +317,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private fun downloadSound() {
         if (mDownloadSpeechActivity != null) {
-            FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${mPromptData!!.data.text_id}-0.wav")
-                    .setPath("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0.wav")
-                    .setTag(0, "${mPromptData!!.data.text_id}-0")
+            FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
+                    .setPath("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
+                    .setTag(0, "${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}")
                     .setCallbackProgressTimes(0)
                     .setAutoRetryTimes(1)
                     .setListener(mQueueTarget)
@@ -330,9 +330,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         for (text in publicTexts.textList) {
             for (i in 0 until text.part_count) {
-                FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${text.text_id}-$i.wav")
-                        .setPath("${mContext.filesDir}/sounds/${text.text_id}-$i.wav")
-                        .setTag(0, "${text.text_id}-$i")
+                FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${text.text_id}-$i-${mAlarmClock.speaker}.wav")
+                        .setPath("${mContext.filesDir}/sounds/${text.text_id}-$i-${mAlarmClock.speaker}.wav")
+                        .setTag(0, "${text.text_id}-$i-${mAlarmClock.speaker}")
                         .setCallbackProgressTimes(0)
                         .setAutoRetryTimes(1)
                         .setListener(mQueueTarget)
@@ -546,7 +546,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         mpFinish.setOnCompletionListener {
             mpFinish.release()
             if (isSetFinish) {
-                val file = File("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0.wav")
+                val file = File("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
                 val promptUri = Uri.fromFile(file)
                 startPlaying(promptUri, false)
             } else {

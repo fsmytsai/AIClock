@@ -107,6 +107,11 @@ class SharedService {
             }
         }
 
+        fun getVersionCode(context: Context): Int {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            return pInfo.versionCode
+        }
+
         fun checkNetWork(context: Context): Boolean {
             val connManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val networkInfo = connManager.activeNetworkInfo

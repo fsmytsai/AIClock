@@ -12,7 +12,6 @@ data class Texts(
 
 data class Text(
         val text_id: Int = 0,
-        val speaker: String = "",
         val category: String = "",
         val title: String = "",
         val description: String = "",
