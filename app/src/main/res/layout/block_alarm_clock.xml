@@ -8,7 +8,8 @@
         android:id="@+id/rl_alarm_clock_block"
         android:layout_width="match_parent"
         android:layout_height="79dp"
-        android:padding="18dp">
+        android:paddingEnd="20dp"
+        android:paddingStart="20dp">
 
         <TextView
             android:id="@+id/tv_time"
@@ -20,11 +21,13 @@
 
         <TextView
             android:id="@+id/tv_repeat"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_marginRight="10dp"
             android:layout_toLeftOf="@id/sb_switch"
+            android:layout_toRightOf="@id/tv_time"
+            android:gravity="end"
             android:textSize="14sp" />
 
         <com.suke.widget.SwitchButton
