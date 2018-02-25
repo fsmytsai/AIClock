@@ -498,9 +498,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private fun setData() {
         mDownloadFinishListener?.startSetData()
-        //先設置響鈴，看 publicTexts 是不是舊資料
         setAlarm(false)
-        SharedService.deleteOldTextsData(mContext, mAlarmClock.acId, publicTexts, true)
     }
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -514,12 +512,13 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             Intent(mContext, PrepareReceiver::class.java)
         } else {
             SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，40分鐘內響鈴，${mAlarmTimeList[2]}分鐘${mAlarmTimeList[3]}秒後響鈴")
-            if (!isAbandon)
-                publicTexts.isOldData = false
+            publicTexts.isOldData = isAbandon
             Intent(mContext, AlarmReceiver::class.java)
         }
         alarmIntent.putExtra("ACId", mAlarmClock.acId)
 
+        //設置前先更新資料
+        SharedService.deleteOldTextsData(mContext, mAlarmClock.acId, publicTexts, true)
         //設置前先嘗試取消，避免重複設置
         SharedService.cancelAlarm(mContext, mAlarmClock.acId)
 
