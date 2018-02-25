@@ -509,12 +509,13 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         val alarmIntent = if ((mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 40) &&
                 (mAlarmClock.latitude != 1000.0 || mAlarmClock.category != -1)) {
             SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，${mAlarmTimeList[0]}天${mAlarmTimeList[1]}小時${mAlarmTimeList[2]}分鐘後響鈴")
+            publicTexts.isOldData = true
             mAlarmTimeCalendar.add(Calendar.MINUTE, -40)
             Intent(mContext, PrepareReceiver::class.java)
         } else {
+            SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，40分鐘內響鈴，${mAlarmTimeList[2]}分鐘${mAlarmTimeList[3]}秒後響鈴")
             if (!isAbandon)
                 publicTexts.isOldData = false
-            SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，40分鐘內響鈴，${mAlarmTimeList[2]}分鐘${mAlarmTimeList[3]}秒後響鈴")
             Intent(mContext, AlarmReceiver::class.java)
         }
         alarmIntent.putExtra("ACId", mAlarmClock.acId)
