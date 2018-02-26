@@ -11,11 +11,12 @@ class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val acId = intent.getIntExtra("ACId", 0)
+        SharedService.writeDebugLog("AlarmReceiver onReceive ACId = $acId")
         if (acId != 0 && SharedService.checkAlarmClockIsOpen(context, acId)) {
-            val startMainIntent = Intent(context, AlarmActivity::class.java)
-            startMainIntent.putExtra("ACId", acId)
-            startMainIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            context.startActivity(startMainIntent)
+            val startAlarmIntent = Intent(context, AlarmActivity::class.java)
+            startAlarmIntent.putExtra("ACId", acId)
+            startAlarmIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(startAlarmIntent)
         }
     }
 }
