@@ -32,7 +32,6 @@ import java.io.IOException
 
 class AlarmActivity : AppCompatActivity() {
     private var mAlarmService: AlarmService? = null
-    private var mACId = 0
     private var mRealTexts: Texts = Texts()
     private var mIgnoreCount = 0
 
@@ -47,30 +46,30 @@ class AlarmActivity : AppCompatActivity() {
         }
         hideBottomUIMenu()
         setContentView(R.layout.activity_alarm)
-        mACId = intent.getIntExtra("ACId", 0)
-        if (mACId != 0) {
-            //初始化圖片快取
-            initCache()
-            val alarmClock = SharedService.getAlarmClock(this, mACId)
-            val texts = SharedService.getTexts(this, mACId)
-            if (alarmClock != null && texts != null) {
-                //初始化 mRealTexts
-                mRealTexts.acId = texts.acId
-                mRealTexts.isOldData = texts.isOldData
 
-                //過濾掉缺少音檔的 text
-                for (text in texts.textList) {
-                    val addToRealTextsList = (0 until text.part_count)
-                            .map { File("$filesDir/sounds/${text.text_id}-$it-${alarmClock.speaker}.wav") }
-                            .all { it.exists() }
-                    if (addToRealTextsList) mRealTexts.textList.add(text)
-                }
-                mIgnoreCount = mRealTexts.textList.filter { it.description == "time" || it.description == "weather" }.size
+        val acId = intent.getIntExtra("ACId", 0)
+
+        //初始化圖片快取
+        initCache()
+        val alarmClock = SharedService.getAlarmClock(this, acId)
+        val texts = SharedService.getTexts(this, acId)
+        if (alarmClock != null && texts != null) {
+            //初始化 mRealTexts
+            mRealTexts.acId = texts.acId
+            mRealTexts.isOldData = texts.isOldData
+
+            //過濾掉缺少音檔的 text
+            for (text in texts.textList) {
+                val addToRealTextsList = (0 until text.part_count)
+                        .map { File("$filesDir/sounds/${text.text_id}-$it-${alarmClock.speaker}.wav") }
+                        .all { it.exists() }
+                if (addToRealTextsList) mRealTexts.textList.add(text)
             }
-            //遺失 mTexts 或 mAlarmClock，響鈴及提示
-            initViews()
-            startAlarmService()
+            mIgnoreCount = mRealTexts.textList.filter { it.description == "time" || it.description == "weather" }.size
         }
+        //遺失 mTexts 或 mAlarmClock，響鈴及提示
+        initViews()
+        startAlarmService()
 
     }
 
