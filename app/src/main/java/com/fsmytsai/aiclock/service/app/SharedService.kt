@@ -29,18 +29,21 @@ class SharedService {
         var reRunRunnable = false
 
         fun cancelAlarm(context: Context, acId: Int) {
+            val appContext = context.applicationContext
             //取消準備
-            var intent = Intent(context, PrepareReceiver::class.java)
+            var intent = Intent(appContext, PrepareReceiver::class.java)
             intent.putExtra("ACId", acId)
-            var pi = PendingIntent.getBroadcast(context, acId, intent, PendingIntent.FLAG_ONE_SHOT)
-            val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            var pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_ONE_SHOT)
+            val am = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             am.cancel(pi)
 
             //取消響鈴
-            intent = Intent(context, AlarmReceiver::class.java)
+            intent = Intent(appContext, AlarmReceiver::class.java)
             intent.putExtra("ACId", acId)
-            pi = PendingIntent.getBroadcast(context, acId, intent, PendingIntent.FLAG_ONE_SHOT)
+            pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_ONE_SHOT)
             am.cancel(pi)
+
+            writeDebugLog("cancelAlarm Success")
         }
 
         fun checkAlarmClockIsOpen(context: Context, acId: Int): Boolean {

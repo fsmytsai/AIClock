@@ -505,27 +505,29 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     @TargetApi(Build.VERSION_CODES.M)
     private fun setAlarm(isAbandon: Boolean) {
+        val appContext = mContext.applicationContext
+
         //超過 40 分鐘才響鈴且需要更新資料及音檔(天氣或新聞)，則設置一個提前 40 分鐘的任務重新抓取新聞天氣
         val alarmIntent = if ((mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 40) &&
                 (mAlarmClock.latitude != 1000.0 || mAlarmClock.category != -1)) {
             SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，${mAlarmTimeList[0]}天${mAlarmTimeList[1]}小時${mAlarmTimeList[2]}分鐘後響鈴")
             publicTexts.isOldData = true
             mAlarmTimeCalendar.add(Calendar.MINUTE, -40)
-            Intent(mContext, PrepareReceiver::class.java)
+            Intent(appContext, PrepareReceiver::class.java)
         } else {
             SharedService.writeDebugLog("SpeechDownloader 設置鬧鐘成功，40分鐘內響鈴，${mAlarmTimeList[2]}分鐘${mAlarmTimeList[3]}秒後響鈴")
             publicTexts.isOldData = isAbandon
-            Intent(mContext, AlarmReceiver::class.java)
+            Intent(appContext, AlarmReceiver::class.java)
         }
         alarmIntent.putExtra("ACId", mAlarmClock.acId)
 
         //設置前先更新資料
-        SharedService.deleteOldTextsData(mContext, mAlarmClock.acId, publicTexts, true)
+        SharedService.deleteOldTextsData(appContext, mAlarmClock.acId, publicTexts, true)
         //設置前先嘗試取消，避免重複設置
         SharedService.cancelAlarm(mContext, mAlarmClock.acId)
 
-        val pi = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_CANCEL_CURRENT)
-        val am = mContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val pi = PendingIntent.getBroadcast(appContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+        val am = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, mAlarmTimeCalendar.timeInMillis, pi)
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, mAlarmTimeCalendar.timeInMillis, pi)
