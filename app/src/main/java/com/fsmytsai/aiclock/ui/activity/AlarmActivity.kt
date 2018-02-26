@@ -32,7 +32,7 @@ import java.io.IOException
 class AlarmActivity : AppCompatActivity() {
     private var mAlarmService: AlarmService? = null
     private var mACId = 0
-    private lateinit var mTexts: Texts
+    private var mTexts: Texts? = null
     private var mIgnoreCount = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,10 +49,14 @@ class AlarmActivity : AppCompatActivity() {
         mACId = intent.getIntExtra("ACId", 0)
         if (mACId != 0) {
             initCache()
-            mTexts = SharedService.getTexts(this, mACId)!!
-            mIgnoreCount = mTexts.textList.filter { it.description == "time" || it.description == "weather" }.size
-            initViews()
-            startAlarmService()
+            mTexts = SharedService.getTexts(this, mACId)
+            if (mTexts != null) {
+                mIgnoreCount = mTexts!!.textList.filter { it.description == "time" || it.description == "weather" }.size
+                initViews()
+                startAlarmService()
+            } else {
+                //莫名遺失 mTexts
+            }
         }
 
     }
@@ -133,16 +137,16 @@ class AlarmActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
             if (getItemViewType(position) == TYPE_FOOTER) {
-                if (mTexts.textList.size == 0)
+                if (mTexts!!.textList.size == 0)
                     holder!!.tvFooter.text = "沒有新聞!"
                 else
                     holder!!.tvFooter.text = "到底囉!"
                 return
             }
 
-            holder!!.tvTitle.text = mTexts.textList[position + mIgnoreCount].title
-            holder.tvDescription.text = mTexts.textList[position + mIgnoreCount].description
-            val previewImage = mTexts.textList[position + mIgnoreCount].preview_image
+            holder!!.tvTitle.text = mTexts!!.textList[position + mIgnoreCount].title
+            holder.tvDescription.text = mTexts!!.textList[position + mIgnoreCount].description
+            val previewImage = mTexts!!.textList[position + mIgnoreCount].preview_image
             if (previewImage != "") {
                 holder.ivNews.tag = previewImage
                 showImage(holder.ivNews, previewImage, holder.pbNews)
@@ -154,14 +158,14 @@ class AlarmActivity : AppCompatActivity() {
             holder.llNews.setOnClickListener {
                 if (SharedService.checkNetWork(this@AlarmActivity)) {
                     val intent = Intent(this@AlarmActivity, WebViewActivity::class.java)
-                    intent.putExtra("URL", mTexts.textList[position + mIgnoreCount].url)
+                    intent.putExtra("URL", mTexts!!.textList[position + mIgnoreCount].url)
                     startActivity(intent)
                 }
             }
         }
 
         override fun getItemCount(): Int {
-            return mTexts.textList.size - mIgnoreCount + 1
+            return mTexts!!.textList.size - mIgnoreCount + 1
         }
 
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
