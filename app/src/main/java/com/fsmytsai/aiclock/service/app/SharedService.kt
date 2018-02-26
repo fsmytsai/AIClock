@@ -43,6 +43,14 @@ class SharedService {
             am.cancel(pi)
         }
 
+        fun checkAlarmClockIsOpen(context: Context, acId: Int): Boolean {
+            val alarmClock = getAlarmClock(context, acId)
+            if (alarmClock != null)
+                return alarmClock.isOpen
+            else
+                return false
+        }
+
         fun getAlarmClocks(context: Context): AlarmClocks {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             val alarmClocksJsonStr = spDatas.getString("AlarmClocksJsonStr", "")
