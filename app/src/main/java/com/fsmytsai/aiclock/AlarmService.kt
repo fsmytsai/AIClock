@@ -11,7 +11,6 @@ import android.os.Binder
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
-import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -26,7 +25,7 @@ class AlarmService : Service() {
     private var mMPNews = MediaPlayer()
     private var mIsByePlaying = false
     private var mIsPausing = false
-    private lateinit var mAlarmClock: AlarmClock
+    private var mSpeaker = -1
     private lateinit var mTexts: Texts
     private val mSoundList = ArrayList<String>()
     private var mNewsCount = 0
@@ -34,33 +33,32 @@ class AlarmService : Service() {
     override fun onBind(intent: Intent): IBinder? {
         //測試到目前為止發現，僅第一次綁定會呼叫(從startService後)
         mTexts = Gson().fromJson(intent.getStringExtra("TextsJsonStr"), Texts::class.java)
-        mAlarmClock = SharedService.getAlarmClock(this, mTexts.acId)!!
+        if (mTexts.acId != 0) {
+            val alarmClock = SharedService.getAlarmClock(this, mTexts.acId)!!
 
-        //檢查檔案是否存在
-        for (text in mTexts.textList) {
-            val addToSoundList = (0 until text.part_count)
-                    .map { File("$filesDir/sounds/${text.text_id}-$it-${mAlarmClock.speaker}.wav") }
-                    .all { it.exists() }
-            if (addToSoundList) {
+            mSpeaker = alarmClock.speaker
+
+            //排列音檔播放順序
+            for (text in mTexts.textList) {
                 if (text.description != "time" && text.description != "weather") {
                     mNewsCount++
                     mSoundList.add("news$mNewsCount")
                 }
 
-                (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it-${mAlarmClock.speaker}" }
+                (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it-$mSpeaker" }
             }
-        }
 
-        //判斷是否為舊資料
-        if (mTexts.isOldData) {
-            //第一個播放的如果是 time 則把提示加入 time 之後
-            if (mTexts.textList[0].description == "time" && "${mTexts.textList[0].text_id}-0" == mSoundList[0]) {
-                SharedService.writeDebugLog("AlarmService insert olddata after time")
-                mSoundList.add(1, "olddata")
-            } else {
-                //否則第一個播放提示
-                SharedService.writeDebugLog("AlarmService insert olddata to first")
-                mSoundList.add(0, "olddata")
+            //判斷是否為舊資料
+            if (mTexts.isOldData) {
+                //第一個播放的如果是 time 則把提示加入 time 之後
+                if (mTexts.textList[0].description == "time" && "${mTexts.textList[0].text_id}-0-$mSpeaker" == mSoundList[0]) {
+                    SharedService.writeDebugLog("AlarmService insert olddata after time")
+                    mSoundList.add(1, "olddata")
+                } else {
+                    //否則第一個播放提示
+                    SharedService.writeDebugLog("AlarmService insert olddata to first")
+                    mSoundList.add(0, "olddata")
+                }
             }
         }
 
@@ -139,9 +137,9 @@ class AlarmService : Service() {
                 mMPNews = MediaPlayer()
                 if (mSoundList[0].startsWith("news") || mSoundList[0] == "olddata") {
                     var spk = "f1"
-                    if (mAlarmClock.speaker == 1)
+                    if (mSpeaker == 1)
                         spk = "f2"
-                    else if (mAlarmClock.speaker == 2)
+                    else if (mSpeaker == 2)
                         spk = "m1"
                     playNews(Uri.parse("android.resource://$packageName/raw/${spk}_${mSoundList[0]}"))
                 } else
@@ -151,9 +149,9 @@ class AlarmService : Service() {
                 //播放掰掰
                 mIsByePlaying = true
                 var spk = "f1"
-                if (mAlarmClock.speaker == 1)
+                if (mSpeaker == 1)
                     spk = "f2"
-                else if (mAlarmClock.speaker == 2)
+                else if (mSpeaker == 2)
                     spk = "m1"
                 playNews(Uri.parse("android.resource://$packageName/raw/${spk}_bye"))
             } else {
@@ -186,19 +184,30 @@ class AlarmService : Service() {
         mMPBGM.prepare()
         mMPBGM.start()
 
-        mHandler.postDelayed(mRunnable, 5000)
+        //沒發生意外才開始播報新聞
+        if (mSpeaker != -1) {
+            mHandler.postDelayed(mRunnable, 5000)
 
-        //準備此鬧鐘下一次的響鈴(最快24小時後響)
-        val alarmClock = SharedService.getAlarmClock(this, mTexts.acId)
-        if (alarmClock != null) {
-            val speechDownloader = SpeechDownloader(this, null)
-            speechDownloader.setAlarmClock(alarmClock)
+            //準備此鬧鐘下一次的響鈴(最快24小時後響)
+            val alarmClock = SharedService.getAlarmClock(this, mTexts.acId)
+            if (alarmClock != null) {
+                val speechDownloader = SpeechDownloader(this, null)
+                speechDownloader.setAlarmClock(alarmClock)
+            }
         }
     }
 
     private val mHandler = Handler()
     private val mRunnable = Runnable {
         mMPBGM.setVolume(0.1f, 0.1f)
-        playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
+        if (mSoundList[0].startsWith("news") || mSoundList[0] == "olddata") {
+            var spk = "f1"
+            if (mSpeaker == 1)
+                spk = "f2"
+            else if (mSpeaker == 2)
+                spk = "m1"
+            playNews(Uri.parse("android.resource://$packageName/raw/${spk}_${mSoundList[0]}"))
+        } else
+            playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
     }
 }

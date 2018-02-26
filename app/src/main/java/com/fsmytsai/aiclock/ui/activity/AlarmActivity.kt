@@ -27,12 +27,13 @@ import kotlinx.android.synthetic.main.activity_alarm.*
 import kotlinx.android.synthetic.main.block_news.view.*
 import kotlinx.android.synthetic.main.footer.view.*
 import okhttp3.*
+import java.io.File
 import java.io.IOException
 
 class AlarmActivity : AppCompatActivity() {
     private var mAlarmService: AlarmService? = null
     private var mACId = 0
-    private var mTexts: Texts? = null
+    private var mRealTexts: Texts = Texts()
     private var mIgnoreCount = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,15 +49,27 @@ class AlarmActivity : AppCompatActivity() {
         setContentView(R.layout.activity_alarm)
         mACId = intent.getIntExtra("ACId", 0)
         if (mACId != 0) {
+            //初始化圖片快取
             initCache()
-            mTexts = SharedService.getTexts(this, mACId)
-            if (mTexts != null) {
-                mIgnoreCount = mTexts!!.textList.filter { it.description == "time" || it.description == "weather" }.size
-                initViews()
-                startAlarmService()
-            } else {
-                //莫名遺失 mTexts
+            val alarmClock = SharedService.getAlarmClock(this, mACId)
+            val texts = SharedService.getTexts(this, mACId)
+            if (alarmClock != null && texts != null) {
+                //初始化 mRealTexts
+                mRealTexts.acId = texts.acId
+                mRealTexts.isOldData = texts.isOldData
+
+                //過濾掉缺少音檔的 text
+                for (text in texts.textList) {
+                    val addToRealTextsList = (0 until text.part_count)
+                            .map { File("$filesDir/sounds/${text.text_id}-$it-${alarmClock.speaker}.wav") }
+                            .all { it.exists() }
+                    if (addToRealTextsList) mRealTexts.textList.add(text)
+                }
+                mIgnoreCount = mRealTexts.textList.filter { it.description == "time" || it.description == "weather" }.size
             }
+            //遺失 mTexts 或 mAlarmClock，響鈴及提示
+            initViews()
+            startAlarmService()
         }
 
     }
@@ -80,11 +93,10 @@ class AlarmActivity : AppCompatActivity() {
 
     fun startAlarmService() {
         val intent = Intent(this, AlarmService::class.java)
-        intent.putExtra("TextsJsonStr", Gson().toJson(mTexts))
+        intent.putExtra("TextsJsonStr", Gson().toJson(mRealTexts))
         startService(intent)
         bindService(intent, alarmServiceConnection, 0)
     }
-
 
     private val alarmServiceConnection = object : ServiceConnection {
 
@@ -137,16 +149,18 @@ class AlarmActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
             if (getItemViewType(position) == TYPE_FOOTER) {
-                if (mTexts!!.textList.size == 0)
-                    holder!!.tvFooter.text = "沒有新聞!"
+                if (mRealTexts.textList.size == 0)
+                    holder!!.tvFooter.text = "發生意外，無新聞資料!\n建議刪除此鬧鐘資料並重新設置"
                 else
                     holder!!.tvFooter.text = "到底囉!"
                 return
             }
 
-            holder!!.tvTitle.text = mTexts!!.textList[position + mIgnoreCount].title
-            holder.tvDescription.text = mTexts!!.textList[position + mIgnoreCount].description
-            val previewImage = mTexts!!.textList[position + mIgnoreCount].preview_image
+            val text = mRealTexts.textList[position + mIgnoreCount]
+
+            holder!!.tvTitle.text = text.title
+            holder.tvDescription.text = text.description
+            val previewImage = text.preview_image
             if (previewImage != "") {
                 holder.ivNews.tag = previewImage
                 showImage(holder.ivNews, previewImage, holder.pbNews)
@@ -158,14 +172,14 @@ class AlarmActivity : AppCompatActivity() {
             holder.llNews.setOnClickListener {
                 if (SharedService.checkNetWork(this@AlarmActivity)) {
                     val intent = Intent(this@AlarmActivity, WebViewActivity::class.java)
-                    intent.putExtra("URL", mTexts!!.textList[position + mIgnoreCount].url)
+                    intent.putExtra("URL", text.url)
                     startActivity(intent)
                 }
             }
         }
 
         override fun getItemCount(): Int {
-            return mTexts!!.textList.size - mIgnoreCount + 1
+            return mRealTexts.textList.size - mIgnoreCount + 1
         }
 
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
