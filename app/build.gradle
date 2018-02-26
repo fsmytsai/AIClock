@@ -11,8 +11,8 @@ android {
         applicationId "com.fsmytsai.aiclock"
         minSdkVersion 17
         targetSdkVersion 27
-        versionCode 9
-        versionName "1.2.2"
+        versionCode 10
+        versionName "1.3.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

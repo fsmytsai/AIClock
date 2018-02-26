@@ -73,7 +73,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     fun setAlarmClock(alarmClock: AlarmClock) {
         mAlarmClock = alarmClock
-        cleanAllOldSound()
 
         //初始化 FileDownloader
         FileDownloader.setup(mContext)
@@ -110,33 +109,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             //沒網路或離響鈴時間小於30秒取消下載(先抓取時間供重設使用)
             if (!getAlarmTime() || !SharedService.checkNetWork(mContext))
                 backgroundCancelDownloadSound()
-        }
-    }
-
-    private fun cleanAllOldSound() {
-        //雖然設置完鬧鐘並更新 TextsList 後再刪才完全正確，但太麻煩了
-        //先抓到所有還需要的檔名
-        val allNeedFileName = ArrayList<String>()
-        val textsList = SharedService.getTextsList(mContext)
-
-        if (textsList == null)
-            return
-
-        for (texts in textsList.textsList) {
-            for (text in texts.textList)
-                for (i in 0 until text.part_count)
-                    allNeedFileName.add("${text.text_id}-$i-${mAlarmClock.speaker}.wav")
-        }
-
-        //遍歷所有檔案，檔名不在 allNeedFileName 裡的直接刪除
-        val directory = File("${mContext.filesDir}/sounds")
-        for (file in directory.listFiles()) {
-            if (file.name !in allNeedFileName) {
-                if (file.delete())
-                    SharedService.writeDebugLog("SpeechDownloader delete oldSound ${file.name}")
-                else
-                    SharedService.writeDebugLog("SpeechDownloader delete failed ${file.name}")
-            }
         }
     }
 
@@ -523,6 +495,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         //設置前先更新資料
         SharedService.deleteOldTextsData(appContext, mAlarmClock.acId, publicTexts, true)
+
         //設置前先嘗試取消，避免重複設置
         SharedService.cancelAlarm(mContext, mAlarmClock.acId)
 
@@ -562,7 +535,33 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun allFinished() {
+        //所有工作都結束後清舊檔
+        cleanAllOldSound()
+
         mDownloadFinishListener?.allFinished()
+    }
+
+    private fun cleanAllOldSound() {
+        //先抓到所有還需要的檔名
+        val allNeedFileName = ArrayList<String>()
+        val textsList = SharedService.getTextsList(mContext) ?: return
+
+        for (texts in textsList.textsList) {
+            for (text in texts.textList)
+                for (i in 0 until text.part_count)
+                    allNeedFileName.add("${text.text_id}-$i-${mAlarmClock.speaker}.wav")
+        }
+
+        //遍歷所有檔案，檔名不在 allNeedFileName 裡的直接刪除
+        val directory = File("${mContext.filesDir}/sounds")
+        for (file in directory.listFiles()) {
+            if (file.name !in allNeedFileName) {
+                if (file.delete())
+                    SharedService.writeDebugLog("SpeechDownloader delete oldSound ${file.name}")
+                else
+                    SharedService.writeDebugLog("SpeechDownloader delete failed ${file.name}")
+            }
+        }
     }
 
     private var mDownloadFinishListener: DownloadFinishListener? = null
