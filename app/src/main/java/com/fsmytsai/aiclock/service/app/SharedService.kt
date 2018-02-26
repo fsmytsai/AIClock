@@ -18,6 +18,7 @@ import com.google.gson.Gson
 import android.widget.Toast
 import android.net.ConnectivityManager
 import android.util.Log
+import java.util.*
 
 
 /**
@@ -50,6 +51,18 @@ class SharedService {
                 return alarmClock.isOpen
             else
                 return false
+        }
+
+        fun checkAlarmClockTime(context: Context, acId: Int): Boolean {
+            val alarmClock = getAlarmClock(context, acId)
+            if (alarmClock != null) {
+                val nowCalendar = Calendar.getInstance()
+                //檢查時間後檢查是否開啟
+                if (alarmClock.hour == nowCalendar.get(Calendar.HOUR_OF_DAY) &&
+                        alarmClock.minute == nowCalendar.get(Calendar.MINUTE))
+                    return true
+            }
+            return false
         }
 
         fun getAlarmClocks(context: Context): AlarmClocks {

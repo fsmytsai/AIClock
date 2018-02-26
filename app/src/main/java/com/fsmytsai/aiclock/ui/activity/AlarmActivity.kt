@@ -34,6 +34,7 @@ class AlarmActivity : AppCompatActivity() {
     private var mAlarmService: AlarmService? = null
     private var mRealTexts: Texts = Texts()
     private var mIgnoreCount = 0
+    private var mNowACId = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,8 +47,8 @@ class AlarmActivity : AppCompatActivity() {
         }
         hideBottomUIMenu()
         setContentView(R.layout.activity_alarm)
-
-        setRealTexts(intent)
+        val acId = intent.getIntExtra("ACId", 0)
+        setRealTexts(acId)
         initViews()
         startAlarmService()
     }
@@ -66,19 +67,24 @@ class AlarmActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        if (intent != null)
-            reSetAll(intent)
+        if (intent != null) {
+            val acId = intent.getIntExtra("ACId", 0)
+            if (acId != mNowACId)
+                reSetAll(acId)
+            else
+                SharedService.writeDebugLog("AlarmActivity ACId 與當前一樣，不動作以取消後來的")
+        }
     }
 
-    private fun reSetAll(intent: Intent) {
-        setRealTexts(intent)
+    private fun reSetAll(acId: Int) {
+        setRealTexts(acId)
         rv_news.adapter.notifyDataSetChanged()
         stopAlarmService()
         startAlarmService()
     }
 
-    private fun setRealTexts(intent: Intent){
-        val acId = intent.getIntExtra("ACId", 0)
+    private fun setRealTexts(acId: Int) {
+        mNowACId = acId
         SharedService.writeDebugLog("AlarmActivity ACId = $acId")
 
         //初始化圖片快取
