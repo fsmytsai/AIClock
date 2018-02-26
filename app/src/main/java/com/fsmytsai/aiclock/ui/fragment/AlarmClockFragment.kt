@@ -179,7 +179,7 @@ class AlarmClockFragment : Fragment() {
         if (requestCode == ADD_ALARM_CLOCK && resultCode == RESULT_OK) {
             isAutoOn = data!!.getBooleanExtra("IsAutoOn", false)
 
-            if (data!!.getBooleanExtra("IsDelete", false)) {
+            if (data.getBooleanExtra("IsDelete", false)) {
                 mAlarmClocks.alarmClockList.removeAt(mNowPosition)
                 rvAlarmClock.adapter.notifyItemRemoved(mNowPosition)
                 rvAlarmClock.adapter.notifyItemRangeChanged(mNowPosition, mAlarmClocks.alarmClockList.size - mNowPosition)
