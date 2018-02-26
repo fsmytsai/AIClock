@@ -160,7 +160,7 @@
                     android:textSize="18sp" />
 
                 <com.fsmytsai.aiclock.ui.view.MyRadioGroup
-                    android:id="@+id/rg_NewsType"
+                    android:id="@+id/rg_category"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
@@ -176,6 +176,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:checked="true"
+                            android:tag="-1"
                             android:text="關閉" />
 
                         <RadioButton
@@ -183,6 +184,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:tag="0"
                             android:text="綜合" />
 
                         <RadioButton
@@ -190,6 +192,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:tag="1"
                             android:text="財經" />
                     </LinearLayout>
 
@@ -204,6 +207,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:tag="2"
                             android:text="娛樂" />
 
                         <RadioButton
@@ -211,6 +215,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:tag="3"
                             android:text="健康" />
 
                         <RadioButton
@@ -218,6 +223,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:tag="4"
                             android:text="科學" />
                     </LinearLayout>
 
@@ -232,6 +238,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:tag="5"
                             android:text="體育" />
 
                         <RadioButton
@@ -239,6 +246,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:tag="6"
                             android:text="科技" />
 
                         <View

@@ -17,6 +17,8 @@ import android.support.v7.app.AlertDialog
 import com.fsmytsai.aiclock.R
 import android.view.MenuItem
 import android.view.View
+import android.widget.RadioButton
+import com.bigkoo.pickerview.OptionsPickerView
 import com.fsmytsai.aiclock.model.*
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -138,20 +140,15 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             6 -> rb_technology.isChecked = true
         }
 
-        rg_NewsType.setOnCheckedChangeListener(object : MyRadioGroup.OnCheckedChangeListener {
+        rg_category.setOnCheckedChangeListener(object : MyRadioGroup.OnCheckedChangeListener {
             override fun onCheckedChanged(group: MyRadioGroup, checkedId: Int) {
-                when (checkedId) {
-                    R.id.rb_no -> mAlarmClock.category = -1
-                    R.id.rb_general -> mAlarmClock.category = 0
-                    R.id.rb_business -> mAlarmClock.category = 1
-                    R.id.rb_entertainment -> mAlarmClock.category = 2
-                    R.id.rb_health -> mAlarmClock.category = 3
-                    R.id.rb_science -> mAlarmClock.category = 4
-                    R.id.rb_sports -> mAlarmClock.category = 5
-                    R.id.rb_technology -> mAlarmClock.category = 6
+                val rb_category = findViewById<RadioButton>(checkedId)
+                mAlarmClock.category = rb_category.tag.toString().toInt()
+                if (mAlarmClock.category != -1) {
+                    pvNewsCount.setNPicker(arrayListOf("6", "7", "8", "9", "10", "11", "12"), null, null)
+                    pvNewsCount.show()
                 }
             }
-
         })
 
         val circleTextviewFull = ContextCompat.getDrawable(this, R.drawable.circle_textview_full)
@@ -186,6 +183,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     1000.0,
                     0.0,
                     -1,
+                    6,
                     booleanArrayOf(false, false, false, false, false, false, false),
                     true)
         }
@@ -220,6 +218,28 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 .isCenterLabel(true)
                 .setDecorView(ll_time)
                 .isDialog(false)
+                .build()
+    }
+
+    private val pvNewsCount by lazy {
+        OptionsPickerView.Builder(this, object : OptionsPickerView.OnOptionsSelectListener {
+            override fun onOptionsSelect(options1: Int, options2: Int, options3: Int, v: View?) {
+                mAlarmClock.newsCount = options1 + 6
+            }
+        }).setContentTextSize(24)
+                .setLineSpacingMultiplier(1.5f)
+                .setDividerColor(ContextCompat.getColor(this, R.color.colorPaleBlue))
+                .setTextColorCenter(ContextCompat.getColor(this, R.color.colorBlue))
+                .setSelectOptions(mAlarmClock.newsCount - 6)
+                .setTextColorOut(Color.BLACK)
+                .setBgColor(ContextCompat.getColor(this, R.color.colorPaleYellow))
+                .setCancelText("取消")
+                .setCancelColor(ContextCompat.getColor(this, R.color.colorBlue))
+                .setSubmitText("確定")
+                .setSubmitColor(ContextCompat.getColor(this, R.color.colorBlue))
+                .setTitleText("播報新聞篇數")
+                .setTitleBgColor(ContextCompat.getColor(this, R.color.colorPaleYellow))
+                .setTitleColor(Color.BLACK)
                 .build()
     }
 
@@ -364,14 +384,14 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
                     //非第一個alarmClock，新小時小於上一個alarmClock小時 或 新小時等於上一個alarmClock小時且新分鐘小於上一個alarmClock分鐘
                     if (i > 0 && (mAlarmClock.hour < alarmClocks.alarmClockList[i - 1].hour ||
-                            (mAlarmClock.hour == alarmClocks.alarmClockList[i - 1].hour &&
-                                    mAlarmClock.minute < alarmClocks.alarmClockList[i - 1].minute)))
+                                    (mAlarmClock.hour == alarmClocks.alarmClockList[i - 1].hour &&
+                                            mAlarmClock.minute < alarmClocks.alarmClockList[i - 1].minute)))
                         isChangePosition = true
 
                     //非最後一個alarmClock，新小時大於下一個alarmClock小時 或 新小時等於下一個alarmClock小時且新分鐘大於下一個alarmClock分鐘
                     if (i < alarmClocks.alarmClockList.size - 1 && (mAlarmClock.hour > alarmClocks.alarmClockList[i + 1].hour ||
-                            (mAlarmClock.hour == alarmClocks.alarmClockList[i + 1].hour &&
-                                    mAlarmClock.minute > alarmClocks.alarmClockList[i + 1].minute)))
+                                    (mAlarmClock.hour == alarmClocks.alarmClockList[i + 1].hour &&
+                                            mAlarmClock.minute > alarmClocks.alarmClockList[i + 1].minute)))
                         isChangePosition = true
 
                     if (isChangePosition) {

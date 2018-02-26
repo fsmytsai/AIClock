@@ -264,9 +264,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 //            "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
 //                    "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=-1&latitude=1000&longitude=0"
 //        else
-        val url = "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
-                "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&" +
-                "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}&version_code=${SharedService.getVersionCode(mContext)}"
+        val url = "${mContext.getString(R.string.server_url)}api/getTextData?" +
+                "hour=${mAlarmClock.hour}&minute=${mAlarmClock.minute}&" +
+                "speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&news_count=${mAlarmClock.newsCount}&" +
+                "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}&" +
+                "version_code=${SharedService.getVersionCode(mContext)}"
 
         val request = Request.Builder()
                 .url(url)
