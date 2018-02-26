@@ -42,8 +42,6 @@ class SharedService {
             intent.putExtra("ACId", acId)
             pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_ONE_SHOT)
             am.cancel(pi)
-
-            writeDebugLog("cancelAlarm Success")
         }
 
         fun checkAlarmClockIsOpen(context: Context, acId: Int): Boolean {
