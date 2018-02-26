@@ -24,9 +24,10 @@ class ResetAlarmService : Service() {
     @TargetApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val alarmClocks = SharedService.getAlarmClocks(this)
+        val isFromMain = intent?.getBooleanExtra("IsFromMain", false) ?: false
         for (alarmClock in alarmClocks.alarmClockList) {
             if (alarmClock.isOpen) {
-                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground){
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !isFromMain) {
                     mIsStartedForeground = true
                     SharedService.writeDebugLog("ResetAlarmService resetAlarm in Android O")
                     val CHANNEL_ID = "resetAlarm"

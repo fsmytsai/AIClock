@@ -121,6 +121,16 @@ class SharedService {
             return pInfo.versionCode
         }
 
+        fun checkUpdate(context: Context): Boolean {
+            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            val nowVersionCode = getVersionCode(context)
+            if (nowVersionCode != spDatas.getInt("VersionCode", 0)) {
+                spDatas.edit().putInt("VersionCode", nowVersionCode).apply()
+                return true
+            }
+            return false
+        }
+
         fun checkNetWork(context: Context): Boolean {
             val connManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val networkInfo = connManager.activeNetworkInfo

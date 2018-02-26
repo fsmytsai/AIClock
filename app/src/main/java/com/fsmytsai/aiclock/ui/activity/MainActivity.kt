@@ -1,9 +1,11 @@
 package com.fsmytsai.aiclock.ui.activity
 
+import android.content.Intent
 import android.os.Bundle
 import com.fsmytsai.aiclock.R
+import com.fsmytsai.aiclock.ResetAlarmService
+import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.ui.fragment.AlarmClockFragment
-import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : DownloadSpeechActivity() {
@@ -12,6 +14,11 @@ class MainActivity : DownloadSpeechActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initViews()
+        if (SharedService.checkUpdate(this)) {
+            val resetAlarmServiceIntent = Intent(this, ResetAlarmService::class.java)
+            resetAlarmServiceIntent.putExtra("IsFromMain", true)
+            startService(resetAlarmServiceIntent)
+        }
     }
 
     private fun initViews() {
