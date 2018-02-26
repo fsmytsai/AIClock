@@ -47,30 +47,9 @@ class AlarmActivity : AppCompatActivity() {
         hideBottomUIMenu()
         setContentView(R.layout.activity_alarm)
 
-        val acId = intent.getIntExtra("ACId", 0)
-
-        //初始化圖片快取
-        initCache()
-        val alarmClock = SharedService.getAlarmClock(this, acId)
-        val texts = SharedService.getTexts(this, acId)
-        if (alarmClock != null && texts != null) {
-            //初始化 mRealTexts
-            mRealTexts.acId = texts.acId
-            mRealTexts.isOldData = texts.isOldData
-
-            //過濾掉缺少音檔的 text
-            for (text in texts.textList) {
-                val addToRealTextsList = (0 until text.part_count)
-                        .map { File("$filesDir/sounds/${text.text_id}-$it-${alarmClock.speaker}.wav") }
-                        .all { it.exists() }
-                if (addToRealTextsList) mRealTexts.textList.add(text)
-            }
-            mIgnoreCount = mRealTexts.textList.filter { it.description == "time" || it.description == "weather" }.size
-        }
-        //遺失 mTexts 或 mAlarmClock，響鈴及提示
+        setRealTexts(intent)
         initViews()
         startAlarmService()
-
     }
 
     private fun hideBottomUIMenu() {
@@ -85,12 +64,50 @@ class AlarmActivity : AppCompatActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent != null)
+            reSetAll(intent)
+    }
+
+    private fun reSetAll(intent: Intent) {
+        setRealTexts(intent)
+        rv_news.adapter.notifyDataSetChanged()
+        stopAlarmService()
+        startAlarmService()
+    }
+
+    private fun setRealTexts(intent: Intent){
+        val acId = intent.getIntExtra("ACId", 0)
+        SharedService.writeDebugLog("AlarmActivity ACId = $acId")
+
+        //初始化圖片快取
+        initCache()
+        val alarmClock = SharedService.getAlarmClock(this, acId)
+        val texts = SharedService.getTexts(this, acId)
+        if (alarmClock != null && texts != null) {
+            //初始化 mRealTexts
+            mRealTexts = Texts()
+            mRealTexts.acId = texts.acId
+            mRealTexts.isOldData = texts.isOldData
+
+            //過濾掉缺少音檔的 text
+            for (text in texts.textList) {
+                val addToRealTextsList = (0 until text.part_count)
+                        .map { File("$filesDir/sounds/${text.text_id}-$it-${alarmClock.speaker}.wav") }
+                        .all { it.exists() }
+                if (addToRealTextsList) mRealTexts.textList.add(text)
+            }
+            mIgnoreCount = mRealTexts.textList.filter { it.description == "time" || it.description == "weather" }.size
+        }
+    }
+
     private fun initViews() {
         rv_news.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         rv_news.adapter = NewsAdapter()
     }
 
-    fun startAlarmService() {
+    private fun startAlarmService() {
         val intent = Intent(this, AlarmService::class.java)
         intent.putExtra("TextsJsonStr", Gson().toJson(mRealTexts))
         startService(intent)
