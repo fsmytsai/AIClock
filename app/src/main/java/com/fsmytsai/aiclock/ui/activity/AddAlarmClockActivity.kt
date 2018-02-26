@@ -146,6 +146,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 mAlarmClock.category = rb_category.tag.toString().toInt()
                 if (mAlarmClock.category != -1) {
                     pvNewsCount.setNPicker(arrayListOf("6", "7", "8", "9", "10", "11", "12"), null, null)
+                    pvNewsCount.setSelectOptions(mAlarmClock.newsCount - 6)
                     pvNewsCount.show()
                 }
             }
