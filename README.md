@@ -3,7 +3,6 @@
 # To Do
 | State      | Description                 |
 |------------|-----------------------------|
-| unfinished | 新增設置取得幾則新聞 |
 | finished   | 第幾則新聞提示 |
 | finished   | 使用網路提示 |
 | finished   | 判斷時間多判斷星期幾 |
@@ -26,6 +25,10 @@
 | finished   | 長按刪除鬧鐘 |
 | finished   | 新聞詳細頁面 |
 | finished   | 修改後端，避免超過1000次抓取新聞 |
+| finished   | 修正修改鬧鐘後重複設置的問題 |
+| finished   | 修正取消鬧鐘後還有可能響的問題 |
+| finished   | 新增設置取得幾則新聞 |
+
 
 # Version Features
 ## 第一版包含以下功能：
@@ -36,6 +39,11 @@
 5. 可查看正在播報新聞
 
 # Release Note
+## 1.3.0 versionCode = 10
+1. 新增播報新聞篇數
+1. 修正修改鬧鐘後重複設置的問題
+2. 修正取消鬧鐘後還有可能響的問題
+
 ## 1.2.2 versionCode = 9
 1. 修正大字體時，首頁可能跑版的問題
 
