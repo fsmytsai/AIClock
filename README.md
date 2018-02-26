@@ -3,7 +3,6 @@
 # To Do
 | State      | Description                 |
 |------------|-----------------------------|
-| unfinished | 修正響鈴時間重疊造成第二個鬧鐘失效 |
 | finished   | 第幾則新聞提示 |
 | finished   | 使用網路提示 |
 | finished   | 判斷時間多判斷星期幾 |
@@ -30,6 +29,7 @@
 | finished   | 修正取消鬧鐘後還有可能響的問題 |
 | finished   | 新增設置取得幾則新聞 |
 | finished   | 修正沒網路時，開啟鬧鐘造成閃退的問題 |
+| finished   | 修正響鈴時間重疊造成第二個鬧鐘失效 |
 
 
 # Version Features
