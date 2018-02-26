@@ -177,6 +177,8 @@ class AlarmClockFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == ADD_ALARM_CLOCK && resultCode == RESULT_OK) {
+            isAutoOn = data!!.getBooleanExtra("IsAutoOn", false)
+
             if (data!!.getBooleanExtra("IsDelete", false)) {
                 mAlarmClocks.alarmClockList.removeAt(mNowPosition)
                 rvAlarmClock.adapter.notifyItemRemoved(mNowPosition)
