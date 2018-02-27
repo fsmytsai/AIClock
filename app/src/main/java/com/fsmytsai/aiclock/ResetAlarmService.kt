@@ -26,9 +26,9 @@ class ResetAlarmService : Service() {
     @TargetApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         mIsFromMain = intent?.getBooleanExtra("IsFromMain", false) ?: false
-        val isFromReBoot = intent?.getBooleanExtra("IsFromReBoot", false) ?: false
+        val isFromReceiver = intent?.getBooleanExtra("IsFromReceiver", false) ?: false
 
-        if (mIsFromMain || isFromReBoot) {
+        if (mIsFromMain || isFromReceiver) {
             val alarmClocks = SharedService.getAlarmClocks(this)
             (0 until alarmClocks.alarmClockList.size)
                     .filter { alarmClocks.alarmClockList[it].isOpen }
