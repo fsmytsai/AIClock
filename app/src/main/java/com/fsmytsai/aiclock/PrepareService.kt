@@ -20,11 +20,11 @@ class PrepareService : Service() {
             else {
                 if (SharedService.waitToPrepareAlarmClockList.size == 0) {
                     SharedService.waitToPrepareAlarmClockList.add(alarmClock)
-                    SharedService.writeDebugLog("PrepareService startDownload")
+                    SharedService.writeDebugLog(this, "PrepareService startDownload")
                     startDownload()
-                }else{
+                } else {
                     SharedService.waitToPrepareAlarmClockList.add(alarmClock)
-                    SharedService.writeDebugLog("PrepareService add to wait No. ${SharedService.waitToPrepareAlarmClockList.size}")
+                    SharedService.writeDebugLog(this, "PrepareService add to wait No. ${SharedService.waitToPrepareAlarmClockList.size}")
                 }
             }
 
@@ -59,7 +59,7 @@ class PrepareService : Service() {
     }
 
     override fun onDestroy() {
-        SharedService.writeDebugLog("PrepareService onDestroy")
+        SharedService.writeDebugLog(this, "PrepareService onDestroy")
         super.onDestroy()
     }
 }

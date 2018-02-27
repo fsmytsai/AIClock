@@ -18,6 +18,8 @@ import com.google.gson.Gson
 import android.widget.Toast
 import android.net.ConnectivityManager
 import android.util.Log
+import java.io.File
+import java.io.PrintWriter
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -39,9 +41,9 @@ class SharedService {
             var pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_NO_CREATE)
             val am = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             if (pi == null) {
-                writeDebugLog("cancelAlarm PrepareReceiver pi dose not exist")
+                writeDebugLog(context, "cancelAlarm PrepareReceiver pi dose not exist")
             } else {
-                writeDebugLog("cancelAlarm PrepareReceiver success")
+                writeDebugLog(context, "cancelAlarm PrepareReceiver success")
                 am.cancel(pi)
                 pi.cancel()
             }
@@ -51,9 +53,9 @@ class SharedService {
             intent.putExtra("ACId", acId)
             pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_NO_CREATE)
             if (pi == null) {
-                writeDebugLog("cancelAlarm AlarmReceiver pi dose not exist")
+                writeDebugLog(context, "cancelAlarm AlarmReceiver pi dose not exist")
             } else {
-                writeDebugLog("cancelAlarm AlarmReceiver success")
+                writeDebugLog(context, "cancelAlarm AlarmReceiver success")
                 am.cancel(pi)
                 pi.cancel()
             }
@@ -194,8 +196,20 @@ class SharedService {
             }
         }
 
-        fun writeDebugLog(logContent: String) {
+        fun writeDebugLog(context: Context, logContent: String) {
             Log.d("AIClockDebugLog", logContent)
+            val nowCalendar = Calendar.getInstance()
+            val logFileName = "${nowCalendar.get(Calendar.YEAR)}-${nowCalendar.get(Calendar.MONTH) + 1}-${nowCalendar.get(Calendar.DAY_OF_MONTH)}.txt"
+            val file = File("${context.filesDir}/logs/$logFileName")
+
+            File("${context.filesDir}/logs/").mkdir()
+
+            val time = "${nowCalendar.get(Calendar.HOUR_OF_DAY)}:${nowCalendar.get(Calendar.MINUTE)}:${nowCalendar.get(Calendar.SECOND)}"
+            try {
+                file.appendText("$time - $logContent\n")
+            } catch (e: Exception) {
+                Log.d("AIClockDebugLog", e.message)
+            }
         }
 
         //避免重複Toast

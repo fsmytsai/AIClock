@@ -39,7 +39,7 @@ class ResetAlarmService : Service() {
             else {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !mIsFromMain) {
                     mIsStartedForeground = true
-                    SharedService.writeDebugLog("ResetAlarmService resetAlarm in Android O")
+                    SharedService.writeDebugLog(this, "ResetAlarmService resetAlarm in Android O")
                     val CHANNEL_ID = "resetAlarm"
                     val channel = NotificationChannel(CHANNEL_ID,
                             "AI Clock NotificationChannel Name",
@@ -54,7 +54,7 @@ class ResetAlarmService : Service() {
                     startForeground(1, notification)
                 }
 
-                SharedService.writeDebugLog("ResetAlarmService start download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
+                SharedService.writeDebugLog(this, "ResetAlarmService start download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
                 startReset()
             }
         } else {
@@ -69,11 +69,11 @@ class ResetAlarmService : Service() {
         speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
             override fun cancel() {
                 mNeedResetAlarmClocks.alarmClockList.removeAt(0)
-                SharedService.writeDebugLog("ResetAlarmService cancel download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
+                SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService cancel download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
                 if (mNeedResetAlarmClocks.alarmClockList.size == 0) {
                     if (mIsFromMain) {
                         SharedService.updateVersionCode(this@ResetAlarmService)
-                        SharedService.writeDebugLog("ResetAlarmService updateVersionCode")
+                        SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService updateVersionCode")
                     }
                     stopSelf()
                 } else
@@ -86,11 +86,11 @@ class ResetAlarmService : Service() {
 
             override fun allFinished() {
                 mNeedResetAlarmClocks.alarmClockList.removeAt(0)
-                SharedService.writeDebugLog("ResetAlarmService finish download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
+                SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService finish download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
                 if (mNeedResetAlarmClocks.alarmClockList.size == 0) {
                     if (mIsFromMain) {
                         SharedService.updateVersionCode(this@ResetAlarmService)
-                        SharedService.writeDebugLog("ResetAlarmService updateVersionCode")
+                        SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService updateVersionCode")
                     }
                     stopSelf()
                 } else
@@ -101,7 +101,7 @@ class ResetAlarmService : Service() {
     }
 
     override fun onDestroy() {
-        SharedService.writeDebugLog("ResetAlarmService onDestroy")
+        SharedService.writeDebugLog(this, "ResetAlarmService onDestroy")
         super.onDestroy()
     }
 }

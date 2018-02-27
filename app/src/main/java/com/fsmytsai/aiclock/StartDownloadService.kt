@@ -47,7 +47,7 @@ class StartDownloadService : Service() {
     }
 
     override fun onDestroy() {
-        SharedService.writeDebugLog("StartDownloadService onDestroy")
+        SharedService.writeDebugLog(this, "StartDownloadService onDestroy")
         super.onDestroy()
     }
 }

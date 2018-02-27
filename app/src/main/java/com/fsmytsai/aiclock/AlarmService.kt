@@ -52,11 +52,11 @@ class AlarmService : Service() {
             if (mTexts.isOldData) {
                 //第一個播放的如果是 time 則把提示加入 time 之後
                 if (mTexts.textList[0].description == "time" && "${mTexts.textList[0].text_id}-0-$mSpeaker" == mSoundList[0]) {
-                    SharedService.writeDebugLog("AlarmService insert olddata after time")
+                    SharedService.writeDebugLog(this, "AlarmService insert olddata after time")
                     mSoundList.add(1, "olddata")
                 } else {
                     //否則第一個播放提示
-                    SharedService.writeDebugLog("AlarmService insert olddata to first")
+                    SharedService.writeDebugLog(this, "AlarmService insert olddata to first")
                     mSoundList.add(0, "olddata")
                 }
             }
@@ -71,7 +71,7 @@ class AlarmService : Service() {
         if (!mIsPausing)
             return
 
-        SharedService.writeDebugLog("AlarmService resumePlay")
+        SharedService.writeDebugLog(this, "AlarmService resumePlay")
         if (SharedService.isNewsPlaying) {
             mIsPausing = false
             mMPBGM.start()
@@ -85,7 +85,7 @@ class AlarmService : Service() {
     }
 
     fun pausePlay() {
-        SharedService.writeDebugLog("AlarmService pausePlay")
+        SharedService.writeDebugLog(this, "AlarmService pausePlay")
         mIsPausing = true
         mMPBGM.pause()
         if (SharedService.isNewsPlaying)
@@ -97,7 +97,7 @@ class AlarmService : Service() {
     }
 
     override fun onDestroy() {
-        SharedService.writeDebugLog("AlarmService onDestroy")
+        SharedService.writeDebugLog(this, "AlarmService onDestroy")
         mHandler.removeCallbacksAndMessages(null)
         mMPNews.release()
         mMPBGM.release()

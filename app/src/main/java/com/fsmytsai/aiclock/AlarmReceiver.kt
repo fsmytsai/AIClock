@@ -13,7 +13,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val acId = intent.getIntExtra("ACId", 0)
         val isOpen = SharedService.checkAlarmClockIsOpen(context, acId)
         val isRightTime = SharedService.checkAlarmClockTime(context, acId)
-        SharedService.writeDebugLog("AlarmReceiver isOpen = $isOpen isRightTime = $isRightTime")
+        SharedService.writeDebugLog(context, "AlarmReceiver isOpen = $isOpen isRightTime = $isRightTime")
         if (acId != 0 && isOpen && isRightTime) {
             val startAlarmIntent = Intent(context, AlarmActivity::class.java)
             startAlarmIntent.putExtra("ACId", acId)

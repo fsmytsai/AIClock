@@ -72,7 +72,7 @@ class AlarmActivity : AppCompatActivity() {
             if (acId != mNowACId)
                 reSetAll(acId)
             else
-                SharedService.writeDebugLog("AlarmActivity ACId 與當前一樣，不動作以取消後來的")
+                SharedService.writeDebugLog(this, "AlarmActivity ACId 與當前一樣，不動作以取消後來的")
         }
     }
 
@@ -85,7 +85,7 @@ class AlarmActivity : AppCompatActivity() {
 
     private fun setRealTexts(acId: Int) {
         mNowACId = acId
-        SharedService.writeDebugLog("AlarmActivity ACId = $acId")
+        SharedService.writeDebugLog(this, "AlarmActivity ACId = $acId")
 
         //初始化圖片快取
         initCache()
