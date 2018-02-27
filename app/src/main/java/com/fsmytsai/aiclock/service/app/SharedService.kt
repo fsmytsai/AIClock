@@ -68,6 +68,22 @@ class SharedService {
                 return false
         }
 
+        //當兩種PI都回傳null，表示AlarmManager內不存在此鬧鐘
+        fun checkNeedReset(context: Context, acId: Int): Boolean {
+            val alarmClock = getAlarmClock(context, acId)
+            if (alarmClock != null) {
+                val appContext = context.applicationContext
+                val prepareReceiverIntent = Intent(appContext, PrepareReceiver::class.java)
+                prepareReceiverIntent.putExtra("ACId", acId)
+                val prepareReceiverPI = PendingIntent.getBroadcast(appContext, acId, prepareReceiverIntent, PendingIntent.FLAG_NO_CREATE)
+                val alarmReceiverIntent = Intent(appContext, AlarmReceiver::class.java)
+                alarmReceiverIntent.putExtra("ACId", acId)
+                val alarmReceiverPI = PendingIntent.getBroadcast(appContext, acId, alarmReceiverIntent, PendingIntent.FLAG_NO_CREATE)
+                return prepareReceiverPI == null && alarmReceiverPI == null
+            } else
+                return false
+        }
+
 //        fun checkAlarmClockTime(context: Context, acId: Int): Boolean {
 //            val alarmClock = getAlarmClock(context, acId)
 //            if (alarmClock != null) {
@@ -153,21 +169,6 @@ class SharedService {
         fun getVersionCode(context: Context): Int {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             return pInfo.versionCode
-        }
-
-        fun checkUpdate(context: Context): Boolean {
-            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
-            val nowVersionCode = getVersionCode(context)
-            if (nowVersionCode != spDatas.getInt("VersionCode", 0)) {
-                return true
-            }
-            return false
-        }
-
-        fun updateVersionCode(context: Context) {
-            val nowVersionCode = getVersionCode(context)
-            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
-            spDatas.edit().putInt("VersionCode", nowVersionCode).apply()
         }
 
         fun checkNetWork(context: Context, showToast: Boolean): Boolean {

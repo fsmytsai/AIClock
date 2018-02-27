@@ -7,7 +7,6 @@ import android.view.Menu
 import android.view.MenuItem
 import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.ResetAlarmService
-import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.ui.fragment.AlarmClockFragment
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -18,11 +17,10 @@ class MainActivity : DownloadSpeechActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initViews()
-        if (SharedService.checkUpdate(this)) {
-            val resetAlarmServiceIntent = Intent(this, ResetAlarmService::class.java)
-            resetAlarmServiceIntent.putExtra("IsFromMain", true)
-            startService(resetAlarmServiceIntent)
-        }
+        //改成每次開啟都檢查是否有失效鬧鐘
+        val resetAlarmServiceIntent = Intent(this, ResetAlarmService::class.java)
+        resetAlarmServiceIntent.putExtra("IsFromMain", true)
+        startService(resetAlarmServiceIntent)
     }
 
     private fun initViews() {

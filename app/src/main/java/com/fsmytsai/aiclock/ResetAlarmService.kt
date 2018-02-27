@@ -31,8 +31,10 @@ class ResetAlarmService : Service() {
         if (mIsFromMain || isFromReceiver) {
             val alarmClocks = SharedService.getAlarmClocks(this)
             (0 until alarmClocks.alarmClockList.size)
-                    .filter { alarmClocks.alarmClockList[it].isOpen }
+                    .filter { alarmClocks.alarmClockList[it].isOpen && SharedService.checkNeedReset(this, alarmClocks.alarmClockList[it].acId) }
                     .mapTo(mNeedResetAlarmClocks.alarmClockList) { alarmClocks.alarmClockList[it] }
+
+            SharedService.writeDebugLog(this, "ResetAlarmService start download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
 
             if (mNeedResetAlarmClocks.alarmClockList.size == 0)
                 stopSelf()
@@ -54,7 +56,6 @@ class ResetAlarmService : Service() {
                     startForeground(1, notification)
                 }
 
-                SharedService.writeDebugLog(this, "ResetAlarmService start download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
                 startReset()
             }
         } else {
@@ -71,10 +72,6 @@ class ResetAlarmService : Service() {
                 mNeedResetAlarmClocks.alarmClockList.removeAt(0)
                 SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService cancel download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
                 if (mNeedResetAlarmClocks.alarmClockList.size == 0) {
-                    if (mIsFromMain) {
-                        SharedService.updateVersionCode(this@ResetAlarmService)
-                        SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService updateVersionCode")
-                    }
                     stopSelf()
                 } else
                     startReset()
@@ -88,10 +85,6 @@ class ResetAlarmService : Service() {
                 mNeedResetAlarmClocks.alarmClockList.removeAt(0)
                 SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService finish download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
                 if (mNeedResetAlarmClocks.alarmClockList.size == 0) {
-                    if (mIsFromMain) {
-                        SharedService.updateVersionCode(this@ResetAlarmService)
-                        SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService updateVersionCode")
-                    }
                     stopSelf()
                 } else
                     startReset()
