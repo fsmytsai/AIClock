@@ -85,7 +85,6 @@ class AlarmActivity : AppCompatActivity() {
 
     private fun setRealTexts(acId: Int) {
         mNowACId = acId
-        SharedService.writeDebugLog(this, "AlarmActivity ACId = $acId")
 
         //初始化圖片快取
         initCache()
