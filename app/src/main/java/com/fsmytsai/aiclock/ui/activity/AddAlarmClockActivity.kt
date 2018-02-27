@@ -229,6 +229,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             }
         }).setContentTextSize(24)
                 .setLineSpacingMultiplier(1.5f)
+                .setOutSideCancelable(false)
                 .setDividerColor(ContextCompat.getColor(this, R.color.colorPaleBlue))
                 .setTextColorCenter(ContextCompat.getColor(this, R.color.colorBlue))
                 .setSelectOptions(mAlarmClock.newsCount - 6)
