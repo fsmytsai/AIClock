@@ -183,8 +183,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         SharedService.writeDebugLog(mContext, "SpeechDownloader nowTime = ${nowCalendar.get(Calendar.HOUR_OF_DAY)}:${nowCalendar.get(Calendar.MINUTE)}:${nowCalendar.get(Calendar.SECOND)}")
         SharedService.writeDebugLog(mContext, "SpeechDownloader mAlarmTimeList = ${mAlarmTimeList[0]} ${mAlarmTimeList[1]} ${mAlarmTimeList[2]} ${mAlarmTimeList[3]}")
 
-        //檢查網路
-        if (!SharedService.checkNetWork(mContext))
+        //檢查網路，前景執行就顯示無網路提示
+        if (!SharedService.checkNetWork(mContext, mDownloadSpeechActivity != null))
             return false
 
         if (mDownloadSpeechActivity != null) getPromptData() else getTextData()

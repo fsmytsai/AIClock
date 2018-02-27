@@ -192,7 +192,7 @@ class AlarmActivity : AppCompatActivity() {
             }
 
             holder.llNews.setOnClickListener {
-                if (SharedService.checkNetWork(this@AlarmActivity)) {
+                if (SharedService.checkNetWork(this@AlarmActivity, true)) {
                     val intent = Intent(this@AlarmActivity, WebViewActivity::class.java)
                     intent.putExtra("URL", text.url)
                     startActivity(intent)
