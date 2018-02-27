@@ -65,8 +65,10 @@ class ResetAlarmService : Service() {
                 mNeedResetAlarmClocks.alarmClockList.removeAt(0)
                 SharedService.writeDebugLog("ResetAlarmService cancel download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
                 if (mNeedResetAlarmClocks.alarmClockList.size == 0) {
-                    if (mIsFromMain)
+                    if (mIsFromMain) {
                         SharedService.updateVersionCode(this@ResetAlarmService)
+                        SharedService.writeDebugLog("ResetAlarmService updateVersionCode")
+                    }
                     stopSelf()
                 } else
                     startReset()
@@ -80,8 +82,10 @@ class ResetAlarmService : Service() {
                 mNeedResetAlarmClocks.alarmClockList.removeAt(0)
                 SharedService.writeDebugLog("ResetAlarmService finish download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
                 if (mNeedResetAlarmClocks.alarmClockList.size == 0) {
-                    if (mIsFromMain)
+                    if (mIsFromMain) {
                         SharedService.updateVersionCode(this@ResetAlarmService)
+                        SharedService.writeDebugLog("ResetAlarmService updateVersionCode")
+                    }
                     stopSelf()
                 } else
                     startReset()
