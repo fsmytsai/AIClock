@@ -152,10 +152,15 @@ class SharedService {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             val nowVersionCode = getVersionCode(context)
             if (nowVersionCode != spDatas.getInt("VersionCode", 0)) {
-                spDatas.edit().putInt("VersionCode", nowVersionCode).apply()
                 return true
             }
             return false
+        }
+
+        fun updateVersionCode(context: Context) {
+            val nowVersionCode = getVersionCode(context)
+            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            spDatas.edit().putInt("VersionCode", nowVersionCode).apply()
         }
 
         fun checkNetWork(context: Context): Boolean {

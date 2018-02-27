@@ -17,6 +17,7 @@ import com.fsmytsai.aiclock.model.AlarmClocks
 class ResetAlarmService : Service() {
     private var mIsStartedForeground = false
     private var mNeedResetAlarmClocks = AlarmClocks()
+    private var mIsFromMain = false
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -32,8 +33,8 @@ class ResetAlarmService : Service() {
         if (mNeedResetAlarmClocks.alarmClockList.size == 0)
             stopSelf()
         else {
-            val isFromMain = intent?.getBooleanExtra("IsFromMain", false) ?: false
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !isFromMain) {
+            mIsFromMain = intent?.getBooleanExtra("IsFromMain", false) ?: false
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !mIsFromMain) {
                 mIsStartedForeground = true
                 SharedService.writeDebugLog("ResetAlarmService resetAlarm in Android O")
                 val CHANNEL_ID = "resetAlarm"
@@ -63,9 +64,11 @@ class ResetAlarmService : Service() {
             override fun cancel() {
                 mNeedResetAlarmClocks.alarmClockList.removeAt(0)
                 SharedService.writeDebugLog("ResetAlarmService cancel download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
-                if (mNeedResetAlarmClocks.alarmClockList.size == 0)
+                if (mNeedResetAlarmClocks.alarmClockList.size == 0) {
+                    if (mIsFromMain)
+                        SharedService.updateVersionCode(this@ResetAlarmService)
                     stopSelf()
-                else
+                } else
                     startReset()
             }
 
@@ -76,9 +79,11 @@ class ResetAlarmService : Service() {
             override fun allFinished() {
                 mNeedResetAlarmClocks.alarmClockList.removeAt(0)
                 SharedService.writeDebugLog("ResetAlarmService finish download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
-                if (mNeedResetAlarmClocks.alarmClockList.size == 0)
+                if (mNeedResetAlarmClocks.alarmClockList.size == 0) {
+                    if (mIsFromMain)
+                        SharedService.updateVersionCode(this@ResetAlarmService)
                     stopSelf()
-                else
+                } else
                     startReset()
             }
         })
