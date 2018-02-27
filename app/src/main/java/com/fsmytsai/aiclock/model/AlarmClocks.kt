@@ -4,7 +4,7 @@ package com.fsmytsai.aiclock.model
  * Created by user on 2018/2/16.
  */
 data class AlarmClocks(
-        val alarmClockList: ArrayList<AlarmClock>
+        val alarmClockList: ArrayList<AlarmClock> = ArrayList()
 )
 
 data class AlarmClock(
