@@ -25,34 +25,40 @@ class ResetAlarmService : Service() {
 
     @TargetApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val alarmClocks = SharedService.getAlarmClocks(this)
-        (0 until alarmClocks.alarmClockList.size)
-                .filter { alarmClocks.alarmClockList[it].isOpen }
-                .mapTo(mNeedResetAlarmClocks.alarmClockList) { alarmClocks.alarmClockList[it] }
+        mIsFromMain = intent?.getBooleanExtra("IsFromMain", false) ?: false
+        val isFromReBoot = intent?.getBooleanExtra("IsFromReBoot", false) ?: false
 
-        if (mNeedResetAlarmClocks.alarmClockList.size == 0)
-            stopSelf()
-        else {
-            mIsFromMain = intent?.getBooleanExtra("IsFromMain", false) ?: false
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !mIsFromMain) {
-                mIsStartedForeground = true
-                SharedService.writeDebugLog("ResetAlarmService resetAlarm in Android O")
-                val CHANNEL_ID = "resetAlarm"
-                val channel = NotificationChannel(CHANNEL_ID,
-                        "AI Clock NotificationChannel Name",
-                        NotificationManager.IMPORTANCE_DEFAULT)
+        if (mIsFromMain || isFromReBoot) {
+            val alarmClocks = SharedService.getAlarmClocks(this)
+            (0 until alarmClocks.alarmClockList.size)
+                    .filter { alarmClocks.alarmClockList[it].isOpen }
+                    .mapTo(mNeedResetAlarmClocks.alarmClockList) { alarmClocks.alarmClockList[it] }
 
-                (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
+            if (mNeedResetAlarmClocks.alarmClockList.size == 0)
+                stopSelf()
+            else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !mIsFromMain) {
+                    mIsStartedForeground = true
+                    SharedService.writeDebugLog("ResetAlarmService resetAlarm in Android O")
+                    val CHANNEL_ID = "resetAlarm"
+                    val channel = NotificationChannel(CHANNEL_ID,
+                            "AI Clock NotificationChannel Name",
+                            NotificationManager.IMPORTANCE_DEFAULT)
 
-                val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                        .setContentTitle("AI 智能鬧鐘")
-                        .setContentText("重新設定 AI 智能鬧鐘中...").build()
+                    (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
 
-                startForeground(1, notification)
+                    val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                            .setContentTitle("AI 智能鬧鐘")
+                            .setContentText("重新設定 AI 智能鬧鐘中...").build()
+
+                    startForeground(1, notification)
+                }
+
+                SharedService.writeDebugLog("ResetAlarmService start download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
+                startReset()
             }
-
-            SharedService.writeDebugLog("ResetAlarmService start download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
-            startReset()
+        } else {
+            stopSelf()
         }
 
         return super.onStartCommand(intent, flags, startId)
