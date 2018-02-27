@@ -34,15 +34,27 @@ class SharedService {
             //取消準備
             var intent = Intent(appContext, PrepareReceiver::class.java)
             intent.putExtra("ACId", acId)
-            var pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_ONE_SHOT)
+            var pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_NO_CREATE)
             val am = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            am.cancel(pi)
+            if (pi == null) {
+                writeDebugLog("cancelAlarm PrepareReceiver pi dose not exist")
+            } else {
+                writeDebugLog("cancelAlarm PrepareReceiver success")
+                am.cancel(pi)
+                pi.cancel()
+            }
 
             //取消響鈴
             intent = Intent(appContext, AlarmReceiver::class.java)
             intent.putExtra("ACId", acId)
-            pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_ONE_SHOT)
-            am.cancel(pi)
+            pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_NO_CREATE)
+            if (pi == null) {
+                writeDebugLog("cancelAlarm AlarmReceiver pi dose not exist")
+            } else {
+                writeDebugLog("cancelAlarm AlarmReceiver success")
+                am.cancel(pi)
+                pi.cancel()
+            }
         }
 
         fun checkAlarmClockIsOpen(context: Context, acId: Int): Boolean {
