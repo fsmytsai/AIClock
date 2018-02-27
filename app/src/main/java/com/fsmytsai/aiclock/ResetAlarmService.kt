@@ -24,52 +24,57 @@ class ResetAlarmService : Service() {
     @TargetApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val alarmClocks = SharedService.getAlarmClocks(this)
-        val isFromMain = intent?.getBooleanExtra("IsFromMain", false) ?: false
-        for (alarmClock in alarmClocks.alarmClockList) {
-            if (alarmClock.isOpen) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !isFromMain) {
-                    mIsStartedForeground = true
-                    SharedService.writeDebugLog("ResetAlarmService resetAlarm in Android O")
-                    val CHANNEL_ID = "resetAlarm"
-                    val channel = NotificationChannel(CHANNEL_ID,
-                            "AI Clock NotificationChannel Name",
-                            NotificationManager.IMPORTANCE_DEFAULT)
+        if (alarmClocks.alarmClockList.size == 0)
+            stopSelf()
+        else {
+            val isFromMain = intent?.getBooleanExtra("IsFromMain", false) ?: false
+            for (alarmClock in alarmClocks.alarmClockList) {
+                if (alarmClock.isOpen) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !isFromMain) {
+                        mIsStartedForeground = true
+                        SharedService.writeDebugLog("ResetAlarmService resetAlarm in Android O")
+                        val CHANNEL_ID = "resetAlarm"
+                        val channel = NotificationChannel(CHANNEL_ID,
+                                "AI Clock NotificationChannel Name",
+                                NotificationManager.IMPORTANCE_DEFAULT)
 
-                    (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
+                        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
 
-                    val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                            .setContentTitle("AI 智能鬧鐘")
-                            .setContentText("重新設定 AI 智能鬧鐘中...").build()
+                        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                                .setContentTitle("AI 智能鬧鐘")
+                                .setContentText("重新設定 AI 智能鬧鐘中...").build()
 
-                    startForeground(1, notification)
+                        startForeground(1, notification)
+                    }
+
+                    mNeedResetCount++
+                    SharedService.writeDebugLog("ResetAlarmService start download mNeedResetCount = $mNeedResetCount")
+
+                    val speechDownloader = SpeechDownloader(this, null)
+                    speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
+                        override fun cancel() {
+                            mNeedResetCount--
+                            SharedService.writeDebugLog("ResetAlarmService cancel download mNeedResetCount = $mNeedResetCount")
+                            if (mNeedResetCount == 0)
+                                stopSelf()
+                        }
+
+                        override fun startSetData() {
+
+                        }
+
+                        override fun allFinished() {
+                            mNeedResetCount--
+                            SharedService.writeDebugLog("ResetAlarmService finish download mNeedResetCount = $mNeedResetCount")
+                            if (mNeedResetCount == 0)
+                                stopSelf()
+                        }
+                    })
+                    speechDownloader.setAlarmClock(alarmClock)
                 }
-
-                mNeedResetCount++
-                SharedService.writeDebugLog("ResetAlarmService start download mNeedResetCount = $mNeedResetCount")
-
-                val speechDownloader = SpeechDownloader(this, null)
-                speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
-                    override fun cancel() {
-                        mNeedResetCount--
-                        SharedService.writeDebugLog("ResetAlarmService cancel download mNeedResetCount = $mNeedResetCount")
-                        if (mNeedResetCount == 0)
-                            stopSelf()
-                    }
-
-                    override fun startSetData() {
-
-                    }
-
-                    override fun allFinished() {
-                        mNeedResetCount--
-                        SharedService.writeDebugLog("ResetAlarmService finish download mNeedResetCount = $mNeedResetCount")
-                        if (mNeedResetCount == 0)
-                            stopSelf()
-                    }
-                })
-                speechDownloader.setAlarmClock(alarmClock)
             }
         }
+
         return super.onStartCommand(intent, flags, startId)
     }
 

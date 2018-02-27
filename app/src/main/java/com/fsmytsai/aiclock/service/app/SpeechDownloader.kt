@@ -420,11 +420,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             //離響鈴還超過 15 分鐘(重開機或響鈴的瞬間可能會取得超大分鐘數)， X 分鐘後重試(距離響鈴時間的 1/3 ，小於 10 分鐘的話則使用 10 分鐘)
             if (alarmMinute > 15) {
                 val retryMinute = if (alarmMinute / 3 > 10) alarmMinute / 3 else 10
-                SharedService.writeDebugLog("SpeechDownloader 背景取消下載，離響鈴超過 15 分鐘 $retryMinute 分鐘後重試")
+                SharedService.writeDebugLog("SpeechDownloader 背景取消下載，離響鈴超過 15 分鐘($alarmMinute) $retryMinute 分鐘後重試")
                 retryDownloadSound(retryMinute.toInt())
             } else {
                 //剩下不到 15 分鐘響鈴，直接播放舊資料及音檔
-                SharedService.writeDebugLog("SpeechDownloader 背景取消下載，離響鈴不到 15 分鐘，直接播放舊資料及音檔")
+                SharedService.writeDebugLog("SpeechDownloader 背景取消下載，離響鈴不到 15 分鐘($alarmMinute)，直接播放舊資料及音檔")
                 setAlarm(true)
             }
         }
@@ -440,7 +440,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //設置前先嘗試取消，避免重複設置
         SharedService.cancelAlarm(mContext, mAlarmClock.acId)
 
-        val pi = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_CANCEL_CURRENT)
+        val pi = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         val am = mContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val tenMinuteLaterCalendar = Calendar.getInstance()
@@ -504,7 +504,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //設置前先嘗試取消，避免重複設置
         SharedService.cancelAlarm(mContext, mAlarmClock.acId)
 
-        val pi = PendingIntent.getBroadcast(appContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_ONE_SHOT)
+        val pi = PendingIntent.getBroadcast(appContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         val am = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, mAlarmTimeCalendar.timeInMillis, pi)
