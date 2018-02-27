@@ -19,7 +19,6 @@ import android.widget.Toast
 import android.net.ConnectivityManager
 import android.util.Log
 import java.io.File
-import java.io.PrintWriter
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -165,11 +164,12 @@ class SharedService {
             spDatas.edit().putInt("VersionCode", nowVersionCode).apply()
         }
 
-        fun checkNetWork(context: Context): Boolean {
+        fun checkNetWork(context: Context, showToast: Boolean): Boolean {
             val connManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val networkInfo = connManager.activeNetworkInfo
             if (networkInfo == null || !networkInfo.isConnected || !networkInfo.isAvailable) {
-                showTextToast(context, "請檢查網路連線")
+                if (showToast)
+                    showTextToast(context, "請檢查網路連線")
                 return false
             }
             return true
