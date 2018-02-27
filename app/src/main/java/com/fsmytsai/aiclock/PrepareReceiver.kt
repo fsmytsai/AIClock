@@ -12,6 +12,7 @@ class PrepareReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val acId = intent.getIntExtra("ACId", 0)
+        SharedService.writeDebugLog("PrepareReceiver ACId = $acId")
         if (acId != 0 && SharedService.checkAlarmClockIsOpen(context, acId)) {
             val serviceIntent = Intent(context, PrepareService::class.java)
             serviceIntent.putExtra("ACId", acId)
