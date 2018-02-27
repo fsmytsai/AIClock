@@ -4,6 +4,7 @@
 | State      | Description                 |
 |------------|-----------------------------|
 | unfinished | 用 JobService 處理 Android N 以上的開啟網路事件 |
+| unfinished | 問題回報 |
 
 
 # Version Features
@@ -16,7 +17,8 @@
 
 # Release Note
 ## 1.3.2 versionCode = 12
-1. 新增問題回報、關於
+1. 新增關於選單
+2. 緊急修正由於作者頭撞到造成的鬧鐘失效問題
 
 ## 1.3.1 versionCode = 11
 1. 增加穩定度
