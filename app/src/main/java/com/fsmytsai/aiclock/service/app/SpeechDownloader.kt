@@ -73,7 +73,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     fun setAlarmClock(alarmClock: AlarmClock) {
         mAlarmClock = alarmClock
-
+        SharedService.writeDebugLog("SpeechDownloader start ACId = ${mAlarmClock.acId}")
         //初始化 FileDownloader
         FileDownloader.setup(mContext)
 
@@ -181,7 +181,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             mAlarmTimeList.add(0)
 
         //檢查網路
-        if(!SharedService.checkNetWork(mContext))
+        if (!SharedService.checkNetWork(mContext))
             return false
 
         if (mDownloadSpeechActivity != null) getPromptData() else getTextData()
