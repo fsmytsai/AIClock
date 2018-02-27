@@ -3,35 +3,7 @@
 # To Do
 | State      | Description                 |
 |------------|-----------------------------|
-| finished   | 第幾則新聞提示 |
-| finished   | 使用網路提示 |
-| finished   | 判斷時間多判斷星期幾 |
-| finished   | 測試 google play 更新會不會殺死鬧鐘 |
-| finished   | 應在下載音檔前才抓位置 |
-| finished   | 取得鬧鐘資料跟文字資料模組化 |
-| finished   | 提早插入鬧鐘資料 |
-| finished   | 檢查 PrepareService 的 stopself 有沒有效 |
-| finished   | 播報天氣新增地名 |
-| finished   | 修正沒網路時新建鬧鐘崩潰 |
-| finished   | 取消下載 |
-| finished   | 簡化使用網路提示 |
-| finished   | 重開機重新設置 | 
-| finished   | 刪除舊音檔 |
-| finished   | 修復背景下載失敗造成整個鬧鐘失效 |
-| finished   | 時間用滾動選擇 |
-| finished   | 提示詳細溫度 |
-| finished   | 修改後端，加上來源網址及圖片 |
-| finished   | 響鈴頁面 |
-| finished   | 長按刪除鬧鐘 |
-| finished   | 新聞詳細頁面 |
-| finished   | 修改後端，避免超過1000次抓取新聞 |
-| finished   | 修正修改鬧鐘後重複設置的問題 |
-| finished   | 修正取消鬧鐘後還有可能響的問題 |
-| finished   | 新增設置取得幾則新聞 |
-| finished   | 修正沒網路時，開啟鬧鐘造成閃退的問題 |
-| finished   | 修正響鈴時間重疊造成第二個鬧鐘失效 |
-| finished   | 新增更新後自動重設所有鬧鐘 |
-| finished   | 修正準備鬧鐘及重設鬧鐘因同時下載多個鬧鐘資料，可能造成互相刪除音檔 |
+| unfinished | 用 JobService 處理 Android N 以上的開啟網路事件 |
 
 
 # Version Features
@@ -43,6 +15,9 @@
 5. 可查看正在播報新聞
 
 # Release Note
+## 1.3.2 versionCode = 12
+1. 新增問題回報、關於
+
 ## 1.3.1 versionCode = 11
 1. 增加穩定度
 
