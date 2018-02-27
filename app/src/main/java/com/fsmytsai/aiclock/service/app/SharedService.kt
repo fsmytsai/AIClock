@@ -19,6 +19,7 @@ import android.widget.Toast
 import android.net.ConnectivityManager
 import android.util.Log
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 /**
@@ -28,6 +29,7 @@ class SharedService {
     companion object {
         var isNewsPlaying = false
         var reRunRunnable = false
+        val waitToPrepareAlarmClockList = ArrayList<AlarmClock>()
 
         fun cancelAlarm(context: Context, acId: Int) {
             val appContext = context.applicationContext

@@ -18,25 +18,44 @@ class PrepareService : Service() {
             if (alarmClock == null)
                 stopSelf()
             else {
-                val speechDownloader = SpeechDownloader(this, null)
-                speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
-                    override fun cancel() {
-                        stopSelf()
-                    }
-
-                    override fun startSetData() {
-
-                    }
-
-                    override fun allFinished() {
-                        stopSelf()
-                    }
-                })
-                speechDownloader.setAlarmClock(alarmClock)
+                if (SharedService.waitToPrepareAlarmClockList.size == 0) {
+                    SharedService.waitToPrepareAlarmClockList.add(alarmClock)
+                    SharedService.writeDebugLog("PrepareService startDownload")
+                    startDownload()
+                }else{
+                    SharedService.waitToPrepareAlarmClockList.add(alarmClock)
+                    SharedService.writeDebugLog("PrepareService add to wait No. ${SharedService.waitToPrepareAlarmClockList.size}")
+                }
             }
 
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun startDownload() {
+        val speechDownloader = SpeechDownloader(this, null)
+        speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
+            override fun cancel() {
+                SharedService.waitToPrepareAlarmClockList.removeAt(0)
+                if (SharedService.waitToPrepareAlarmClockList.size == 0)
+                    stopSelf()
+                else
+                    startDownload()
+            }
+
+            override fun startSetData() {
+
+            }
+
+            override fun allFinished() {
+                SharedService.waitToPrepareAlarmClockList.removeAt(0)
+                if (SharedService.waitToPrepareAlarmClockList.size == 0)
+                    stopSelf()
+                else
+                    startDownload()
+            }
+        })
+        speechDownloader.setAlarmClock(SharedService.waitToPrepareAlarmClockList[0])
     }
 
     override fun onDestroy() {
