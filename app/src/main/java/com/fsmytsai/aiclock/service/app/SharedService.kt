@@ -40,9 +40,9 @@ class SharedService {
             var pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_NO_CREATE)
             val am = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             if (pi == null) {
-                writeDebugLog(context, "cancelAlarm PrepareReceiver pi dose not exist")
+                writeDebugLog(context, "SharedService cancelAlarm PrepareReceiver pi dose not exist")
             } else {
-                writeDebugLog(context, "cancelAlarm PrepareReceiver success")
+                writeDebugLog(context, "SharedService cancelAlarm PrepareReceiver success")
                 am.cancel(pi)
                 pi.cancel()
             }
@@ -52,9 +52,9 @@ class SharedService {
             intent.putExtra("ACId", acId)
             pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_NO_CREATE)
             if (pi == null) {
-                writeDebugLog(context, "cancelAlarm AlarmReceiver pi dose not exist")
+                writeDebugLog(context, "SharedService cancelAlarm AlarmReceiver pi dose not exist")
             } else {
-                writeDebugLog(context, "cancelAlarm AlarmReceiver success")
+                writeDebugLog(context, "SharedService cancelAlarm AlarmReceiver success")
                 am.cancel(pi)
                 pi.cancel()
             }
@@ -68,17 +68,23 @@ class SharedService {
                 return false
         }
 
-        fun checkAlarmClockTime(context: Context, acId: Int): Boolean {
-            val alarmClock = getAlarmClock(context, acId)
-            if (alarmClock != null) {
-                val nowCalendar = Calendar.getInstance()
-                //檢查時間後檢查是否開啟
-                if (alarmClock.hour == nowCalendar.get(Calendar.HOUR_OF_DAY) &&
-                        alarmClock.minute == nowCalendar.get(Calendar.MINUTE))
-                    return true
-            }
-            return false
-        }
+//        fun checkAlarmClockTime(context: Context, acId: Int): Boolean {
+//            val alarmClock = getAlarmClock(context, acId)
+//            if (alarmClock != null) {
+//                val nowCalendar = Calendar.getInstance()
+//                val alarmCalendar = Calendar.getInstance()
+//                alarmCalendar.set(Calendar.HOUR_OF_DAY, alarmClock.hour)
+//                alarmCalendar.set(Calendar.MINUTE, alarmClock.minute)
+//                alarmCalendar.set(Calendar.SECOND, 0)
+//
+//                val differenceSecond = kotlin.math.abs(nowCalendar.timeInMillis - alarmCalendar.timeInMillis) / 1000
+//                writeDebugLog(context, "SharedService checkAlarmClockTime differenceSecond = $differenceSecond")
+//                //檢查誤差秒數是否小於 60
+//                if (differenceSecond < 60)
+//                    return true
+//            }
+//            return false
+//        }
 
         fun getAlarmClocks(context: Context): AlarmClocks {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
