@@ -158,19 +158,19 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             return false
         }
 
-        if (differenceSecond > 60 * 60 * 24) {
+        if (differenceSecond >= 60 * 60 * 24) {
             mAlarmTimeList.add(differenceSecond / (60 * 60 * 24))
             differenceSecond %= (60 * 60 * 24)
         } else
             mAlarmTimeList.add(0)
 
-        if (differenceSecond > 60 * 60) {
+        if (differenceSecond >= 60 * 60) {
             mAlarmTimeList.add(differenceSecond / (60 * 60))
             differenceSecond %= (60 * 60)
         } else
             mAlarmTimeList.add(0)
 
-        if (differenceSecond > 60)
+        if (differenceSecond >= 60)
             mAlarmTimeList.add(differenceSecond / 60)
         else
             mAlarmTimeList.add(0)
