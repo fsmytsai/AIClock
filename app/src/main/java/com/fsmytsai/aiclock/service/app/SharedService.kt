@@ -60,14 +60,14 @@ class SharedService {
             }
         }
 
-        fun checkAlarmClockIsOpen(context: Context, acId: Int): Boolean {
-            val alarmClock = getAlarmClock(context, acId)
-            if (alarmClock != null)
-                return alarmClock.isOpen
-            else
-                return false
-        }
-
+//        fun checkAlarmClockIsOpen(context: Context, acId: Int): Boolean {
+//            val alarmClock = getAlarmClock(context, acId)
+//            if (alarmClock != null)
+//                return alarmClock.isOpen
+//            else
+//                return false
+//        }
+//
 //        fun checkAlarmClockTime(context: Context, acId: Int): Boolean {
 //            val alarmClock = getAlarmClock(context, acId)
 //            if (alarmClock != null) {
