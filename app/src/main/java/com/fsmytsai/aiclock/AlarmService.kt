@@ -17,6 +17,7 @@ import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.activity.AlarmActivity
 import com.google.gson.Gson
 import java.io.File
+import java.lang.reflect.InvocationTargetException
 
 class AlarmService : Service() {
     private val mBinder = LocalBinder()
@@ -117,7 +118,11 @@ class AlarmService : Service() {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun playNews(uri: Uri) {
-        mMPNews.setDataSource(this, uri)
+        try {
+            mMPNews.setDataSource(this, uri)
+        } catch (e: InvocationTargetException) {
+            SharedService.writeDebugLog(this, "AlarmService setDataSource failed uri = $uri")
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val audioAttributes = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)

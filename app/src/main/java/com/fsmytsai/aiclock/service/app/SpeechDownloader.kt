@@ -29,6 +29,7 @@ import kotlinx.android.synthetic.main.block_prompt_dialog.view.*
 import okhttp3.*
 import java.io.File
 import java.io.IOException
+import java.lang.reflect.InvocationTargetException
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -519,7 +520,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun startPlaying(uri: Uri, isSetFinish: Boolean) {
         val mpFinish = MediaPlayer()
-        mpFinish.setDataSource(mContext, uri)
+        try {
+            mpFinish.setDataSource(mContext, uri)
+        } catch (e: InvocationTargetException) {
+            SharedService.writeDebugLog(mContext, "SpeechDownloader setDataSource failed uri = $uri")
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val audioAttributes = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
