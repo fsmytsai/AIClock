@@ -4,6 +4,8 @@
 | State      | Description                 |
 |------------|-----------------------------|
 | unfinished | 用 JobService 處理 Android N 以上的開啟網路事件 |
+| warn | 15 分鐘內重試太短，容易造成最後 2-5 分鐘才決定播放舊音檔，導致 10 分鐘內無法再次呼叫響鈴。(兩個鬧鐘會打架，互相拖 9 分鐘) |
+| unfinished | 考慮是否要將響鈴時的順序改成先開 service 再從 service 開 activity |
 
 
 # Version Features
@@ -15,6 +17,11 @@
 5. 可查看正在播報新聞
 
 # Release Note
+## 1.4.1 versionCode = 14
+1. 新增可在關於選單看到當前版本號
+2. 修正在 Android 6.0 以上的版本沒開網路造成的延遲響鈴
+3. 修正低機率遺失音檔造成的閃退
+
 ## 1.4.0 versionCode = 13
 1. 新增問題回報及許願選單
 
@@ -70,7 +77,7 @@
 5. 修正取不到位置閃退的問題
   
 ## 1.0.2 versionCode = 3
-1. 修正低 android 版本一開就閃退的錯誤
+1. 修正低 Android 版本一開就閃退的錯誤
   
 ## 1.0.1 versionCode = 2
 1. 修正手機大字體時造成的跑版
