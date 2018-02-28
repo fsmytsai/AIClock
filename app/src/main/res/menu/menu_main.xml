@@ -1,0 +1,23 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.tsaiweb.myapplication.MainActivity">
+
+    <item
+        android:id="@+id/item_error_report"
+        android:orderInCategory="100"
+        android:title="問題回報"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/item_wish"
+        android:orderInCategory="200"
+        android:title="許願"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/item_about"
+        android:orderInCategory="300"
+        android:title="關於"
+        app:showAsAction="never" />
+</menu>
