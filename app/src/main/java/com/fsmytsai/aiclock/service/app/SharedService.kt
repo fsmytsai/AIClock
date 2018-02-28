@@ -31,6 +31,7 @@ class SharedService {
         var isNewsPlaying = false
         var reRunRunnable = false
         val waitToPrepareAlarmClockList = ArrayList<AlarmClock>()
+        val speakerArr = arrayOf("f1", "f2", "m1")
 
         fun cancelAlarm(context: Context, acId: Int) {
             val appContext = context.applicationContext

@@ -24,7 +24,6 @@ class AlarmService : Service() {
     private var mAlarmActivity: AlarmActivity? = null
     private var mMPBGM = MediaPlayer()
     private var mMPNews = MediaPlayer()
-    private var mIsByePlaying = false
     private var mIsPausing = false
     private var mSpeaker = -1
     private lateinit var mTexts: Texts
@@ -63,6 +62,9 @@ class AlarmService : Service() {
             }
         }
 
+        //最後加上 bye
+        mSoundList.add("bye")
+
         startBGM()
 
         return mBinder
@@ -85,17 +87,17 @@ class AlarmService : Service() {
         }
     }
 
-    fun pausePlay() {
-        SharedService.writeDebugLog(this, "AlarmService pausePlay")
-        mIsPausing = true
-        mMPBGM.pause()
-        if (SharedService.isNewsPlaying)
-            mMPNews.pause()
-        else {
-            SharedService.reRunRunnable = true
-            mHandler.removeCallbacksAndMessages(null)
-        }
-    }
+//    fun pausePlay() {
+//        SharedService.writeDebugLog(this, "AlarmService pausePlay")
+//        mIsPausing = true
+//        mMPBGM.pause()
+//        if (SharedService.isNewsPlaying)
+//            mMPNews.pause()
+//        else {
+//            SharedService.reRunRunnable = true
+//            mHandler.removeCallbacksAndMessages(null)
+//        }
+//    }
 
     override fun onDestroy() {
         SharedService.writeDebugLog(this, "AlarmService onDestroy")
@@ -118,11 +120,14 @@ class AlarmService : Service() {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun playNews(uri: Uri) {
+        //雖然開始播放前已全部檢查過，但保險起見也加上 try catch
         try {
             mMPNews.setDataSource(this, uri)
         } catch (e: InvocationTargetException) {
             SharedService.writeDebugLog(this, "AlarmService setDataSource failed uri = $uri")
+            mMPNews.setDataSource("android.resource://$packageName/raw/${SharedService.speakerArr[mSpeaker]}_lost")
         }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val audioAttributes = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
@@ -131,41 +136,26 @@ class AlarmService : Service() {
         } else {
             mMPNews.setAudioStreamType(AudioManager.STREAM_ALARM)
         }
-        mMPNews.setOnCompletionListener {
-            if (!mIsByePlaying) {
-                mSoundList.removeAt(0)
-            }
 
+        mMPNews.setOnCompletionListener {
             mMPNews.release()
+
+            //如果還沒播放 bye 則一直刪，由於是播放完才刪除，所以不可放進下面的 if 中
+            if (mSoundList.size > 0)
+                mSoundList.removeAt(0)
 
             if (mSoundList.size > 0) {
                 mMPNews = MediaPlayer()
-                if (mSoundList[0].startsWith("news") || mSoundList[0] == "olddata") {
-                    var spk = "f1"
-                    if (mSpeaker == 1)
-                        spk = "f2"
-                    else if (mSpeaker == 2)
-                        spk = "m1"
-                    playNews(Uri.parse("android.resource://$packageName/raw/${spk}_${mSoundList[0]}"))
-                } else
+                if (mSoundList[0].startsWith("news") || mSoundList[0] == "olddata" || mSoundList[0] == "bye")
+                    playNews(Uri.parse("android.resource://$packageName/raw/${SharedService.speakerArr[mSpeaker]}_${mSoundList[0]}"))
+                else
                     playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
-            } else if (!mIsByePlaying) {
-                mMPNews = MediaPlayer()
-                //播放掰掰
-                mIsByePlaying = true
-                var spk = "f1"
-                if (mSpeaker == 1)
-                    spk = "f2"
-                else if (mSpeaker == 2)
-                    spk = "m1"
-                playNews(Uri.parse("android.resource://$packageName/raw/${spk}_bye"))
             } else {
-                //結束播放
-                mIsByePlaying = false
                 mMPBGM.setVolume(1f, 1f)
                 SharedService.isNewsPlaying = false
             }
         }
+
         mMPNews.prepare()
         mMPNews.start()
         SharedService.isNewsPlaying = true
@@ -206,12 +196,7 @@ class AlarmService : Service() {
     private val mRunnable = Runnable {
         mMPBGM.setVolume(0.1f, 0.1f)
         if (mSoundList[0].startsWith("news") || mSoundList[0] == "olddata") {
-            var spk = "f1"
-            if (mSpeaker == 1)
-                spk = "f2"
-            else if (mSpeaker == 2)
-                spk = "m1"
-            playNews(Uri.parse("android.resource://$packageName/raw/${spk}_${mSoundList[0]}"))
+            playNews(Uri.parse("android.resource://$packageName/raw/${SharedService.speakerArr[mSpeaker]}_${mSoundList[0]}"))
         } else
             playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
     }

@@ -524,6 +524,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             mpFinish.setDataSource(mContext, uri)
         } catch (e: InvocationTargetException) {
             SharedService.writeDebugLog(mContext, "SpeechDownloader setDataSource failed uri = $uri")
+            mpFinish.setDataSource("android.resource://${mContext.packageName}/raw/${SharedService.speakerArr[mAlarmClock.speaker]}_lost")
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val audioAttributes = AudioAttributes.Builder()
@@ -569,9 +570,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         val directory = File("${mContext.filesDir}/sounds")
         for (file in directory.listFiles()) {
             if (file.name !in allNeedFileName) {
-                if (file.delete())
-                    SharedService.writeDebugLog(mContext, "SpeechDownloader delete oldSound ${file.name}")
-                else
+                if (!file.delete())
                     SharedService.writeDebugLog(mContext, "SpeechDownloader delete failed ${file.name}")
             }
         }
