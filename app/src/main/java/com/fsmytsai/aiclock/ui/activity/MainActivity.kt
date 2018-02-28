@@ -80,7 +80,7 @@ class MainActivity : DownloadSpeechActivity() {
             R.id.item_about -> {
                 AlertDialog.Builder(this)
                         .setTitle("關於")
-                        .setMessage("本程式所有新聞來源皆為newsapi.org\n\n背景音樂來自 youtube 的創作者工具箱")
+                        .setMessage("當前版本號：${SharedService.getVersionCode(this)}\n\n本程式所有新聞來源皆為newsapi.org\n\n背景音樂來自 youtube 的創作者工具箱")
                         .setPositiveButton("知道了", null)
                         .show()
                 true
@@ -106,6 +106,8 @@ class MainActivity : DownloadSpeechActivity() {
 
         builder.addFormDataPart("content", content)
                 .addFormDataPart("type", "$type")
+                .addFormDataPart("version_code", "${SharedService.getVersionCode(this)}")
+
         if (email != "")
             builder.addFormDataPart("email", "$email")
 
