@@ -4,7 +4,6 @@
 | State      | Description                 |
 |------------|-----------------------------|
 | unfinished | 用 JobService 處理 Android N 以上的開啟網路事件 |
-| unfinished | 問題回報 |
 
 
 # Version Features
@@ -16,6 +15,9 @@
 5. 可查看正在播報新聞
 
 # Release Note
+## 1.4.0 versionCode = 13
+1. 新增問題回報及許願選單
+
 ## 1.3.2 versionCode = 12
 1. 新增關於選單
 2. 緊急修正由於作者頭撞到造成 1.3.0 版的鬧鐘失效問題
