@@ -376,7 +376,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         override fun retry(task: BaseDownloadTask?, ex: Throwable?, retryingTimes: Int, soFarBytes: Int) {}
 
         override fun completed(task: BaseDownloadTask) {
-            SharedService.writeDebugLog(mContext, "SpeechDownloader download complete ${task.getTag(0) as String}")
             completeOrErrorDownload()
         }
 
@@ -421,14 +420,15 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         } else {
             //距離響鈴時間的分鐘數
             val alarmMinute = mAlarmTimeList[0] * 24 * 60 + mAlarmTimeList[1] * 60 + mAlarmTimeList[2]
-            //離響鈴還超過 15 分鐘(重開機或響鈴的瞬間可能會取得超大分鐘數)， X 分鐘後重試(距離響鈴時間的 1/3 ，小於 10 分鐘的話則使用 10 分鐘)
-            if (alarmMinute > 15) {
+            //離響鈴還超過 27 分鐘(重開機或響鈴的瞬間可能會取得超大分鐘數)， X 分鐘後重試(距離響鈴時間的 1/3 ，小於 10 分鐘的話則使用 10 分鐘)
+            //避免 9 * 3 造成的延遲響鈴 (響鈴時間太接近的鬧鐘過多可能還是會造成響鈴延遲)
+            if (alarmMinute > 27) {
                 val retryMinute = if (alarmMinute / 3 > 10) alarmMinute / 3 else 10
-                SharedService.writeDebugLog(mContext, "SpeechDownloader 背景取消下載，離響鈴超過 15 分鐘($alarmMinute) $retryMinute 分鐘後重試")
+                SharedService.writeDebugLog(mContext, "SpeechDownloader 背景取消下載，離響鈴超過 27 分鐘($alarmMinute) $retryMinute 分鐘後重試")
                 retryDownloadSound(retryMinute.toInt())
             } else {
-                //剩下不到 15 分鐘響鈴，直接播放舊資料及音檔
-                SharedService.writeDebugLog(mContext, "SpeechDownloader 背景取消下載，離響鈴不到 15 分鐘($alarmMinute)，直接播放舊資料及音檔")
+                //剩下不到 27 分鐘響鈴，直接播放舊資料及音檔
+                SharedService.writeDebugLog(mContext, "SpeechDownloader 背景取消下載，離響鈴不到 27 分鐘($alarmMinute)，直接播放舊資料及音檔")
                 setAlarm(true)
             }
         }
