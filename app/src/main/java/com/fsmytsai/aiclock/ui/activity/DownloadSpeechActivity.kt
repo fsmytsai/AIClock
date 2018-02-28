@@ -13,7 +13,7 @@ import com.fsmytsai.aiclock.StartDownloadService
 import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
-import kotlinx.android.synthetic.main.block_download_dialog.view.*
+import kotlinx.android.synthetic.main.dialog_download.view.*
 
 open class DownloadSpeechActivity : AppCompatActivity() {
     private var mDownloadService: StartDownloadService? = null
@@ -84,7 +84,7 @@ open class DownloadSpeechActivity : AppCompatActivity() {
     }
 
     fun showDownloadingDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.block_download_dialog, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_download, null)
         pbDownloading = dialogView.pb_downloading
         tvDownloading = dialogView.tv_downloading
 

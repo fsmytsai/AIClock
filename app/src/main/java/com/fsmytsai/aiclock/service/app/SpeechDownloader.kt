@@ -25,7 +25,7 @@ import com.google.gson.Gson
 import com.liulishuo.filedownloader.BaseDownloadTask
 import com.liulishuo.filedownloader.FileDownloadListener
 import com.liulishuo.filedownloader.FileDownloader
-import kotlinx.android.synthetic.main.block_prompt_dialog.view.*
+import kotlinx.android.synthetic.main.dialog_prompt.view.*
 import okhttp3.*
 import java.io.File
 import java.io.IOException
@@ -82,7 +82,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             //前景
             val spDatas = mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             if (!spDatas.getBoolean("NeverPrompt", false)) {
-                val dialogView = mDownloadSpeechActivity!!.layoutInflater.inflate(R.layout.block_prompt_dialog, null)
+                val dialogView = mDownloadSpeechActivity!!.layoutInflater.inflate(R.layout.dialog_prompt, null)
                 AlertDialog.Builder(mDownloadSpeechActivity!!)
                         .setCancelable(false)
                         .setView(dialogView)
