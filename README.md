@@ -4,6 +4,7 @@
 | State      | Description                 |
 |------------|-----------------------------|
 | unfinished | 用 JobService 處理 Android N 以上的開啟網路事件 |
+| unfinished | report 加上 version_code |
 
 
 # Version Features
