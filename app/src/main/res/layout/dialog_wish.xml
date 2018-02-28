@@ -15,12 +15,24 @@
         android:textSize="20sp" />
 
     <EditText
+        android:id="@+id/et_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/edittextback"
+        android:gravity="top"
+        android:hint="Email 選填 (可留空)"
+        android:inputType="textEmailAddress"
+        android:padding="8dp" />
+
+    <EditText
         android:id="@+id/et_content"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:background="@drawable/edittextback"
         android:gravity="top"
         android:hint="例：希望播報聲音能更好聽。"
+        android:inputType="textMultiLine"
         android:padding="8dp" />
 
 </LinearLayout>

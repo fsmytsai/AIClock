@@ -55,7 +55,8 @@ class MainActivity : DownloadSpeechActivity() {
                             .setNegativeButton("取消", null)
                             .setPositiveButton("送出", { _, _ ->
                                 val content = dialogView.et_content.text.toString()
-                                report(content, 0)
+                                val email = dialogView.et_email.text.toString()
+                                report(content, 0, email)
                             })
                             .show()
                 }
@@ -69,7 +70,8 @@ class MainActivity : DownloadSpeechActivity() {
                             .setNegativeButton("取消", null)
                             .setPositiveButton("送出", { _, _ ->
                                 val content = dialogView.et_content.text.toString()
-                                report(content, 1)
+                                val email = dialogView.et_email.text.toString()
+                                report(content, 1, email)
                             })
                             .show()
                 }
@@ -87,7 +89,7 @@ class MainActivity : DownloadSpeechActivity() {
         }
     }
 
-    private fun report(content: String, type: Int) {
+    private fun report(content: String, type: Int, email: String) {
         val builder = MultipartBody.Builder()
         builder.setType(MultipartBody.FORM)
         if (type == 0) {
@@ -104,6 +106,8 @@ class MainActivity : DownloadSpeechActivity() {
 
         builder.addFormDataPart("content", content)
                 .addFormDataPart("type", "$type")
+        if (email != "")
+            builder.addFormDataPart("email", "$email")
 
         val body = builder.build()
 
