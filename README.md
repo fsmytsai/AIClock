@@ -4,6 +4,7 @@
 | State      | Description                 |
 |------------|-----------------------------|
 | unfinished | 用 JobService 處理 Android N 以上的開啟網路事件 |
+| unfinished | 開網路時把放棄的重設 |
 | warn | 15 分鐘內重試太短，容易造成最後 2-5 分鐘才決定播放舊音檔，導致 10 分鐘內無法再次呼叫響鈴。(兩個鬧鐘會打架，互相拖 9 分鐘) |
 | unfinished | 考慮是否要將響鈴時的順序改成先開 service 再從 service 開 activity |
 
