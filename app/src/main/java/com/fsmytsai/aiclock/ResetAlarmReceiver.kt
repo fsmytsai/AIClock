@@ -13,16 +13,19 @@ class ResetAlarmReceiver : BroadcastReceiver() {
             SharedService.writeDebugLog(context, "ResetAlarmReceiver ACTION_BOOT_COMPLETED")
             val serviceIntent = Intent(context, ResetAlarmService::class.java)
             serviceIntent.putExtra("IsFromReceiver", true)
+            serviceIntent.putExtra("CheckNeedReset", false)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(serviceIntent)
             } else {
                 context.startService(serviceIntent)
             }
         } else {
+            //確定是開啟網路才執行
             if (SharedService.checkNetWork(context, false)) {
                 SharedService.writeDebugLog(context, "ResetAlarmReceiver open network")
                 val serviceIntent = Intent(context, ResetAlarmService::class.java)
                 serviceIntent.putExtra("IsFromReceiver", true)
+                serviceIntent.putExtra("CheckNeedReset", false)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     context.startForegroundService(serviceIntent)
                 } else {

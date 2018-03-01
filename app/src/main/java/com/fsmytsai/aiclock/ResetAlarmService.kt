@@ -17,7 +17,6 @@ import com.fsmytsai.aiclock.model.AlarmClocks
 class ResetAlarmService : Service() {
     private var mIsStartedForeground = false
     private var mNeedResetAlarmClocks = AlarmClocks()
-    private var mIsFromMain = false
 
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -25,21 +24,28 @@ class ResetAlarmService : Service() {
 
     @TargetApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        mIsFromMain = intent?.getBooleanExtra("IsFromMain", false) ?: false
+        val isFromMain = intent?.getBooleanExtra("IsFromMain", false) ?: false
         val isFromReceiver = intent?.getBooleanExtra("IsFromReceiver", false) ?: false
 
-        if (mIsFromMain || isFromReceiver) {
+        if (isFromMain || isFromReceiver) {
             val alarmClocks = SharedService.getAlarmClocks(this)
-            (0 until alarmClocks.alarmClockList.size)
-                    .filter { alarmClocks.alarmClockList[it].isOpen && SharedService.checkNeedReset(this, alarmClocks.alarmClockList[it].acId) }
-                    .mapTo(mNeedResetAlarmClocks.alarmClockList) { alarmClocks.alarmClockList[it] }
+
+            val checkNeedReset = intent?.getBooleanExtra("CheckNeedReset", true) ?: true
+            if (checkNeedReset)
+                (0 until alarmClocks.alarmClockList.size)
+                        .filter { alarmClocks.alarmClockList[it].isOpen && SharedService.checkNeedReset(this, alarmClocks.alarmClockList[it].acId) }
+                        .mapTo(mNeedResetAlarmClocks.alarmClockList) { alarmClocks.alarmClockList[it] }
+            else
+                (0 until alarmClocks.alarmClockList.size)
+                        .filter { alarmClocks.alarmClockList[it].isOpen }
+                        .mapTo(mNeedResetAlarmClocks.alarmClockList) { alarmClocks.alarmClockList[it] }
 
             SharedService.writeDebugLog(this, "ResetAlarmService start download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
 
             if (mNeedResetAlarmClocks.alarmClockList.size == 0)
                 stopSelf()
             else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !mIsFromMain) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !isFromMain) {
                     mIsStartedForeground = true
                     SharedService.writeDebugLog(this, "ResetAlarmService resetAlarm in Android O")
                     val CHANNEL_ID = "resetAlarm"
