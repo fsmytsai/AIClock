@@ -70,17 +70,28 @@ class SharedService {
         }
 
         //當兩種PI都回傳null，表示AlarmManager內不存在此鬧鐘
-        fun checkNeedReset(context: Context, acId: Int): Boolean {
+        fun checkNeedReset(context: Context, acId: Int, isCheckTime: Boolean): Boolean {
             val alarmClock = getAlarmClock(context, acId)
             if (alarmClock != null) {
-                val appContext = context.applicationContext
-                val prepareReceiverIntent = Intent(appContext, PrepareReceiver::class.java)
-                prepareReceiverIntent.putExtra("ACId", acId)
-                val prepareReceiverPI = PendingIntent.getBroadcast(appContext, acId, prepareReceiverIntent, PendingIntent.FLAG_NO_CREATE)
-                val alarmReceiverIntent = Intent(appContext, AlarmReceiver::class.java)
-                alarmReceiverIntent.putExtra("ACId", acId)
-                val alarmReceiverPI = PendingIntent.getBroadcast(appContext, acId, alarmReceiverIntent, PendingIntent.FLAG_NO_CREATE)
-                return prepareReceiverPI == null && alarmReceiverPI == null
+                if (isCheckTime) {
+                    val nowCalendar = Calendar.getInstance()
+                    val alarmCalendar = Calendar.getInstance()
+                    alarmCalendar.set(Calendar.HOUR_OF_DAY, alarmClock.hour)
+                    alarmCalendar.set(Calendar.MINUTE, alarmClock.minute)
+                    alarmCalendar.set(Calendar.SECOND, 0)
+                    val differenceSecond = (alarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
+                    return differenceSecond in 0..1800
+                } else {
+                    val appContext = context.applicationContext
+                    val prepareReceiverIntent = Intent(appContext, PrepareReceiver::class.java)
+                    prepareReceiverIntent.putExtra("ACId", acId)
+                    val prepareReceiverPI = PendingIntent.getBroadcast(appContext, acId, prepareReceiverIntent, PendingIntent.FLAG_NO_CREATE)
+                    val alarmReceiverIntent = Intent(appContext, AlarmReceiver::class.java)
+                    alarmReceiverIntent.putExtra("ACId", acId)
+                    val alarmReceiverPI = PendingIntent.getBroadcast(appContext, acId, alarmReceiverIntent, PendingIntent.FLAG_NO_CREATE)
+                    return prepareReceiverPI == null && alarmReceiverPI == null
+                }
+
             } else
                 return false
         }
