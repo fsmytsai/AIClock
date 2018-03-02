@@ -4,9 +4,10 @@
 | State      | Description                 |
 |------------|-----------------------------|
 | unfinished | 用 JobService 處理 Android N 以上的開啟網路事件 |
-| unfinished | 開網路時把放棄的重設 |
+| finished | 開網路時把 isOldData 、 texts 消失、鬧鐘失效的全部重設 |
 | warn | 15 分鐘內重試太短，容易造成最後 2-5 分鐘才決定播放舊音檔，導致 10 分鐘內無法再次呼叫響鈴。(兩個鬧鐘會打架，互相拖 9 分鐘) |
 | unfinished | 考慮是否要將響鈴時的順序改成先開 service 再從 service 開 activity |
+| unfinished | 問題回報加入手機型號及 Android 版本 |
 
 
 # Version Features
@@ -18,10 +19,15 @@
 5. 可查看正在播報新聞
 
 # Release Note
+## 1.5.0 versionCode = 15
+1. 新增鬧鐘可不重複的功能
+2. 新增 Android 7.0 以下的手機當重新連上網路會自動重設失效鬧鐘
+3. 修正天氣播報關不掉的錯誤
+4. 修正低機率遺失音檔造成的閃退
+
 ## 1.4.1 versionCode = 14
 1. 新增可在關於選單看到當前版本號
 2. 修正在系統為 Android 6.0 以上的手機沒開網路造成的延遲響鈴
-3. 修正低機率遺失音檔造成的閃退
 
 ## 1.4.0 versionCode = 13
 1. 新增問題回報及許願選單
