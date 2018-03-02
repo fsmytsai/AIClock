@@ -194,7 +194,7 @@ class AlarmService : Service() {
                 val alarmClocks = SharedService.getAlarmClocks(this)
                 for (i in 0 until alarmClocks.alarmClockList.size) {
                     if (alarmClocks.alarmClockList[i].acId == mAlarmClock.acId)
-                        alarmClocks.alarmClockList.set(i, mAlarmClock)
+                        alarmClocks.alarmClockList[i] = mAlarmClock
                 }
                 SharedService.updateAlarmClocks(this, alarmClocks)
             }
