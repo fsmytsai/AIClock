@@ -29,7 +29,6 @@ import kotlinx.android.synthetic.main.dialog_prompt.view.*
 import okhttp3.*
 import java.io.File
 import java.io.IOException
-import java.lang.reflect.InvocationTargetException
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -522,7 +521,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         val mpFinish = MediaPlayer()
         try {
             mpFinish.setDataSource(mContext, uri)
-        } catch (e: InvocationTargetException) {
+        } catch (e: Exception) {
             SharedService.writeDebugLog(mContext, "SpeechDownloader setDataSource failed uri = $uri")
             mpFinish.setDataSource("android.resource://${mContext.packageName}/raw/${SharedService.speakerArr[mAlarmClock.speaker]}_lost")
         }

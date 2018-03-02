@@ -17,7 +17,6 @@ import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.activity.AlarmActivity
 import com.google.gson.Gson
 import java.io.File
-import java.lang.reflect.InvocationTargetException
 
 class AlarmService : Service() {
     private val mBinder = LocalBinder()
@@ -123,7 +122,7 @@ class AlarmService : Service() {
         //雖然開始播放前已全部檢查過，但保險起見也加上 try catch
         try {
             mMPNews.setDataSource(this, uri)
-        } catch (e: InvocationTargetException) {
+        } catch (e: Exception) {
             SharedService.writeDebugLog(this, "AlarmService setDataSource failed uri = $uri")
             mMPNews.setDataSource("android.resource://$packageName/raw/${SharedService.speakerArr[mSpeaker]}_lost")
         }
