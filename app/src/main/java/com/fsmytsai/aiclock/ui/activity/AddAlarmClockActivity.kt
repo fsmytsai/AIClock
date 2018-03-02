@@ -142,15 +142,26 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
         rg_category.setOnCheckedChangeListener(object : MyRadioGroup.OnCheckedChangeListener {
             override fun onCheckedChanged(group: MyRadioGroup, checkedId: Int) {
-                val rb_category = findViewById<RadioButton>(checkedId)
-                mAlarmClock.category = rb_category.tag.toString().toInt()
-                if (mAlarmClock.category != -1) {
-                    pvNewsCount.setNPicker(arrayListOf("6", "7", "8", "9", "10", "11", "12"), null, null)
-                    pvNewsCount.setSelectOptions(mAlarmClock.newsCount - 6)
-                    pvNewsCount.show()
-                }
+                val rbCategory = findViewById<RadioButton>(checkedId)
+                mAlarmClock.category = rbCategory.tag.toString().toInt()
+                if (mAlarmClock.category != -1)
+                    ll_news_count.visibility = View.VISIBLE
+                else
+                    ll_news_count.visibility = View.GONE
             }
         })
+
+        if (mAlarmClock.category != -1)
+            ll_news_count.visibility = View.VISIBLE
+        else
+            ll_news_count.visibility = View.GONE
+
+        et_news_count.setText("${mAlarmClock.newsCount}")
+        et_news_count.setOnClickListener {
+            pvNewsCount.setNPicker(arrayListOf("6", "7", "8", "9", "10", "11", "12"), null, null)
+            pvNewsCount.setSelectOptions(mAlarmClock.newsCount - 6)
+            pvNewsCount.show()
+        }
 
         val circleTextviewFull = ContextCompat.getDrawable(this, R.drawable.circle_textview_full)
         (0..6).filter { mAlarmClock.isRepeatArr[it] }
@@ -223,10 +234,9 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
     }
 
     private val pvNewsCount by lazy {
-        OptionsPickerView.Builder(this, object : OptionsPickerView.OnOptionsSelectListener {
-            override fun onOptionsSelect(options1: Int, options2: Int, options3: Int, v: View?) {
-                mAlarmClock.newsCount = options1 + 6
-            }
+        OptionsPickerView.Builder(this, OptionsPickerView.OnOptionsSelectListener { options1, _, _, _ ->
+            mAlarmClock.newsCount = options1 + 6
+            et_news_count.setText("${options1 + 6}")
         }).setContentTextSize(24)
                 .setLineSpacingMultiplier(1.5f)
                 .setOutSideCancelable(false)
@@ -339,19 +349,6 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             SharedService.showTextToast(this, "請選擇播報者")
             return
         }
-
-//        var isRepeatChoose = false
-//        for (isRepeat in mAlarmClock.isRepeatArr) {
-//            if (isRepeat) {
-//                isRepeatChoose = true
-//                break
-//            }
-//        }
-
-//        if (!isRepeatChoose) {
-//            SharedService.showTextToast(this, "請選擇重複天數")
-//            return
-//        }
 
         bindDownloadService(object : CanStartDownloadCallback {
             override fun start() {
