@@ -1,6 +1,7 @@
 package com.fsmytsai.aiclock.ui.activity
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.view.Menu
@@ -107,6 +108,8 @@ class MainActivity : DownloadSpeechActivity() {
         builder.addFormDataPart("content", content)
                 .addFormDataPart("type", "$type")
                 .addFormDataPart("version_code", "${SharedService.getVersionCode(this)}")
+                .addFormDataPart("brand_model", "${Build.BRAND}-${Build.MODEL}")
+                .addFormDataPart("sdk_int", "${Build.VERSION.SDK_INT}")
 
         if (email != "")
             builder.addFormDataPart("email", "$email")
