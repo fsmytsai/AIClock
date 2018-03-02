@@ -186,10 +186,12 @@ class AlarmService : Service() {
 
             //有開啟重複則準備此鬧鐘下一次的響鈴(最快24小時後響)
             if (!mAlarmClock.isRepeatArr.all { !it }) {
+                SharedService.writeDebugLog(this,"AlarmService set next alarm")
                 val speechDownloader = SpeechDownloader(this, null)
                 speechDownloader.setAlarmClock(mAlarmClock)
             } else {
                 //否則表示只響一次，關閉它
+                SharedService.writeDebugLog(this,"AlarmService only alarm once")
                 mAlarmClock.isOpen = false
                 val alarmClocks = SharedService.getAlarmClocks(this)
                 for (i in 0 until alarmClocks.alarmClockList.size) {
