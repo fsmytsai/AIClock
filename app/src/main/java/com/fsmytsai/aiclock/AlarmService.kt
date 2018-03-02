@@ -11,6 +11,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
+import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -28,14 +29,15 @@ class AlarmService : Service() {
     private lateinit var mTexts: Texts
     private val mSoundList = ArrayList<String>()
     private var mNewsCount = 0
+    private lateinit var mAlarmClock: AlarmClock
 
     override fun onBind(intent: Intent): IBinder? {
         //測試到目前為止發現，僅第一次綁定會呼叫(從startService後)
         mTexts = Gson().fromJson(intent.getStringExtra("TextsJsonStr"), Texts::class.java)
         if (mTexts.acId != 0) {
-            val alarmClock = SharedService.getAlarmClock(this, mTexts.acId)!!
+            mAlarmClock = SharedService.getAlarmClock(this, mTexts.acId)!!
 
-            mSpeaker = alarmClock.speaker
+            mSpeaker = mAlarmClock.speaker
 
             //排列音檔播放順序
             for (text in mTexts.textList) {
@@ -182,12 +184,21 @@ class AlarmService : Service() {
         if (mSpeaker != -1) {
             mHandler.postDelayed(mRunnable, 5000)
 
-            //準備此鬧鐘下一次的響鈴(最快24小時後響)
-            val alarmClock = SharedService.getAlarmClock(this, mTexts.acId)
-            if (alarmClock != null) {
+            //有開啟重複則準備此鬧鐘下一次的響鈴(最快24小時後響)
+            if (!mAlarmClock.isRepeatArr.all { !it }) {
                 val speechDownloader = SpeechDownloader(this, null)
-                speechDownloader.setAlarmClock(alarmClock)
+                speechDownloader.setAlarmClock(mAlarmClock)
+            } else {
+                //否則表示只響一次，關閉它
+                mAlarmClock.isOpen = false
+                val alarmClocks = SharedService.getAlarmClocks(this)
+                for (i in 0 until alarmClocks.alarmClockList.size) {
+                    if (alarmClocks.alarmClockList[i].acId == mAlarmClock.acId)
+                        alarmClocks.alarmClockList.set(i, mAlarmClock)
+                }
+                SharedService.updateAlarmClocks(this, alarmClocks)
             }
+
         }
     }
 

@@ -340,18 +340,18 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             return
         }
 
-        var isRepeatChoose = false
-        for (isRepeat in mAlarmClock.isRepeatArr) {
-            if (isRepeat) {
-                isRepeatChoose = true
-                break
-            }
-        }
+//        var isRepeatChoose = false
+//        for (isRepeat in mAlarmClock.isRepeatArr) {
+//            if (isRepeat) {
+//                isRepeatChoose = true
+//                break
+//            }
+//        }
 
-        if (!isRepeatChoose) {
-            SharedService.showTextToast(this, "請選擇重複天數")
-            return
-        }
+//        if (!isRepeatChoose) {
+//            SharedService.showTextToast(this, "請選擇重複天數")
+//            return
+//        }
 
         bindDownloadService(object : CanStartDownloadCallback {
             override fun start() {
