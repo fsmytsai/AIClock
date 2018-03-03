@@ -97,23 +97,23 @@ class SharedService {
             return prepareReceiverPI == null && alarmReceiverPI == null
         }
 
-//        fun checkAlarmClockTime(context: Context, acId: Int): Boolean {
-//            val alarmClock = getAlarmClock(context, acId)
-//            if (alarmClock != null) {
-//                val nowCalendar = Calendar.getInstance()
-//                val alarmCalendar = Calendar.getInstance()
-//                alarmCalendar.set(Calendar.HOUR_OF_DAY, alarmClock.hour)
-//                alarmCalendar.set(Calendar.MINUTE, alarmClock.minute)
-//                alarmCalendar.set(Calendar.SECOND, 0)
-//
-//                val differenceSecond = kotlin.math.abs(nowCalendar.timeInMillis - alarmCalendar.timeInMillis) / 1000
-//                writeDebugLog(context, "SharedService checkAlarmClockTime differenceSecond = $differenceSecond")
-//                //檢查誤差秒數是否小於 60
-//                if (differenceSecond < 60)
-//                    return true
-//            }
-//            return false
-//        }
+        fun checkAlarmClockTime(context: Context, acId: Int): Boolean {
+            val alarmClock = getAlarmClock(context, acId)
+            if (alarmClock != null) {
+                val nowCalendar = Calendar.getInstance()
+                val alarmCalendar = Calendar.getInstance()
+                alarmCalendar.set(Calendar.HOUR_OF_DAY, alarmClock.hour)
+                alarmCalendar.set(Calendar.MINUTE, alarmClock.minute)
+                alarmCalendar.set(Calendar.SECOND, 0)
+
+                val differenceSecond = kotlin.math.abs(nowCalendar.timeInMillis - alarmCalendar.timeInMillis) / 1000
+                writeDebugLog(context, "SharedService checkAlarmClockTime differenceSecond = $differenceSecond")
+                //檢查誤差秒數是否小於 60
+                if (differenceSecond < 60)
+                    return true
+            }
+            return false
+        }
 
         fun getAlarmClocks(context: Context): AlarmClocks {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
