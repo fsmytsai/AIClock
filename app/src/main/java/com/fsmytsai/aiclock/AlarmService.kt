@@ -126,7 +126,7 @@ class AlarmService : Service() {
             mMPNews.setDataSource(this, uri)
         } catch (e: Exception) {
             SharedService.writeDebugLog(this, "AlarmService setDataSource failed uri = $uri")
-            mMPNews.setDataSource("android.resource://$packageName/raw/${SharedService.speakerArr[mSpeaker]}_lost")
+            mMPNews.setDataSource(this, Uri.parse("android.resource://$packageName/raw/${SharedService.speakerArr[mSpeaker]}_lost"))
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -186,12 +186,12 @@ class AlarmService : Service() {
 
             //有開啟重複則準備此鬧鐘下一次的響鈴(最快24小時後響)
             if (!mAlarmClock.isRepeatArr.all { !it }) {
-                SharedService.writeDebugLog(this,"AlarmService set next alarm")
+                SharedService.writeDebugLog(this, "AlarmService set next alarm")
                 val speechDownloader = SpeechDownloader(this, null)
                 speechDownloader.setAlarmClock(mAlarmClock)
             } else {
                 //否則表示只響一次，關閉它
-                SharedService.writeDebugLog(this,"AlarmService only alarm once")
+                SharedService.writeDebugLog(this, "AlarmService only alarm once")
                 mAlarmClock.isOpen = false
                 val alarmClocks = SharedService.getAlarmClocks(this)
                 for (i in 0 until alarmClocks.alarmClockList.size) {
