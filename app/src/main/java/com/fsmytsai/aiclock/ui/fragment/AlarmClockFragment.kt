@@ -102,39 +102,33 @@ class AlarmClockFragment : Fragment() {
             holder.tvRepeat.setTextColor(Color.BLUE)
             holder.sbSwitch.isChecked = ac.isOpen
             holder.sbSwitch.setOnCheckedChangeListener { view, isChecked ->
-                //AddAlarmClockActivity 關閉前已更新資料
-                if (isAutoOn) {
-                    isAutoOn = false
+                //更新開關資料
+                ac.isOpen = isChecked
+                SharedService.updateAlarmClocks(mMainActivity, mAlarmClocks)
+                //開啟就下載音檔並設置鬧鐘，關閉則取消鬧鐘及刪除 texts 資料
+                if (isChecked) {
+                    mMainActivity.bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
+                        override fun start() {
+                            mMainActivity.startDownload(ac, object : SpeechDownloader.DownloadFinishListener {
+                                override fun cancel() {
+                                    Handler().postDelayed({
+                                        view.isChecked = false
+                                    }, 1000)
+                                }
+
+                                override fun startSetData() {
+
+                                }
+
+                                override fun allFinished() {
+
+                                }
+                            })
+                        }
+                    })
                 } else {
-                    //更新開關資料
-                    ac.isOpen = isChecked
-                    SharedService.updateAlarmClocks(mMainActivity, mAlarmClocks)
-                    //開啟就下載音檔並設置鬧鐘，關閉則取消鬧鐘及刪除 texts 資料
-                    if (isChecked) {
-                        mMainActivity.bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
-                            override fun start() {
-                                mMainActivity.startDownload(ac, object : SpeechDownloader.DownloadFinishListener {
-                                    override fun cancel() {
-                                        Handler().postDelayed({
-                                            view.isChecked = false
-                                        }, 1000)
-                                    }
-
-                                    override fun startSetData() {
-
-                                    }
-
-                                    override fun allFinished() {
-
-                                    }
-                                })
-                            }
-                        })
-
-                    } else {
-                        SharedService.cancelAlarm(mMainActivity, ac.acId)
-                        SharedService.deleteOldTextsData(mMainActivity, ac.acId, null, false)
-                    }
+                    SharedService.cancelAlarm(mMainActivity, ac.acId)
+                    SharedService.deleteOldTextsData(mMainActivity, ac.acId, null, false)
                 }
             }
 
