@@ -63,6 +63,7 @@ class AlarmClockFragment : Fragment() {
     }
 
     private inner class AlarmClockAdapter : RecyclerView.Adapter<AlarmClockAdapter.ViewHolder>() {
+
         val TYPE_FOOTER = 1  //说明是带有Footer的
         val TYPE_NORMAL = 2  //说明是不带有header和footer的
         private var mFooterView: View? = null
@@ -71,8 +72,8 @@ class AlarmClockFragment : Fragment() {
             return if (position == itemCount - 1) TYPE_FOOTER else TYPE_NORMAL
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
-            val context = parent?.context
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val context = parent.context
             if (viewType == TYPE_FOOTER) {
                 mFooterView = LayoutInflater.from(context).inflate(R.layout.footer, parent, false)
                 return ViewHolder(mFooterView!!)
@@ -81,17 +82,17 @@ class AlarmClockFragment : Fragment() {
             return ViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             if (getItemViewType(position) == TYPE_FOOTER) {
                 if (mAlarmClocks.alarmClockList.size == 0)
-                    holder!!.tvFooter.text = "點右下角新增智能鬧鐘!"
+                    holder.tvFooter.text = "點右下角新增智能鬧鐘!"
                 else
-                    holder!!.tvFooter.text = "沒有更多鬧鐘囉!"
+                    holder.tvFooter.text = "沒有更多鬧鐘囉!"
                 return
             }
 
             val ac = mAlarmClocks.alarmClockList[position]
-            holder!!.tvTime.text = "${String.format("%02d", ac.hour)}:${String.format("%02d", ac.minute)}"
+            holder.tvTime.text = "${String.format("%02d", ac.hour)}:${String.format("%02d", ac.minute)}"
             var repeat = ""
             for (i in 0..6) {
                 if (ac.isRepeatArr[i])

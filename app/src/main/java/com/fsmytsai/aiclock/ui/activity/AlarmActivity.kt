@@ -158,8 +158,8 @@ class AlarmActivity : AppCompatActivity() {
             return if (position == itemCount - 1) TYPE_FOOTER else TYPE_NORMAL
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ViewHolder {
-            val context = parent?.context
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val context = parent.context
             if (viewType == TYPE_FOOTER) {
                 mFooterView = LayoutInflater.from(context).inflate(R.layout.footer, parent, false)
                 return ViewHolder(mFooterView!!)
@@ -168,18 +168,18 @@ class AlarmActivity : AppCompatActivity() {
             return ViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: ViewHolder?, position: Int) {
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             if (getItemViewType(position) == TYPE_FOOTER) {
                 if (mRealTexts.textList.size == 0)
-                    holder!!.tvFooter.text = "發生意外，無新聞資料!\n建議刪除此鬧鐘資料並重新設置"
+                    holder.tvFooter.text = "發生意外，無新聞資料!\n建議刪除此鬧鐘資料並重新設置"
                 else
-                    holder!!.tvFooter.text = "到底囉!"
+                    holder.tvFooter.text = "到底囉!"
                 return
             }
 
             val text = mRealTexts.textList[position + mIgnoreCount]
 
-            holder!!.tvTitle.text = text.title
+            holder.tvTitle.text = text.title
             holder.tvDescription.text = text.description
             val previewImage = text.preview_image
             if (previewImage != "") {
