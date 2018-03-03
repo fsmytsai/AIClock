@@ -91,7 +91,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                             }
 
                             //沒網路或離響鈴時間小於30秒取消下載
-                            if (!getAlarmTime())
+                            if (getAlarmTime())
+                                getPromptData()
+                            else
                                 foregroundCancelDownloadSound()
                         })
                         .setNegativeButton("取消", { _, _ ->
@@ -100,14 +102,18 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                         .show()
             } else {
                 //沒網路或離響鈴時間小於30秒取消下載
-                if (!getAlarmTime())
+                if (getAlarmTime())
+                    getPromptData()
+                else
                     foregroundCancelDownloadSound()
             }
 
         } else {
             //背景
             //沒網路或離響鈴時間小於30秒取消下載
-            if (!getAlarmTime())
+            if (getAlarmTime())
+                getTextData()
+            else
                 backgroundCancelDownloadSound()
         }
     }
@@ -200,8 +206,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         if (!SharedService.checkNetWork(mContext, mDownloadSpeechActivity != null))
             return false
 
-        if (mDownloadSpeechActivity != null) getPromptData() else getTextData()
-
         return true
     }
 
@@ -269,10 +273,13 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call?, e: IOException?) {
-                mDownloadSpeechActivity?.runOnUiThread {
-                    SharedService.showTextToast(mDownloadSpeechActivity!!, "請檢查網路連線")
-                    foregroundCancelDownloadSound()
-                }
+                if (mDownloadSpeechActivity != null)
+                    mDownloadSpeechActivity?.runOnUiThread {
+                        SharedService.showTextToast(mDownloadSpeechActivity!!, "請檢查網路連線")
+                        foregroundCancelDownloadSound()
+                    }
+                else
+                    backgroundCancelDownloadSound()
             }
 
             override fun onResponse(call: Call?, response: Response?) {
@@ -419,6 +426,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     fun foregroundCancelDownloadSound() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader 前景取消下載")
         stopDownloadSound()
         mDownloadFinishListener?.cancel()
     }
