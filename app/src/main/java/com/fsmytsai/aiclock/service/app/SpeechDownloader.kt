@@ -112,7 +112,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             //背景
             //沒網路或離響鈴時間小於30秒取消下載
             if (getAlarmTime())
-                getTextData()
+                getTextsData()
             else
                 backgroundCancelDownloadSound()
         }
@@ -233,7 +233,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                     if (statusCode == 200) {
                         mPromptData = Gson().fromJson(resMessage, PromptData::class.java)
                         mDownloadSpeechActivity?.setDownloadProgress(5)
-                        getTextData()
+                        getTextsData()
                     } else {
                         SharedService.handleError(mDownloadSpeechActivity!!, statusCode!!, resMessage!!)
                         foregroundCancelDownloadSound()
@@ -244,7 +244,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         })
     }
 
-    private fun getTextData() {
+    private fun getTextsData() {
         //如果有開啟位置且為背景則抓取位置
         if (mAlarmClock.latitude != 1000.0 && mDownloadSpeechActivity == null)
             if (ActivityCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
