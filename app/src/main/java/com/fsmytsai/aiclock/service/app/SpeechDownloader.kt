@@ -544,7 +544,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             mpFinish.setDataSource(mContext, uri)
         } catch (e: Exception) {
             SharedService.writeDebugLog(mContext, "SpeechDownloader setDataSource failed uri = $uri")
-            mpFinish.setDataSource("android.resource://${mContext.packageName}/raw/${SharedService.speakerArr[mAlarmClock.speaker]}_lost")
+            mpFinish.setDataSource(mContext, Uri.parse("android.resource://${mContext.packageName}/raw/${SharedService.speakerArr[mAlarmClock.speaker]}_lost"))
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val audioAttributes = AudioAttributes.Builder()
