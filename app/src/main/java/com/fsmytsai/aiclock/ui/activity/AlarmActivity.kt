@@ -48,9 +48,15 @@ class AlarmActivity : AppCompatActivity() {
         hideBottomUIMenu()
         setContentView(R.layout.activity_alarm)
         val acId = intent.getIntExtra("ACId", 0)
-        setRealTexts(acId)
-        initViews()
-        startAlarmService()
+
+        if (SharedService.checkAlarmClockTime(this, acId)) {
+            setRealTexts(acId)
+            initViews()
+            startAlarmService()
+        } else {
+            SharedService.writeDebugLog(this, "AlarmActivity onCreate 延遲超過 9 分鐘")
+            finish()
+        }
     }
 
     private fun hideBottomUIMenu() {
@@ -69,9 +75,12 @@ class AlarmActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         if (intent != null) {
             val acId = intent.getIntExtra("ACId", 0)
-            if (acId != mNowACId)
-                reSetAll(acId)
-            else
+            if (acId != mNowACId) {
+                if (SharedService.checkAlarmClockTime(this, acId))
+                    reSetAll(acId)
+                else
+                    SharedService.writeDebugLog(this, "AlarmActivity onNewIntent 延遲超過 9 分鐘")
+            } else
                 SharedService.writeDebugLog(this, "AlarmActivity ACId 與當前一樣，不動作以取消後來的")
         }
     }

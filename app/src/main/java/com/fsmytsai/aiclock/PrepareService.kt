@@ -15,7 +15,7 @@ class PrepareService : Service() {
         val acId = intent?.getIntExtra("ACId", 0)
         if (acId != 0) {
             val alarmClock = SharedService.getAlarmClock(this, acId!!)
-            if (alarmClock == null || !SharedService.checkAlarmClockIsOpen(this, acId) || !SharedService.checkAlarmClockTime(this, acId))
+            if (alarmClock == null || !SharedService.checkAlarmClockIsOpen(this, acId))
                 stopSelf()
             else {
                 if (SharedService.waitToPrepareAlarmClockList.size == 0) {

@@ -108,8 +108,8 @@ class SharedService {
 
                 val differenceSecond = kotlin.math.abs(nowCalendar.timeInMillis - alarmCalendar.timeInMillis) / 1000
                 writeDebugLog(context, "SharedService checkAlarmClockTime differenceSecond = $differenceSecond")
-                //檢查誤差秒數是否小於 60
-                if (differenceSecond < 60)
+                //檢查誤差秒數是否小於 540 秒
+                if (differenceSecond < 540)
                     return true
             }
             return false
