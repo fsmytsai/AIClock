@@ -7,6 +7,7 @@
 | warn | 15 分鐘內重試太短，容易造成最後 2-5 分鐘才決定播放舊音檔，導致 10 分鐘內無法再次呼叫響鈴。(兩個鬧鐘會打架，互相拖 9 分鐘) |
 | unfinished | 考慮是否要將響鈴時的順序改成先開 service 再從 service 開 activity |
 | unfinished | 改用空氣盒子抓空氣資料，缺點是沒 AQI 跟座標要算 |
+| unfinished | 清除伺服器舊資料 |
 
 
 # Version Features
