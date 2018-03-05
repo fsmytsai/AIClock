@@ -188,6 +188,7 @@ class AlarmService : Service() {
             if (!mAlarmClock.isRepeatArr.all { !it }) {
                 SharedService.writeDebugLog(this, "AlarmService set next alarm")
                 val speechDownloader = SpeechDownloader(this, null)
+                speechDownloader.setKeepFileName(mSoundList)
                 speechDownloader.setAlarmClock(mAlarmClock)
             } else {
                 //否則表示只響一次，關閉它

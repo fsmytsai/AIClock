@@ -575,6 +575,12 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         mDownloadFinishListener?.allFinished()
     }
 
+    private val mKeepFileName = ArrayList<String>()
+
+    fun setKeepFileName(keepFileName: ArrayList<String>) {
+        keepFileName.mapTo(mKeepFileName) { "$it.wav" }
+    }
+
     private fun cleanAllOldSound() {
         //先抓到所有還需要的檔名
         val allNeedFileName = ArrayList<String>()
@@ -585,6 +591,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                 for (i in 0 until text.part_count)
                     allNeedFileName.add("${text.text_id}-$i-${mAlarmClock.speaker}.wav")
         }
+
+        allNeedFileName.addAll(mKeepFileName)
 
         //遍歷所有檔案，檔名不在 allNeedFileName 裡的直接刪除
         val directory = File("${mContext.filesDir}/sounds")
