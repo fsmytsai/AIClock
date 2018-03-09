@@ -84,7 +84,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
         when (mAlarmClock.speaker) {
             0 -> rb_f1.isChecked = true
-            1 -> rb_f2.isChecked = true
+//            1 -> rb_f2.isChecked = true
             2 -> rb_m1.isChecked = true
         }
 
@@ -97,10 +97,10 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     mAlarmClock.speaker = 0
                     uri = Uri.parse("android.resource://$packageName/raw/f1_hello")
                 }
-                R.id.rb_f2 -> {
-                    mAlarmClock.speaker = 1
-                    uri = Uri.parse("android.resource://$packageName/raw/f2_hello")
-                }
+//                R.id.rb_f2 -> {
+//                    mAlarmClock.speaker = 1
+//                    uri = Uri.parse("android.resource://$packageName/raw/f2_hello")
+//                }
                 R.id.rb_m1 -> {
                     mAlarmClock.speaker = 2
                     uri = Uri.parse("android.resource://$packageName/raw/m1_hello")
@@ -137,7 +137,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             3 -> rb_health.isChecked = true
             4 -> rb_science.isChecked = true
             5 -> rb_sports.isChecked = true
-            6 -> rb_technology.isChecked = true
+//            6 -> rb_technology.isChecked = true
         }
 
         rg_category.setOnCheckedChangeListener(object : MyRadioGroup.OnCheckedChangeListener {
@@ -158,7 +158,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
         et_news_count.setText("${mAlarmClock.newsCount}")
         et_news_count.setOnClickListener {
-            pvNewsCount.setNPicker(arrayListOf("6", "7", "8", "9", "10", "11", "12"), null, null)
+            pvNewsCount.setNPicker(arrayListOf("6", "7", "8", "9", "10"), null, null)
             pvNewsCount.setSelectOptions(mAlarmClock.newsCount - 6)
             pvNewsCount.show()
         }
