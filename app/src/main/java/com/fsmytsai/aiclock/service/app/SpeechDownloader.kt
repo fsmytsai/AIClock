@@ -212,7 +212,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         mDownloadSpeechActivity?.showDownloadingDialog()
 
         val request = Request.Builder()
-                .url("${mDownloadSpeechActivity?.getString(R.string.server_url)}api/getPromptData?day=${mAlarmTimeList[0]}&hour=${mAlarmTimeList[1]}&" +
+                .url("${SharedService.latestUrl}api/getPromptData?day=${mAlarmTimeList[0]}&hour=${mAlarmTimeList[1]}&" +
                         "minute=${mAlarmTimeList[2]}&second=${mAlarmTimeList[3]}&speaker=${mAlarmClock.speaker}&version_code=${SharedService.getVersionCode(mContext)}")
                 .build()
 
@@ -260,7 +260,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 //            "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
 //                    "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=-1&latitude=1000&longitude=0"
 //        else
-        val url = "${mContext.getString(R.string.server_url)}api/getTextData?" +
+        val url = "${SharedService.latestUrl}api/getTextData?" +
                 "hour=${mAlarmClock.hour}&minute=${mAlarmClock.minute}&" +
                 "speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&news_count=${mAlarmClock.newsCount}&" +
                 "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}&" +
@@ -318,7 +318,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private fun downloadSound() {
         if (mDownloadSpeechActivity != null) {
-            FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
+            FileDownloader.getImpl().create("${SharedService.latestUrl}sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
                     .setPath("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
                     .setTag(0, "${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}")
                     .setCallbackProgressTimes(0)
@@ -331,7 +331,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         for (text in mTexts!!.textList) {
             for (i in 0 until text.part_count) {
-                FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${text.text_id}-$i-${mAlarmClock.speaker}.wav")
+                FileDownloader.getImpl().create("${SharedService.latestUrl}sounds/${text.text_id}-$i-${mAlarmClock.speaker}.wav")
                         .setPath("${mContext.filesDir}/sounds/${text.text_id}-$i-${mAlarmClock.speaker}.wav")
                         .setTag(0, "${text.text_id}-$i-${mAlarmClock.speaker}")
                         .setCallbackProgressTimes(0)
@@ -367,7 +367,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //已開始下載，恢復task
         if (mIsStartedDownloadSound) {
             while (mPauseList.size > 0) {
-                FileDownloader.getImpl().create("${mContext.getString(R.string.server_url)}sounds/${mPauseList[0]}.wav")
+                FileDownloader.getImpl().create("${SharedService.latestUrl}sounds/${mPauseList[0]}.wav")
                         .setPath("${mContext.filesDir}/sounds/${mPauseList[0]}.wav")
                         .setTag(0, mPauseList[0])
                         .setCallbackProgressTimes(0)

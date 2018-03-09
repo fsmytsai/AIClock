@@ -1,5 +1,6 @@
 package com.fsmytsai.aiclock.ui.activity
 
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -10,6 +11,7 @@ import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.ResetAlarmService
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.ui.fragment.AlarmClockFragment
+import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.dialog_wish.view.*
 import java.io.File
@@ -24,6 +26,7 @@ class MainActivity : DownloadSpeechActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initViews()
+        checkLatestUrl()
         //改成每次開啟都檢查是否有失效鬧鐘
         val resetAlarmServiceIntent = Intent(this, ResetAlarmService::class.java)
         resetAlarmServiceIntent.putExtra("IsFromMain", true)
@@ -117,7 +120,7 @@ class MainActivity : DownloadSpeechActivity() {
         val body = builder.build()
 
         val request = Request.Builder()
-                .url("${getString(R.string.server_url)}api/createReport")
+                .url("${SharedService.latestUrl}api/createReport")
                 .post(body)
                 .build()
 
@@ -143,5 +146,49 @@ class MainActivity : DownloadSpeechActivity() {
 
             }
         })
+    }
+
+    private fun checkLatestUrl() {
+        val spDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
+        SharedService.latestUrl = spDatas.getString("LatestUrl", "")
+        if (SharedService.latestUrl == "")
+            SharedService.latestUrl = "http://aialarmclock.southeastasia.cloudapp.azure.com/"
+
+        try {
+            val request = Request.Builder()
+                    .url("${SharedService.latestUrl}api/getLatestUrl")
+                    .build()
+
+            OkHttpClient().newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call?, e: IOException?) {
+//                runOnUiThread {
+//                    SharedService.showTextToast(this@MainActivity, "請檢查網路連線")
+//                }
+                }
+
+                override fun onResponse(call: Call?, response: Response?) {
+                    val statusCode = response?.code()
+                    val resMessage = response?.body()?.string()
+
+                    runOnUiThread {
+                        if (statusCode == 200) {
+                            val latestUrl = Gson().fromJson(resMessage, String::class.java)
+                            if (SharedService.latestUrl != latestUrl) {
+                                SharedService.writeDebugLog(this@MainActivity, "MainActivity update latestUrl to $latestUrl")
+                                SharedService.latestUrl = latestUrl
+                                spDatas.edit().putString("LatestUrl", SharedService.latestUrl).apply()
+                            }
+                        } else {
+                            SharedService.handleError(this@MainActivity, statusCode!!, resMessage!!)
+                        }
+                    }
+
+                }
+            })
+        } catch (e: Exception) {
+            SharedService.writeDebugLog(this,"MainActivity check latest url crash")
+            spDatas.edit().putString("LatestUrl", "").apply()
+            checkLatestUrl()
+        }
     }
 }

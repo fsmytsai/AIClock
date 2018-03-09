@@ -32,6 +32,7 @@ class SharedService {
         var reRunRunnable = false
         val waitToPrepareAlarmClockList = ArrayList<AlarmClock>()
         val speakerArr = arrayOf("f1", "f2", "m1")
+        var latestUrl = ""
 
         fun cancelAlarm(context: Context, acId: Int) {
             val appContext = context.applicationContext
@@ -207,12 +208,12 @@ class SharedService {
                 }
             }
 
-            if (bestLocation == null) {
-                return false
+            return if (bestLocation == null) {
+                false
             } else {
                 alarmClock.latitude = bestLocation.latitude
                 alarmClock.longitude = bestLocation.longitude
-                return true
+                true
             }
         }
 
@@ -255,7 +256,7 @@ class SharedService {
             }
         }
 
-        fun showErrorDialog(context: Context, errorMessageList: ArrayList<String>) {
+        private fun showErrorDialog(context: Context, errorMessageList: ArrayList<String>) {
             var errorMessage = ""
             for (i in errorMessageList.indices) {
                 errorMessage += errorMessageList[i]
