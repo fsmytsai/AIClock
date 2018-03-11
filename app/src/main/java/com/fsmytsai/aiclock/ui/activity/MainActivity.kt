@@ -2,6 +2,8 @@ package com.fsmytsai.aiclock.ui.activity
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -21,10 +23,12 @@ import java.io.IOException
 
 
 class MainActivity : DownloadSpeechActivity() {
+    private lateinit var mSPDatas: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        mSPDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
         initViews()
         checkLatestUrl()
         //改成每次開啟都檢查是否有失效鬧鐘
@@ -120,7 +124,7 @@ class MainActivity : DownloadSpeechActivity() {
         val body = builder.build()
 
         val request = Request.Builder()
-                .url("${SharedService.latestUrl}api/createReport")
+                .url("${SharedService.getLatestUrl(this)}api/createReport")
                 .post(body)
                 .build()
 
@@ -149,46 +153,84 @@ class MainActivity : DownloadSpeechActivity() {
     }
 
     private fun checkLatestUrl() {
-        val spDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
-        SharedService.latestUrl = spDatas.getString("LatestUrl", "")
-        if (SharedService.latestUrl == "")
-            SharedService.latestUrl = "http://aialarmclock.southeastasia.cloudapp.azure.com/"
+        val request = Request.Builder()
+                .url("${SharedService.getLatestUrl(this)}api/getLatestUrl")
+                .build()
 
-        try {
-            val request = Request.Builder()
-                    .url("${SharedService.latestUrl}api/getLatestUrl")
-                    .build()
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call?, e: IOException?) {
+                runOnUiThread {
+                    SharedService.showTextToast(this@MainActivity, "請檢查網路連線")
+                }
+            }
 
-            OkHttpClient().newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call?, e: IOException?) {
+            override fun onResponse(call: Call?, response: Response?) {
+                val statusCode = response?.code()
+                val resMessage = response?.body()?.string()
+
+                runOnUiThread {
+                    if (statusCode == 200) {
+                        val latestUrl = Gson().fromJson(resMessage, String::class.java)
+                        if (SharedService.getLatestUrl(this@MainActivity) != latestUrl) {
+                            SharedService.writeDebugLog(this@MainActivity, "MainActivity update latestUrl to $latestUrl")
+                            mSPDatas.edit().putString("LatestUrl", latestUrl).apply()
+                        }
+                        checkLatestVersion()
+                    } else {
+                        SharedService.handleError(this@MainActivity, statusCode!!, resMessage!!)
+                    }
+                }
+
+            }
+        })
+    }
+
+    private fun checkLatestVersion() {
+        val request = Request.Builder()
+                .url("${SharedService.getLatestUrl(this)}api/getLatestVersionCode")
+                .build()
+
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call?, e: IOException?) {
 //                runOnUiThread {
 //                    SharedService.showTextToast(this@MainActivity, "請檢查網路連線")
 //                }
-                }
+            }
 
-                override fun onResponse(call: Call?, response: Response?) {
-                    val statusCode = response?.code()
-                    val resMessage = response?.body()?.string()
+            override fun onResponse(call: Call?, response: Response?) {
+                val statusCode = response?.code()
+                val resMessage = response?.body()?.string()
 
-                    runOnUiThread {
-                        if (statusCode == 200) {
-                            val latestUrl = Gson().fromJson(resMessage, String::class.java)
-                            if (SharedService.latestUrl != latestUrl) {
-                                SharedService.writeDebugLog(this@MainActivity, "MainActivity update latestUrl to $latestUrl")
-                                SharedService.latestUrl = latestUrl
-                                spDatas.edit().putString("LatestUrl", SharedService.latestUrl).apply()
-                            }
-                        } else {
-                            SharedService.handleError(this@MainActivity, statusCode!!, resMessage!!)
+                runOnUiThread {
+                    if (statusCode == 200) {
+                        val latestVersionCode = Gson().fromJson(resMessage, Int::class.java)
+                        if (mSPDatas.getInt("LatestVersionCode", SharedService.getVersionCode(this@MainActivity)) != latestVersionCode) {
+                            SharedService.writeDebugLog(this@MainActivity, "MainActivity found new version $latestVersionCode")
+                            AlertDialog.Builder(this@MainActivity)
+                                    .setTitle("提示")
+                                    .setMessage("有新版本囉!")
+                                    .setNegativeButton("跳過此版本", { _, _ ->
+                                        mSPDatas.edit().putInt("LatestVersionCode", latestVersionCode).apply()
+                                    })
+                                    .setNeutralButton("關閉", null)
+                                    .setPositiveButton("前往 Google Play 更新", { _, _ ->
+                                        val appPackageName = packageName // getPackageName() from Context or Activity object
+                                        try {
+                                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$appPackageName")))
+                                        } catch (anfe: android.content.ActivityNotFoundException) {
+                                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$appPackageName")))
+                                        }
+
+                                    })
+                                    .show()
                         }
+                    } else {
+                        SharedService.handleError(this@MainActivity, statusCode!!, resMessage!!)
                     }
-
                 }
-            })
-        } catch (e: Exception) {
-            SharedService.writeDebugLog(this,"MainActivity check latest url crash")
-            spDatas.edit().putString("LatestUrl", "").apply()
-            checkLatestUrl()
-        }
+
+            }
+        })
     }
+
 }
