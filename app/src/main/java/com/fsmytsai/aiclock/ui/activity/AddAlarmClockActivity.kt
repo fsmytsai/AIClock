@@ -10,7 +10,6 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
@@ -109,18 +108,16 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             startPlaying(uri!!)
         }
 
-        sb_weather.isChecked = mAlarmClock.latitude != 1000.0
+        sc_weather.isChecked = mAlarmClock.latitude != 1000.0
 
-        sb_weather.setOnCheckedChangeListener { view, isChecked ->
+        sc_weather.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     val isSuccess = SharedService.setLocation(this, mAlarmClock)
                     if (!isSuccess) {
                         SharedService.showTextToast(this, "取得位置失敗")
-                        Handler().postDelayed({
-                            sb_weather.isChecked = false
-                        }, 1000)
+                        sc_weather.isChecked = false
                     }
                 } else {
                     requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION), REQUEST_LOCATION)
@@ -184,7 +181,6 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         if (alarmClockJsonStr != null) {
             mIsNew = false
             mAlarmClock = Gson().fromJson(alarmClockJsonStr, AlarmClock::class.java)
-            mAlarmClock.isOpen = true
         } else {
             val newCalendar = Calendar.getInstance()
             val acId = intent.getIntExtra("acId", 0)
@@ -263,12 +259,10 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             val isSuccess = SharedService.setLocation(this, mAlarmClock)
             if (!isSuccess) {
                 SharedService.showTextToast(this, "取得位置失敗")
-                Handler().postDelayed({
-                    sb_weather.isChecked = false
-                }, 1000)
+                sc_weather.isChecked = false
             }
         } else {
-            sb_weather.isChecked = false
+            sc_weather.isChecked = false
             SharedService.showTextToast(this, "您拒絕了天氣播報權限")
         }
     }
@@ -378,8 +372,10 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             for (i in 0 until alarmClocks.alarmClockList.size)
                 if (alarmClocks.alarmClockList[i].acId == mAlarmClock.acId) {
                     //避免自動開啟造成的下載
-                    if (!alarmClocks.alarmClockList[i].isOpen)
+                    if (!alarmClocks.alarmClockList[i].isOpen) {
+                        mAlarmClock.isOpen = true
                         intent.putExtra("IsAutoOn", true)
+                    }
 
                     //非第一個alarmClock，新小時小於上一個alarmClock小時 或 新小時等於上一個alarmClock小時且新分鐘小於上一個alarmClock分鐘
                     if (i > 0 && (mAlarmClock.hour < alarmClocks.alarmClockList[i - 1].hour ||

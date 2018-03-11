@@ -126,14 +126,20 @@
                     android:textColor="@android:color/black"
                     android:textSize="18sp" />
 
-                <com.suke.widget.SwitchButton
-                    android:id="@+id/sb_weather"
+                <android.support.v7.widget.SwitchCompat
+                    android:id="@+id/sc_weather"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:sb_checked_color="@color/colorBlue"
-                    app:sb_checkline_color="@color/colorMainYellow"
-                    app:sb_checkline_width="2dp"
-                    app:sb_uncheckcircle_color="@android:color/holo_red_dark" />
+                    android:checked="true" />
+
+                <!--<com.suke.widget.SwitchButton-->
+                <!--android:id="@+id/sb_weather"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--app:sb_checked_color="@color/colorBlue"-->
+                <!--app:sb_checkline_color="@color/colorMainYellow"-->
+                <!--app:sb_checkline_width="2dp"-->
+                <!--app:sb_uncheckcircle_color="@android:color/holo_red_dark" />-->
             </LinearLayout>
 
             <LinearLayout
@@ -234,12 +240,12 @@
                             android:text="體育" />
 
                         <!--<RadioButton-->
-                            <!--android:id="@+id/rb_technology"-->
-                            <!--android:layout_width="0dp"-->
-                            <!--android:layout_height="wrap_content"-->
-                            <!--android:layout_weight="1"-->
-                            <!--android:tag="6"-->
-                            <!--android:text="科技" />-->
+                        <!--android:id="@+id/rb_technology"-->
+                        <!--android:layout_width="0dp"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_weight="1"-->
+                        <!--android:tag="6"-->
+                        <!--android:text="科技" />-->
 
                         <View
                             android:layout_width="0dp"

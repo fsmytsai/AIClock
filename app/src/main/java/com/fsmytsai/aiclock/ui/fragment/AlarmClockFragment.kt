@@ -6,7 +6,6 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -100,8 +99,13 @@ class AlarmClockFragment : Fragment() {
             }
             holder.tvRepeat.text = repeat
             holder.tvRepeat.setTextColor(Color.BLUE)
-            holder.sbSwitch.isChecked = ac.isOpen
-            holder.sbSwitch.setOnCheckedChangeListener { view, isChecked ->
+            holder.scSwitch.isChecked = ac.isOpen
+            holder.scSwitch.setOnCheckedChangeListener { view, isChecked ->
+                if (isAutoOn) {
+                    isAutoOn = false
+                    return@setOnCheckedChangeListener
+                }
+
                 //更新開關資料
                 ac.isOpen = isChecked
                 SharedService.updateAlarmClocks(mMainActivity, mAlarmClocks)
@@ -111,9 +115,7 @@ class AlarmClockFragment : Fragment() {
                         override fun start() {
                             mMainActivity.startDownload(ac, object : SpeechDownloader.DownloadFinishListener {
                                 override fun cancel() {
-                                    Handler().postDelayed({
-                                        view.isChecked = false
-                                    }, 1000)
+                                    view.isChecked = false
                                 }
 
                                 override fun startSetData() {
@@ -165,7 +167,7 @@ class AlarmClockFragment : Fragment() {
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             val tvTime = itemView.tv_time
             val tvRepeat = itemView.tv_repeat
-            val sbSwitch = itemView.sb_switch
+            val scSwitch = itemView.sc_switch
             val rlAlarmClockBlock = itemView.rl_alarm_clock_block
             val tvFooter = itemView.tv_footer
         }
