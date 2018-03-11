@@ -92,7 +92,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
                             //沒網路或離響鈴時間小於30秒取消下載
                             if (getAlarmTime())
-                                getPromptData()
+                                checkLatestUrl()
                             else
                                 foregroundCancelDownloadSound()
                         })
@@ -103,7 +103,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             } else {
                 //沒網路或離響鈴時間小於30秒取消下載
                 if (getAlarmTime())
-                    getPromptData()
+                    checkLatestUrl()
                 else
                     foregroundCancelDownloadSound()
             }
@@ -112,7 +112,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             //背景
             //沒網路或離響鈴時間小於30秒取消下載
             if (getAlarmTime())
-                getTextsData()
+                checkLatestUrl()
             else
                 backgroundCancelDownloadSound()
         }
@@ -208,11 +208,60 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         return true
     }
 
+    private fun checkLatestUrl() {
+        val request = Request.Builder()
+                .url("${SharedService.getLatestUrl(mContext)}api/getLatestUrl")
+                .build()
+
+        OkHttpClient().newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call?, e: IOException?) {
+                if (mDownloadSpeechActivity != null)
+                    mDownloadSpeechActivity?.runOnUiThread {
+                        SharedService.showTextToast(mDownloadSpeechActivity!!, "請檢查網路連線")
+                        foregroundCancelDownloadSound()
+                    }
+                else
+                    backgroundCancelDownloadSound()
+            }
+
+            override fun onResponse(call: Call?, response: Response?) {
+                val statusCode = response?.code()
+                val resMessage = response?.body()?.string()
+
+                when {
+                    mDownloadSpeechActivity != null -> mDownloadSpeechActivity?.runOnUiThread {
+                        if (statusCode == 200) {
+                            val latestUrl = Gson().fromJson(resMessage, String::class.java)
+                            if (SharedService.getLatestUrl(mContext) != latestUrl) {
+                                SharedService.writeDebugLog(mContext, "SpeechDownloader update latestUrl to $latestUrl")
+                                mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE).edit().putString("LatestUrl", latestUrl).apply()
+                            }
+                            getPromptData()
+                        } else {
+                            SharedService.handleError(mDownloadSpeechActivity!!, statusCode!!, resMessage!!)
+                            foregroundCancelDownloadSound()
+                        }
+                    }
+                    statusCode == 200 -> {
+                        val latestUrl = Gson().fromJson(resMessage, String::class.java)
+                        if (SharedService.getLatestUrl(mContext) != latestUrl) {
+                            SharedService.writeDebugLog(mContext, "SpeechDownloader update latestUrl to $latestUrl")
+                            mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE).edit().putString("LatestUrl", latestUrl).apply()
+                        }
+                        getTextsData()
+                    }
+                    else -> //背景失敗
+                        backgroundCancelDownloadSound()
+                }
+            }
+        })
+    }
+
     private fun getPromptData() {
         mDownloadSpeechActivity?.showDownloadingDialog()
 
         val request = Request.Builder()
-                .url("${SharedService.latestUrl}api/getPromptData?day=${mAlarmTimeList[0]}&hour=${mAlarmTimeList[1]}&" +
+                .url("${SharedService.getLatestUrl(mContext)}api/getPromptData?day=${mAlarmTimeList[0]}&hour=${mAlarmTimeList[1]}&" +
                         "minute=${mAlarmTimeList[2]}&second=${mAlarmTimeList[3]}&speaker=${mAlarmClock.speaker}&version_code=${SharedService.getVersionCode(mContext)}")
                 .build()
 
@@ -260,7 +309,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 //            "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
 //                    "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=-1&latitude=1000&longitude=0"
 //        else
-        val url = "${SharedService.latestUrl}api/getTextData?" +
+        val url = "${SharedService.getLatestUrl(mContext)}api/getTextData?" +
                 "hour=${mAlarmClock.hour}&minute=${mAlarmClock.minute}&" +
                 "speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&news_count=${mAlarmClock.newsCount}&" +
                 "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}&" +
@@ -318,7 +367,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private fun downloadSound() {
         if (mDownloadSpeechActivity != null) {
-            FileDownloader.getImpl().create("${SharedService.latestUrl}sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
+            FileDownloader.getImpl().create("${SharedService.getLatestUrl(mContext)}sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
                     .setPath("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
                     .setTag(0, "${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}")
                     .setCallbackProgressTimes(0)
@@ -331,7 +380,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         for (text in mTexts!!.textList) {
             for (i in 0 until text.part_count) {
-                FileDownloader.getImpl().create("${SharedService.latestUrl}sounds/${text.text_id}-$i-${mAlarmClock.speaker}.wav")
+                FileDownloader.getImpl().create("${SharedService.getLatestUrl(mContext)}sounds/${text.text_id}-$i-${mAlarmClock.speaker}.wav")
                         .setPath("${mContext.filesDir}/sounds/${text.text_id}-$i-${mAlarmClock.speaker}.wav")
                         .setTag(0, "${text.text_id}-$i-${mAlarmClock.speaker}")
                         .setCallbackProgressTimes(0)
@@ -367,7 +416,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //已開始下載，恢復task
         if (mIsStartedDownloadSound) {
             while (mPauseList.size > 0) {
-                FileDownloader.getImpl().create("${SharedService.latestUrl}sounds/${mPauseList[0]}.wav")
+                FileDownloader.getImpl().create("${SharedService.getLatestUrl(mContext)}sounds/${mPauseList[0]}.wav")
                         .setPath("${mContext.filesDir}/sounds/${mPauseList[0]}.wav")
                         .setTag(0, mPauseList[0])
                         .setCallbackProgressTimes(0)

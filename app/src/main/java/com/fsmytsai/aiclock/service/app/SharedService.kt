@@ -32,7 +32,12 @@ class SharedService {
         var reRunRunnable = false
         val waitToPrepareAlarmClockList = ArrayList<AlarmClock>()
         val speakerArr = arrayOf("f1", "f2", "m1")
-        var latestUrl = ""
+
+        fun getLatestUrl(context: Context): String {
+            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            val latestUrl = spDatas.getString("LatestUrl", "http://aialarmclock.southeastasia.cloudapp.azure.com/")
+            return latestUrl
+        }
 
         fun cancelAlarm(context: Context, acId: Int) {
             val appContext = context.applicationContext
@@ -64,10 +69,7 @@ class SharedService {
 
         fun checkAlarmClockIsOpen(context: Context, acId: Int): Boolean {
             val alarmClock = getAlarmClock(context, acId)
-            if (alarmClock != null)
-                return alarmClock.isOpen
-            else
-                return false
+            return alarmClock?.isOpen ?: false
         }
 
         //當兩種PI都回傳null，表示AlarmManager內不存在此鬧鐘
