@@ -204,21 +204,20 @@ class MainActivity : DownloadSpeechActivity() {
                 runOnUiThread {
                     if (statusCode == 200) {
                         val latestVersionCode = Gson().fromJson(resMessage, Int::class.java)
-                        if (mSPDatas.getInt("LatestVersionCode", SharedService.getVersionCode(this@MainActivity)) != latestVersionCode) {
+                        if (mSPDatas.getInt("DoNotUpdateVersionCode", 0) < latestVersionCode && SharedService.getVersionCode(this@MainActivity) < latestVersionCode) {
                             SharedService.writeDebugLog(this@MainActivity, "MainActivity found new version $latestVersionCode")
                             AlertDialog.Builder(this@MainActivity)
                                     .setTitle("提示")
                                     .setMessage("有新版本囉!")
-                                    .setNegativeButton("跳過此版本", { _, _ ->
-                                        mSPDatas.edit().putInt("LatestVersionCode", latestVersionCode).apply()
+                                    .setNegativeButton("忽略", { _, _ ->
+                                        mSPDatas.edit().putInt("DoNotUpdateVersionCode", latestVersionCode).apply()
                                     })
-                                    .setNeutralButton("關閉", null)
+                                    .setNeutralButton("稍後提醒", null)
                                     .setPositiveButton("前往 Google Play 更新", { _, _ ->
-                                        val appPackageName = packageName // getPackageName() from Context or Activity object
                                         try {
-                                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$appPackageName")))
+                                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
                                         } catch (anfe: android.content.ActivityNotFoundException) {
-                                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$appPackageName")))
+                                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
                                         }
 
                                     })
