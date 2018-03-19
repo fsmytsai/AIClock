@@ -48,7 +48,11 @@ open class DownloadSpeechActivity : AppCompatActivity() {
                 SharedService.showTextToast(this@DownloadSpeechActivity, "已完成設置，無法取消")
             } else {
                 dismissDownloadingDialog()
-                unbindService(mDownloadServiceConnection)
+                try {
+                    unbindService(mDownloadServiceConnection)
+                } catch (e: Exception) {
+                    SharedService.writeDebugLog(this@DownloadSpeechActivity, "DownloadSpeechActivity cancel unbindService failed")
+                }
                 mDownloadService = null
                 outDownloadFinishListener?.cancel()
             }
@@ -63,7 +67,11 @@ open class DownloadSpeechActivity : AppCompatActivity() {
             //避免在 AddAlarmClockActivity 已完成後才按取消，且 destroy 頁面造成 service 自殺，再次 unbind 造成的 crash
             if (!mIsAccidentCanceled) {
                 dismissDownloadingDialog()
-                unbindService(mDownloadServiceConnection)
+                try {
+                    unbindService(mDownloadServiceConnection)
+                } catch (e: Exception) {
+                    SharedService.writeDebugLog(this@DownloadSpeechActivity, "DownloadSpeechActivity allFinished unbindService failed")
+                }
             }
             mDownloadService = null
             outDownloadFinishListener?.allFinished()
