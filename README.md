@@ -8,6 +8,9 @@
 | unfinished | 考慮是否要將響鈴時的順序改成先開 service 再從 service 開 activity |
 | unfinished | 改用空氣盒子抓空氣資料，缺點是沒 AQI 跟座標要算 |
 | unfinished | 清除伺服器舊資料 |
+| unfinished | 靜音設置 |
+| unfinished | 響鈴前跳通知看取消響鈴 |
+| unfinished | 一個鬧鐘可重複響鈴到醒(感覺不太需要) |
 
 
 # Version Features
@@ -19,12 +22,25 @@
 5. 可查看正在播報新聞
 
 # Release Note
-##1.5.4 versionCode = 19
+## 1.6.3 versionCode = 23
+1. 修正某些情況下兩個鬧鐘響鈴時間太接近時，第二個不會響的問題
+
+## 1.6.2 versionCode = 22
+1. 修正重複提示更新新版本的錯誤
+
+## 1.6.1 versionCode = 21
+1. 替換掉問題一堆的開關按鈕
+
+## 1.6.0 versionCode = 20
+1. 新增自動檢查是否有新版本的功能
+2. 修正響鈴時閃退的錯誤
+
+## 1.5.4 versionCode = 19
 1. 修正無法設置鬧鐘的錯誤
 2. 可設置的新聞篇數由 12 降至 10
 3. 移除少人使用的女2聲音
 4. 移除科技新聞(未來看情況可能再加回來)
-5. 增加穩定度
+
 ## 1.5.3 versionCode = 18
 1. 新增於晚上 8 點後設置鬧鐘取得的天氣預報是明天的
 2. 修正某些原因造成的音檔大量遺失
