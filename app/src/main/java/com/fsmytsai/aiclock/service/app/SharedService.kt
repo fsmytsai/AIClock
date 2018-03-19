@@ -30,7 +30,6 @@ class SharedService {
     companion object {
         var isNewsPlaying = false
         var reRunRunnable = false
-        val waitToPrepareAlarmClockList = ArrayList<AlarmClock>()
         val speakerArr = arrayOf("f1", "f2", "m1")
 
         fun getLatestUrl(context: Context): String {

@@ -3,10 +3,12 @@ package com.fsmytsai.aiclock
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 
 class PrepareService : Service() {
+    private val mWaitToPrepareAlarmClocks = AlarmClocks()
     override fun onBind(intent: Intent): IBinder? {
         return null
     }
@@ -18,13 +20,13 @@ class PrepareService : Service() {
             if (alarmClock == null || !SharedService.checkAlarmClockIsOpen(this, acId))
                 stopSelf()
             else {
-                if (SharedService.waitToPrepareAlarmClockList.size == 0) {
-                    SharedService.waitToPrepareAlarmClockList.add(alarmClock)
+                if (mWaitToPrepareAlarmClocks.alarmClockList.size == 0) {
+                    mWaitToPrepareAlarmClocks.alarmClockList.add(alarmClock)
                     SharedService.writeDebugLog(this, "PrepareService startDownload")
                     startDownload()
                 } else {
-                    SharedService.waitToPrepareAlarmClockList.add(alarmClock)
-                    SharedService.writeDebugLog(this, "PrepareService add to wait No. ${SharedService.waitToPrepareAlarmClockList.size}")
+                    mWaitToPrepareAlarmClocks.alarmClockList.add(alarmClock)
+                    SharedService.writeDebugLog(this, "PrepareService add to wait No. ${mWaitToPrepareAlarmClocks.alarmClockList.size}")
                 }
             }
 
@@ -36,8 +38,9 @@ class PrepareService : Service() {
         val speechDownloader = SpeechDownloader(this, null)
         speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
             override fun cancel() {
-                SharedService.waitToPrepareAlarmClockList.removeAt(0)
-                if (SharedService.waitToPrepareAlarmClockList.size == 0)
+                if (mWaitToPrepareAlarmClocks.alarmClockList.isNotEmpty())
+                    mWaitToPrepareAlarmClocks.alarmClockList.removeAt(0)
+                if (mWaitToPrepareAlarmClocks.alarmClockList.isEmpty())
                     stopSelf()
                 else
                     startDownload()
@@ -48,14 +51,15 @@ class PrepareService : Service() {
             }
 
             override fun allFinished() {
-                SharedService.waitToPrepareAlarmClockList.removeAt(0)
-                if (SharedService.waitToPrepareAlarmClockList.size == 0)
+                if (mWaitToPrepareAlarmClocks.alarmClockList.isNotEmpty())
+                    mWaitToPrepareAlarmClocks.alarmClockList.removeAt(0)
+                if (mWaitToPrepareAlarmClocks.alarmClockList.isEmpty())
                     stopSelf()
                 else
                     startDownload()
             }
         })
-        speechDownloader.setAlarmClock(SharedService.waitToPrepareAlarmClockList[0])
+        speechDownloader.setAlarmClock(mWaitToPrepareAlarmClocks.alarmClockList[0])
     }
 
     override fun onDestroy() {
