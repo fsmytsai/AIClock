@@ -8,6 +8,9 @@
 | unfinished | 考慮是否要將響鈴時的順序改成先開 service 再從 service 開 activity |
 | unfinished | 改用空氣盒子抓空氣資料，缺點是沒 AQI 跟座標要算 |
 | unfinished | 清除伺服器舊資料 |
+| unfinished | 靜音設置 |
+| unfinished | 響鈴前跳通知看取消響鈴 |
+| unfinished | 一個鬧鐘可重複響鈴到醒(感覺不太需要) |
 
 
 # Version Features
