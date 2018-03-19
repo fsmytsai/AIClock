@@ -11,6 +11,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
 import android.support.annotation.RequiresApi
 import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
@@ -71,11 +72,23 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 //                }
 //    }
 
+    private val mHandler = Handler()
+    private val mRunnable = Runnable {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader overtime")
+        if (mDownloadSpeechActivity != null) {
+            SharedService.showTextToast(mDownloadSpeechActivity!!, "設置超時")
+            foregroundCancelDownloadSound()
+        } else
+            backgroundCancelDownloadSound()
+    }
+
     fun setAlarmClock(alarmClock: AlarmClock) {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader setAlarmClock ACId = ${alarmClock.acId}")
+
         mAlarmClock = alarmClock
-        SharedService.writeDebugLog(mContext, "SpeechDownloader start ACId = ${mAlarmClock.acId}")
-        //初始化 FileDownloader
-        FileDownloader.setup(mContext)
+
+        //倒數計時 60 秒
+        mHandler.postDelayed(mRunnable, 60000)
 
         if (mDownloadSpeechActivity != null) {
             //前景
@@ -209,6 +222,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun checkLatestUrl() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader checkLatestUrl")
         val request = Request.Builder()
                 .url("${SharedService.getLatestUrl(mContext)}api/getLatestUrl")
                 .build()
@@ -258,6 +272,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun getPromptData() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader getPromptData")
         mDownloadSpeechActivity?.showDownloadingDialog()
 
         val request = Request.Builder()
@@ -293,6 +308,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun getTextsData() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader getTextsData")
         //如果有開啟位置且為背景則抓取位置
         if (mAlarmClock.latitude != 1000.0 && mDownloadSpeechActivity == null)
             if (ActivityCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
@@ -366,6 +382,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun downloadSound() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader downloadSound")
+
+        //初始化 FileDownloader
+        FileDownloader.setup(mContext)
+
         if (mDownloadSpeechActivity != null) {
             FileDownloader.getImpl().create("${SharedService.getLatestUrl(mContext)}sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
                     .setPath("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
@@ -397,6 +418,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     fun stopDownloadSound() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader stopDownloadSound")
         if (mIsStartedDownloadSound) {
             FileDownloader.getImpl().pause(mQueueTarget)
         }
@@ -404,6 +426,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     fun resumeDownloadSound() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader resumeDownloadSound")
+
         mIsStoppedDownloadSound = false
 
         if (mIsCanceledDownloadSound)
@@ -444,6 +468,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         override fun retry(task: BaseDownloadTask?, ex: Throwable?, retryingTimes: Int, soFarBytes: Int) {}
 
         override fun completed(task: BaseDownloadTask) {
+            SharedService.writeDebugLog(mContext, "SpeechDownloader download completed ${task.getTag(0) as String}")
             completeOrErrorDownload()
         }
 
@@ -474,17 +499,19 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     fun foregroundCancelDownloadSound() {
-        SharedService.writeDebugLog(mContext, "SpeechDownloader 前景取消下載")
+        SharedService.writeDebugLog(mContext, "SpeechDownloader foregroundCancelDownloadSound")
         stopDownloadSound()
         mDownloadFinishListener?.cancel()
     }
 
     @TargetApi(Build.VERSION_CODES.M)
     private fun backgroundCancelDownloadSound() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader backgroundCancelDownloadSound")
+
         FileDownloader.getImpl().pause(mQueueTarget)
         //離響鈴小於 30 秒(重開機時造成)， 10 分鐘後重試
         if (mAlarmTimeList.size == 0) {
-            SharedService.writeDebugLog(mContext, "SpeechDownloader 背景取消下載，離響鈴小於 30 秒， 10 分鐘後重試")
+            SharedService.writeDebugLog(mContext, "SpeechDownloader less than 30s,10m later retry ")
             retryDownloadSound(10)
         } else {
             //距離響鈴時間的分鐘數
@@ -493,11 +520,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             //避免 9 * 3 造成的延遲響鈴 (響鈴時間太接近的鬧鐘過多可能還是會造成響鈴延遲)
             if (alarmMinute > 27) {
                 val retryMinute = if (alarmMinute / 3 > 10) alarmMinute / 3 else 10
-                SharedService.writeDebugLog(mContext, "SpeechDownloader 背景取消下載，離響鈴超過 27 分鐘($alarmMinute) $retryMinute 分鐘後重試")
+                SharedService.writeDebugLog(mContext, "SpeechDownloader more than 27m($alarmMinute) ${retryMinute}m later retry")
                 retryDownloadSound(retryMinute.toInt())
             } else {
                 //剩下不到 27 分鐘響鈴，直接播放舊資料及音檔
-                SharedService.writeDebugLog(mContext, "SpeechDownloader 背景取消下載，離響鈴不到 27 分鐘($alarmMinute)，直接播放舊資料及音檔")
+                SharedService.writeDebugLog(mContext, "SpeechDownloader less than 27m($alarmMinute),display old data and play old sound")
                 setAlarm(true)
             }
         }
@@ -531,7 +558,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         mDownloadSpeechActivity?.setDownloadProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt())
 
         if (mDownloadedCount == mNeedDownloadCount) {
-            SharedService.writeDebugLog(mContext, "SpeechDownloader download Finish")
+            SharedService.writeDebugLog(mContext, "SpeechDownloader download finish")
+
+            //取消倒數計時
+            mHandler.removeCallbacksAndMessages(null)
+
             setData()
             if (mDownloadSpeechActivity != null) {
                 mDownloadSpeechActivity?.setDownloadProgress(100)
@@ -548,23 +579,28 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun setData() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader setData")
         mDownloadFinishListener?.startSetData()
         setAlarm(false)
     }
 
     @TargetApi(Build.VERSION_CODES.M)
     private fun setAlarm(isAbandon: Boolean) {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader setAlarm")
         val appContext = mContext.applicationContext
+
+        //設置前先嘗試取消，避免重複設置
+        SharedService.cancelAlarm(mContext, mAlarmClock.acId)
 
         //超過 40 分鐘才響鈴且需要更新資料及音檔(天氣或新聞)，則設置一個提前 40 分鐘的任務重新抓取新聞天氣
         val alarmIntent = if ((mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 40) &&
                 (mAlarmClock.latitude != 1000.0 || mAlarmClock.category != -1)) {
-            SharedService.writeDebugLog(mContext, "SpeechDownloader 設置鬧鐘成功，${mAlarmTimeList[0]}天${mAlarmTimeList[1]}小時${mAlarmTimeList[2]}分鐘後響鈴")
+            SharedService.writeDebugLog(mContext, "SpeechDownloader setAlarm success ${mAlarmTimeList[0]}d ${mAlarmTimeList[1]}h ${mAlarmTimeList[2]}m later alarm")
             mTexts?.isOldData = true
             mAlarmTimeCalendar.add(Calendar.MINUTE, -40)
             Intent(appContext, PrepareReceiver::class.java)
         } else {
-            SharedService.writeDebugLog(mContext, "SpeechDownloader 設置鬧鐘成功，40分鐘內響鈴，${mAlarmTimeList[2]}分鐘${mAlarmTimeList[3]}秒後響鈴")
+            SharedService.writeDebugLog(mContext, "SpeechDownloader setAlarm success ${mAlarmTimeList[2]}m ${mAlarmTimeList[3]}s later alarm")
             mTexts?.isOldData = isAbandon
             Intent(appContext, AlarmReceiver::class.java)
         }
@@ -573,9 +609,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //設置前先更新資料(有成功取得資料)
         if (mTexts != null)
             SharedService.deleteOldTextsData(appContext, mAlarmClock.acId, mTexts, true)
-
-        //設置前先嘗試取消，避免重複設置
-        SharedService.cancelAlarm(mContext, mAlarmClock.acId)
 
         val pi = PendingIntent.getBroadcast(appContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         val am = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -618,6 +651,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun allFinished() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader allFinished")
+
         //所有工作都結束後清舊檔
         cleanAllOldSound()
 
