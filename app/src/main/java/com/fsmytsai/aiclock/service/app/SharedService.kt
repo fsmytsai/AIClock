@@ -34,7 +34,7 @@ class SharedService {
 
         fun getLatestUrl(context: Context): String {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
-            val latestUrl = spDatas.getString("LatestUrl", "http://aialarmclock.southeastasia.cloudapp.azure.com/")
+            val latestUrl = spDatas.getString("LatestUrl", "http://smartclock.southeastasia.cloudapp.azure.com/")
             return latestUrl
         }
 
