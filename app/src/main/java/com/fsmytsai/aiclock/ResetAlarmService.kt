@@ -70,9 +70,13 @@ class ResetAlarmService : Service() {
         val speechDownloader = SpeechDownloader(this, null)
         speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
             override fun cancel() {
-                mNeedResetAlarmClocks.alarmClockList.removeAt(0)
-                SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService cancel download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
-                if (mNeedResetAlarmClocks.alarmClockList.size == 0) {
+                if (mNeedResetAlarmClocks.alarmClockList.isNotEmpty()) {
+                    mNeedResetAlarmClocks.alarmClockList.removeAt(0)
+                    SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService cancel download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
+                } else
+                    SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService cancel download isEmpty")
+
+                if (mNeedResetAlarmClocks.alarmClockList.isEmpty()) {
                     stopSelf()
                 } else
                     startReset()
@@ -83,9 +87,12 @@ class ResetAlarmService : Service() {
             }
 
             override fun allFinished() {
-                mNeedResetAlarmClocks.alarmClockList.removeAt(0)
-                SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService finish download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
-                if (mNeedResetAlarmClocks.alarmClockList.size == 0) {
+                if (mNeedResetAlarmClocks.alarmClockList.isNotEmpty()) {
+                    mNeedResetAlarmClocks.alarmClockList.removeAt(0)
+                    SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService finished download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
+                } else
+                    SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService finished download isEmpty")
+                if (mNeedResetAlarmClocks.alarmClockList.isEmpty()) {
                     stopSelf()
                 } else
                     startReset()
