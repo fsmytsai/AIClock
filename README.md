@@ -11,6 +11,7 @@
 | unfinished | 靜音設置 |
 | unfinished | 響鈴前跳通知看取消響鈴 |
 | unfinished | 一個鬧鐘可重複響鈴到醒(感覺不太需要) |
+| unfinished | 語音命令賴床 |
 
 
 # Version Features
