@@ -201,14 +201,12 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         val mAlarmTimeCalendar = Calendar.getInstance()
         mAlarmTimeCalendar.set(Calendar.HOUR_OF_DAY, mAlarmClock.hour)
         mAlarmTimeCalendar.set(Calendar.MINUTE, mAlarmClock.minute)
-        TimePickerView.Builder(this, object : TimePickerView.OnTimeSelectListener {
 
-            override fun onTimeSelect(date: Date, v: View) {
-                val calendar = Calendar.getInstance()
-                calendar.time = date
-                mAlarmClock.hour = calendar.get(Calendar.HOUR_OF_DAY)
-                mAlarmClock.minute = calendar.get(Calendar.MINUTE)
-            }
+        TimePickerView.Builder(this, TimePickerView.OnTimeSelectListener { date, _ ->
+            val calendar = Calendar.getInstance()
+            calendar.time = date
+            mAlarmClock.hour = calendar.get(Calendar.HOUR_OF_DAY)
+            mAlarmClock.minute = calendar.get(Calendar.MINUTE)
         }).setType(booleanArrayOf(false, false, false, true, true, false))
                 .setLayoutRes(R.layout.block_time_picker, { v ->
 
