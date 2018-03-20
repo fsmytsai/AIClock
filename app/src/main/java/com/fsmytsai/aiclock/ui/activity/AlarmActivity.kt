@@ -225,7 +225,7 @@ class AlarmActivity : AppCompatActivity() {
 
     private var mMemoryCaches: LruCache<String, Bitmap>? = null
 
-    protected fun initCache() {
+    private fun initCache() {
         val maxMemory = Runtime.getRuntime().maxMemory() / 3
         mMemoryCaches = object : LruCache<String, Bitmap>(maxMemory.toInt()) {
             override fun sizeOf(key: String?, value: Bitmap?): Int {
@@ -234,28 +234,23 @@ class AlarmActivity : AppCompatActivity() {
         }
     }
 
-    fun getBitmapFromLrucache(imageName: String): Bitmap? {
+    private fun getBitmapFromCache(imageName: String): Bitmap? {
         return mMemoryCaches?.get(imageName)
     }
 
-    fun addBitmapToLrucaches(imageName: String, bitmap: Bitmap) {
-        if (getBitmapFromLrucache(imageName) == null) {
+    private fun addBitmapToCaches(imageName: String, bitmap: Bitmap) {
+        if (getBitmapFromCache(imageName) == null) {
             mMemoryCaches?.put(imageName, bitmap)
         }
     }
 
-    fun removeBitmapFromLrucaches(imageName: String) {
-        if (getBitmapFromLrucache(imageName) == null) {
-            mMemoryCaches?.remove(imageName)
-        }
-    }
-
-    private val wImageViewList = ArrayList<ImageView>()
+    private val mProgressBarList = ArrayList<ProgressBar>()
+    private val mImageViewList = ArrayList<ImageView>()
     private val loadingImgNameList = ArrayList<String>()
     private val mOkHttpClient = OkHttpClient()
 
     private fun showImage(imageView: ImageView, url: String, progressBar: ProgressBar) {
-        val bitmap = getBitmapFromLrucache(url)
+        val bitmap = getBitmapFromCache(url)
         if (bitmap == null) {
             loadImgByOkHttp(
                     imageView,
@@ -269,20 +264,21 @@ class AlarmActivity : AppCompatActivity() {
     }
 
     private fun loadImgByOkHttp(imageView: ImageView, url: String, progressBar: ProgressBar) {
-        for (mImgView in wImageViewList) {
+        for (mImgView in mImageViewList) {
             if (mImgView == imageView)
                 return
         }
-        wImageViewList.add(imageView)
+        mImageViewList.add(imageView)
+        mProgressBarList.add(progressBar)
+
+        progressBar.visibility = View.VISIBLE
+        imageView.visibility = View.GONE
 
         for (imgName in loadingImgNameList) {
             if (imgName == url)
                 return
         }
         loadingImgNameList.add(url)
-
-        progressBar.visibility = View.VISIBLE
-        imageView.visibility = View.GONE
 
         val request = Request.Builder()
                 .url(url)
@@ -292,9 +288,12 @@ class AlarmActivity : AppCompatActivity() {
             override fun onFailure(call: Call, e: IOException) {
                 loadingImgNameList.remove(url)
                 var i = 0
-                while (i < wImageViewList.size) {
-                    if (wImageViewList[i].tag == url) {
-                        wImageViewList.removeAt(i)
+                while (i < mImageViewList.size) {
+                    if (mImageViewList[i].tag == url) {
+                        mImageViewList[i].visibility = View.GONE
+                        mProgressBarList[i].visibility = View.GONE
+                        mImageViewList.removeAt(i)
+                        mProgressBarList.removeAt(i)
                         i--
                     }
                     i++
@@ -308,15 +307,16 @@ class AlarmActivity : AppCompatActivity() {
                 try {
                     runOnUiThread {
                         if (bitmap != null) {
-                            addBitmapToLrucaches(url, bitmap)
+                            addBitmapToCaches(url, bitmap)
                             loadingImgNameList.remove(url)
                             var i = 0
-                            while (i < wImageViewList.size) {
-                                if (wImageViewList[i].tag == url) {
-                                    progressBar.visibility = View.GONE
-                                    imageView.visibility = View.VISIBLE
-                                    wImageViewList[i].setImageBitmap(bitmap)
-                                    wImageViewList.removeAt(i)
+                            while (i < mImageViewList.size) {
+                                if (mImageViewList[i].tag == url) {
+                                    mProgressBarList[i].visibility = View.GONE
+                                    mImageViewList[i].visibility = View.VISIBLE
+                                    mImageViewList[i].setImageBitmap(bitmap)
+                                    mImageViewList.removeAt(i)
+                                    mProgressBarList.removeAt(i)
                                     i--
                                 }
                                 i++
