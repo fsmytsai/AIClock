@@ -374,7 +374,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
                     if (!alarmClocks.alarmClockList[i].isOpen)
                         mAlarmClock.isOpen = true
-                    
+
                     //非第一個alarmClock，新小時小於上一個alarmClock小時 或 新小時等於上一個alarmClock小時且新分鐘小於上一個alarmClock分鐘
                     if (i > 0 && (mAlarmClock.hour < alarmClocks.alarmClockList[i - 1].hour ||
                                     (mAlarmClock.hour == alarmClocks.alarmClockList[i - 1].hour &&
