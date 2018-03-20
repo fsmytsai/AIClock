@@ -49,6 +49,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private var mPromptData: PromptData? = null
     private val mAlarmTimeList = ArrayList<Long>()
     private var mIsFinishGetData = false
+    private var mIsFinishDownload = false
     private var mIsStartedDownloadSound = false
     private var mIsStoppedDownloadSound = false
     private var mIsCanceledDownloadSound = false
@@ -74,6 +75,10 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private val mHandler = Handler()
     private val mRunnable = Runnable {
+        if (mIsFinishDownload) {
+            SharedService.writeDebugLog(mContext, "SpeechDownloader overtime but download is finished")
+            return@Runnable
+        }
         SharedService.writeDebugLog(mContext, "SpeechDownloader overtime")
         if (mDownloadSpeechActivity != null) {
             SharedService.showTextToast(mDownloadSpeechActivity!!, "設置超時")
@@ -426,12 +431,14 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     fun resumeDownloadSound() {
+        if (mIsCanceledDownloadSound) {
+            SharedService.writeDebugLog(mContext, "SpeechDownloader resumeDownloadSound but download is canceled")
+            return
+        }
+
         SharedService.writeDebugLog(mContext, "SpeechDownloader resumeDownloadSound")
 
         mIsStoppedDownloadSound = false
-
-        if (mIsCanceledDownloadSound)
-            return
 
         //完成取得資料但還沒開始下載
         if (mIsFinishGetData && !mIsStartedDownloadSound)
@@ -484,7 +491,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
                 //避免多個檔案失敗造成重複呼叫取消
                 if (!mIsCanceledDownloadSound) {
-                    mIsCanceledDownloadSound = true
                     if (mDownloadSpeechActivity != null) {
                         SharedService.showTextToast(mDownloadSpeechActivity!!, "下載失敗，網路不穩")
                         foregroundCancelDownloadSound()
@@ -500,15 +506,18 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     fun foregroundCancelDownloadSound() {
         SharedService.writeDebugLog(mContext, "SpeechDownloader foregroundCancelDownloadSound")
+        mIsCanceledDownloadSound = true
         stopDownloadSound()
+
         mDownloadFinishListener?.cancel()
     }
 
     @TargetApi(Build.VERSION_CODES.M)
     private fun backgroundCancelDownloadSound() {
         SharedService.writeDebugLog(mContext, "SpeechDownloader backgroundCancelDownloadSound")
+        mIsCanceledDownloadSound = true
+        stopDownloadSound()
 
-        FileDownloader.getImpl().pause(mQueueTarget)
         //離響鈴小於 30 秒(重開機時造成)， 10 分鐘後重試
         if (mAlarmTimeList.size == 0) {
             SharedService.writeDebugLog(mContext, "SpeechDownloader less than 30s,10m later retry ")
@@ -558,10 +567,17 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         mDownloadSpeechActivity?.setDownloadProgress(10 + (mDownloadedCount / mNeedDownloadCount * 90).toInt())
 
         if (mDownloadedCount == mNeedDownloadCount) {
-            SharedService.writeDebugLog(mContext, "SpeechDownloader download finish")
-
             //取消倒數計時
             mHandler.removeCallbacksAndMessages(null)
+
+            if (mIsCanceledDownloadSound) {
+                SharedService.writeDebugLog(mContext, "SpeechDownloader download finish but download is canceled")
+                return
+            }
+
+            SharedService.writeDebugLog(mContext, "SpeechDownloader download finish")
+
+            mIsFinishDownload = true
 
             setData()
             if (mDownloadSpeechActivity != null) {
