@@ -32,7 +32,6 @@ class AlarmClockFragment : Fragment() {
     private lateinit var mAlarmClocks: AlarmClocks
     private val ADD_ALARM_CLOCK = 10
     private val dayOfWeekArr = arrayOf("日", "一", "二", "三", "四", "五", "六")
-    private var isAutoOn = false
     private var mNowPosition = -1
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -99,13 +98,9 @@ class AlarmClockFragment : Fragment() {
             }
             holder.tvRepeat.text = repeat
             holder.tvRepeat.setTextColor(Color.BLUE)
+            holder.scSwitch.setOnCheckedChangeListener(null)
             holder.scSwitch.isChecked = ac.isOpen
             holder.scSwitch.setOnCheckedChangeListener { view, isChecked ->
-                if (isAutoOn) {
-                    isAutoOn = false
-                    return@setOnCheckedChangeListener
-                }
-
                 //更新開關資料
                 ac.isOpen = isChecked
                 SharedService.updateAlarmClocks(mMainActivity, mAlarmClocks)
@@ -183,8 +178,6 @@ class AlarmClockFragment : Fragment() {
                 rvAlarmClock.adapter.notifyItemRangeChanged(mNowPosition, mAlarmClocks.alarmClockList.size - mNowPosition)
                 return
             }
-
-            isAutoOn = data.getBooleanExtra("IsAutoOn", false)
 
             val alarmClock = Gson().fromJson(data.getStringExtra("AlarmClockJsonStr"), AlarmClock::class.java)
 
