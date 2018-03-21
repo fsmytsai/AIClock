@@ -112,7 +112,7 @@ class AlarmActivity : AppCompatActivity() {
                         .all { it.exists() }
                 if (addToRealTextsList) mRealTexts.textList.add(text)
             }
-            mIgnoreCount = mRealTexts.textList.filter { it.description == "time" || it.description == "weather" }.size
+            mIgnoreCount = mRealTexts.textList.filter { it.description == "time" }.size
         }
     }
 
@@ -188,8 +188,23 @@ class AlarmActivity : AppCompatActivity() {
 
             val text = mRealTexts.textList[position + mIgnoreCount]
 
-            holder.tvTitle.text = text.title
-            holder.tvDescription.text = text.description
+            if (text.description == "weather") {
+                holder.tvWeather.visibility = View.VISIBLE
+                holder.tvTitle.visibility = View.GONE
+                holder.tvDescription.visibility = View.GONE
+                var weather = text.title
+                weather = weather.replace("維", "為")
+                if (weather.contains("品質"))
+                    weather = weather.replace("。", "\n\n")
+                holder.tvWeather.text = weather
+            } else {
+                holder.tvWeather.visibility = View.GONE
+                holder.tvTitle.visibility = View.VISIBLE
+                holder.tvDescription.visibility = View.VISIBLE
+                holder.tvTitle.text = text.title
+                holder.tvDescription.text = text.description
+            }
+
             val previewImage = text.preview_image
             if (previewImage != "") {
                 holder.ivNews.tag = previewImage
@@ -213,6 +228,7 @@ class AlarmActivity : AppCompatActivity() {
         }
 
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val tvWeather = itemView.tv_weather
             val tvTitle = itemView.tv_title
             val tvDescription = itemView.tv_description
             val ivNews = itemView.iv_news
