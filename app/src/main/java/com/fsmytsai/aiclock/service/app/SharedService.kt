@@ -131,6 +131,53 @@ class SharedService {
             return alarmClocks.alarmClockList.firstOrNull { it.acId == acId }
         }
 
+        fun getAlarmCalendar(alarmClock: AlarmClock): Calendar {
+            val nowCalendar = Calendar.getInstance()
+            val alarmCalendar = Calendar.getInstance()
+            if (alarmClock.isRepeatArr.all { !it }) {
+                //全部沒選，只響一次
+                alarmCalendar.set(Calendar.HOUR_OF_DAY, alarmClock.hour)
+                alarmCalendar.set(Calendar.MINUTE, alarmClock.minute)
+                alarmCalendar.set(Calendar.SECOND, 0)
+                if (alarmCalendar.timeInMillis < nowCalendar.timeInMillis) {
+                    //已過去，補一天
+                    alarmCalendar.add(Calendar.DATE, 1)
+                }
+            } else {
+                var addDate = 0
+
+                //排列7天內的DAY_OF_WEEK，由於 SUNDAY = 1 ，所以要減回來。
+                val days = ArrayList<Int>()
+                for (i in (nowCalendar.get(Calendar.DAY_OF_WEEK) - 1)..(nowCalendar.get(Calendar.DAY_OF_WEEK) + 5)) {
+                    days.add(i % 7)
+                }
+                for (i in days) {
+                    if (alarmClock.isRepeatArr[i]) {
+                        //當天有圈，判斷設置的時間是否大於現在時間
+                        if (i == nowCalendar.get(Calendar.DAY_OF_WEEK) - 1) {
+                            if (alarmClock.hour > nowCalendar.get(Calendar.HOUR_OF_DAY))
+                                break
+                            else if (alarmClock.hour == nowCalendar.get(Calendar.HOUR_OF_DAY) &&
+                                    alarmClock.minute > nowCalendar.get(Calendar.MINUTE))
+                                break
+                            else
+                            //當天有圈但設置時間小於現在時間，等於下星期的今天
+                                addDate++
+                        } else
+                        //不是當天代表可結束計算
+                            break
+                    } else
+                        addDate++
+                }
+
+                alarmCalendar.add(Calendar.DATE, addDate)
+                alarmCalendar.set(Calendar.HOUR_OF_DAY, alarmClock.hour)
+                alarmCalendar.set(Calendar.MINUTE, alarmClock.minute)
+                alarmCalendar.set(Calendar.SECOND, 0)
+            }
+            return alarmCalendar
+        }
+
         fun getTextsList(context: Context): TextsList? {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             val textsListJsonStr = spDatas.getString("TextsListJsonStr", "")

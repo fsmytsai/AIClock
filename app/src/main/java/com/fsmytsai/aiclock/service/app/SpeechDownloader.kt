@@ -41,7 +41,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private var mContext = context
     private var mDownloadSpeechActivity = activity
     private lateinit var mAlarmClock: AlarmClock
-    private val mAlarmTimeCalendar = Calendar.getInstance()
+    private lateinit var mAlarmCalendar: Calendar
     private var mNeedDownloadCount = 0f
     private var mErrorDownloadCount = 0
     private var mDownloadedCount = 0f
@@ -146,51 +146,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private fun getAlarmTime(): Boolean {
         val nowCalendar = Calendar.getInstance()
+        mAlarmCalendar = SharedService.getAlarmCalendar(mAlarmClock)
 
-        if (mAlarmClock.isRepeatArr.all { !it }) {
-            //全部沒選，只響一次
-            mAlarmTimeCalendar.set(Calendar.HOUR_OF_DAY, mAlarmClock.hour)
-            mAlarmTimeCalendar.set(Calendar.MINUTE, mAlarmClock.minute)
-            mAlarmTimeCalendar.set(Calendar.SECOND, 0)
-            if (mAlarmTimeCalendar.timeInMillis < nowCalendar.timeInMillis) {
-                //已過去，補一天
-                mAlarmTimeCalendar.add(Calendar.DATE, 1)
-            }
-        } else {
-            var addDate = 0
-
-            //排列7天內的DAY_OF_WEEK，由於 SUNDAY = 1 ，所以要減回來。
-            val days = ArrayList<Int>()
-            for (i in (nowCalendar.get(Calendar.DAY_OF_WEEK) - 1)..(nowCalendar.get(Calendar.DAY_OF_WEEK) + 5)) {
-                days.add(i % 7)
-            }
-            for (i in days) {
-                if (mAlarmClock.isRepeatArr[i]) {
-                    //當天有圈，判斷設置的時間是否大於現在時間
-                    if (i == nowCalendar.get(Calendar.DAY_OF_WEEK) - 1) {
-                        if (mAlarmClock.hour > nowCalendar.get(Calendar.HOUR_OF_DAY))
-                            break
-                        else if (mAlarmClock.hour == nowCalendar.get(Calendar.HOUR_OF_DAY) &&
-                                mAlarmClock.minute > nowCalendar.get(Calendar.MINUTE))
-                            break
-                        else
-                        //當天有圈但設置時間小於現在時間，等於下星期的今天
-                            addDate++
-                    } else
-                    //不是當天代表可結束計算
-                        break
-                } else
-                    addDate++
-            }
-
-            mAlarmTimeCalendar.add(Calendar.DATE, addDate)
-            mAlarmTimeCalendar.set(Calendar.HOUR_OF_DAY, mAlarmClock.hour)
-            mAlarmTimeCalendar.set(Calendar.MINUTE, mAlarmClock.minute)
-            mAlarmTimeCalendar.set(Calendar.SECOND, 0)
-        }
-
-
-        var differenceSecond = (mAlarmTimeCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
+        var differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
 
         if (differenceSecond < 30) {
             if (mDownloadSpeechActivity != null)
@@ -626,7 +584,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         val alarmIntent = if ((mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 40) &&
                 (mAlarmClock.latitude != 1000.0 || mAlarmClock.category != -1)) {
             SharedService.writeDebugLog(mContext, "SpeechDownloader setAlarm success ${mAlarmTimeList[0]}d ${mAlarmTimeList[1]}h ${mAlarmTimeList[2]}m later alarm")
-            mAlarmTimeCalendar.add(Calendar.MINUTE, -40)
+            mAlarmCalendar.add(Calendar.MINUTE, -40)
             Intent(appContext, PrepareReceiver::class.java)
         } else {
             SharedService.writeDebugLog(mContext, "SpeechDownloader setAlarm success ${mAlarmTimeList[2]}m ${mAlarmTimeList[3]}s later alarm")
@@ -644,9 +602,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         val pi = PendingIntent.getBroadcast(appContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT)
         val am = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, mAlarmTimeCalendar.timeInMillis, pi)
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, mAlarmTimeCalendar.timeInMillis, pi)
-            else -> am.set(AlarmManager.RTC_WAKEUP, mAlarmTimeCalendar.timeInMillis, pi)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
+            else -> am.set(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
         }
     }
 
