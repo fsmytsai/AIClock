@@ -184,14 +184,8 @@ class AlarmService : Service() {
         if (mSpeaker != -1) {
             mHandler.postDelayed(mRunnable, 5000)
 
-            //有開啟重複則準備此鬧鐘下一次的響鈴(最快24小時後響)
-            if (!mAlarmClock.isRepeatArr.all { !it }) {
-                SharedService.writeDebugLog(this, "AlarmService set next alarm")
-                val speechDownloader = SpeechDownloader(this, null)
-                speechDownloader.setKeepFileName(mSoundList)
-                speechDownloader.setAlarmClock(mAlarmClock)
-            } else {
-                //否則表示只響一次，關閉它
+            //只響一次，關閉它
+            if (mAlarmClock.isRepeatArr.all { !it }) {
                 SharedService.writeDebugLog(this, "AlarmService only alarm once")
                 mAlarmClock.isOpen = false
                 val alarmClocks = SharedService.getAlarmClocks(this)
@@ -200,6 +194,11 @@ class AlarmService : Service() {
                         alarmClocks.alarmClockList[i] = mAlarmClock
                 }
                 SharedService.updateAlarmClocks(this, alarmClocks)
+            } else {
+                SharedService.writeDebugLog(this, "AlarmService set next alarm")
+                val speechDownloader = SpeechDownloader(this, null)
+                speechDownloader.setKeepFileName(mSoundList)
+                speechDownloader.setAlarmClock(mAlarmClock)
             }
 
         }
