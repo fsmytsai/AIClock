@@ -8,12 +8,11 @@
 | unfinished | 考慮是否要將響鈴時的順序改成先開 service 再從 service 開 activity |
 | unfinished | 改用空氣盒子抓空氣資料，缺點是沒 AQI 跟座標要算 |
 | unfinished | 清除伺服器舊資料 |
-| unfinished | 靜音設置 |
 | unfinished | 響鈴前跳通知看取消響鈴 |
 | unfinished | 一個鬧鐘可重複響鈴到醒(感覺不太需要) |
 | unfinished | 語音命令賴床或重播某段音檔等 |
 | unfinished | 自訂背景音樂 |
-| unfinished | 天氣預報及空氣品質資訊放在 header |
+| unfinished | 跟著音檔播放移動 RecyclerView |
 
 
 # Version Features
