@@ -4,20 +4,23 @@
     tools:context="com.tsaiweb.myapplication.MainActivity">
 
     <item
+        android:id="@+id/item_mute"
+        android:checkable="true"
+        android:title="設置鬧鐘時靜音"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/item_error_report"
-        android:orderInCategory="100"
         android:title="問題回報"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/item_wish"
-        android:orderInCategory="200"
         android:title="許願"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/item_about"
-        android:orderInCategory="300"
         android:title="關於"
         app:showAsAction="never" />
 </menu>

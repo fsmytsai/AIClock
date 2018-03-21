@@ -47,14 +47,20 @@ class MainActivity : DownloadSpeechActivity() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.menu_main, menu)
+        menuInflater.inflate(R.menu.menu_main, menu)
+        val itemMute = menu?.findItem(R.id.item_mute)
+        val isMute = mSPDatas.getBoolean("IsMute", false)
+        itemMute?.isChecked = isMute
         return true
-//        return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         return when (item?.itemId) {
+            R.id.item_mute -> {
+                item.isChecked = !item.isChecked
+                mSPDatas.edit().putBoolean("IsMute", item.isChecked).apply()
+                true
+            }
             R.id.item_error_report -> {
                 if (SharedService.checkNetWork(this, true)) {
                     val dialogView = layoutInflater.inflate(R.layout.dialog_error_report, null)

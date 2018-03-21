@@ -40,14 +40,19 @@ import kotlin.collections.ArrayList
 class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private var mContext = context
     private var mDownloadSpeechActivity = activity
+
+    //data
     private lateinit var mAlarmClock: AlarmClock
-    private lateinit var mAlarmCalendar: Calendar
-    private var mNeedDownloadCount = 0f
-    private var mErrorDownloadCount = 0
-    private var mDownloadedCount = 0f
     private var mTexts: Texts? = null
     private var mPromptData: PromptData? = null
     private val mAlarmTimeList = ArrayList<Long>()
+    private lateinit var mAlarmCalendar: Calendar
+
+    //control
+    private var mIsMute = false
+    private var mNeedDownloadCount = 0f
+    private var mErrorDownloadCount = 0
+    private var mDownloadedCount = 0f
     private var mIsStartedDownloadSound = false
     private var mIsStoppedDownloadSound = false
     private var mIsCanceledDownloadSound = false
@@ -106,6 +111,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         if (mDownloadSpeechActivity != null) {
             //前景
             val spDatas = mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            mIsMute = spDatas.getBoolean("IsMute", false)
             if (!spDatas.getBoolean("NeverPrompt", false)) {
                 val dialogView = mDownloadSpeechActivity!!.layoutInflater.inflate(R.layout.dialog_prompt, null)
                 AlertDialog.Builder(mDownloadSpeechActivity!!)
@@ -223,7 +229,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                                 SharedService.writeDebugLog(mContext, "SpeechDownloader update latestUrl to $latestUrl")
                                 mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE).edit().putString("LatestUrl", latestUrl).apply()
                             }
-                            getPromptData()
+                            if (mIsMute) {
+                                mDownloadSpeechActivity?.showDownloadingDialog()
+                                getTextsData()
+                            } else
+                                getPromptData()
                         } else {
                             SharedService.handleError(mDownloadSpeechActivity!!, statusCode!!, resMessage!!)
                             foregroundCancelDownloadSound()
@@ -360,7 +370,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //初始化 FileDownloader
         FileDownloader.setup(mContext)
 
-        if (mDownloadSpeechActivity != null) {
+        if (mDownloadSpeechActivity != null && !mIsMute) {
             FileDownloader.getImpl().create("${SharedService.getLatestUrl(mContext)}sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
                     .setPath("${mContext.filesDir}/sounds/${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}.wav")
                     .setTag(0, "${mPromptData!!.data.text_id}-0-${mAlarmClock.speaker}")
@@ -553,14 +563,33 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
             setData()
             if (mDownloadSpeechActivity != null) {
-                mDownloadSpeechActivity?.setDownloadProgress(100)
-                val uri = Uri.parse("android.resource://${mContext.packageName}/raw/" + when (mAlarmClock.speaker) {
-                    0 -> "setfinishf1"
-                    1 -> "setfinishf2"
-                    2 -> "setfinishm1"
-                    else -> ""
-                })
-                startPlaying(uri!!, true)
+                if (mIsMute) {
+                    var prompt = ""
+                    if (mAlarmTimeList[0] > 0)
+                        prompt += " ${mAlarmTimeList[0]} 天"
+                    if (mAlarmTimeList[1] > 0)
+                        prompt += " ${mAlarmTimeList[1]} 小時"
+                    if (mAlarmTimeList[2] > 0)
+                        prompt += " ${mAlarmTimeList[2]} 分鐘"
+                    if (mAlarmTimeList[3] > 0 && prompt.isEmpty())
+                        prompt += " ${mAlarmTimeList[3]} 秒"
+
+                    prompt += "後響鈴"
+
+                    SharedService.showTextToast(mDownloadSpeechActivity!!, prompt)
+
+                    allFinished()
+                } else {
+                    mDownloadSpeechActivity?.setDownloadProgress(100)
+                    val uri = Uri.parse("android.resource://${mContext.packageName}/raw/" + when (mAlarmClock.speaker) {
+                        0 -> "setfinishf1"
+                        1 -> "setfinishf2"
+                        2 -> "setfinishm1"
+                        else -> ""
+                    })
+                    startPlaying(uri!!, true)
+                }
+
             } else
                 allFinished()
         }

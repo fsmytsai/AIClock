@@ -2,6 +2,8 @@ package com.fsmytsai.aiclock.ui.activity
 
 import android.annotation.TargetApi
 import android.app.Activity
+import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.AudioAttributes
@@ -35,12 +37,25 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
     private var mMPSpeaker = MediaPlayer()
 
     private val REQUEST_LOCATION = 888
+    private var mIsMute = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_alarm_clock)
+        val spDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
+        mIsMute = spDatas.getBoolean("IsMute", false)
         getAlarmClock()
         initViews()
+
+        if (spDatas.getBoolean("PromptMute", true) && !mIsMute) {
+            AlertDialog.Builder(this)
+                    .setTitle("提示")
+                    .setMessage("可在主頁面右上角勾選設定鬧鐘時靜音，即可靜音試聽及提示。")
+                    .setPositiveButton("知道了", { _, _ ->
+                        spDatas.edit().putBoolean("PromptMute", false).apply()
+                    })
+                    .show()
+        }
     }
 
     override fun onStop() {
@@ -105,7 +120,8 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     uri = Uri.parse("android.resource://$packageName/raw/m1_hello")
                 }
             }
-            startPlaying(uri!!)
+            if (!mIsMute)
+                startPlaying(uri!!)
         }
 
         sc_weather.isChecked = mAlarmClock.latitude != 1000.0
