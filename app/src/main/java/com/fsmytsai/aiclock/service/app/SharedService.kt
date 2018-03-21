@@ -73,7 +73,6 @@ class SharedService {
 
         //當兩種PI都回傳null，表示AlarmManager內不存在此鬧鐘
         fun checkNeedReset(context: Context, acId: Int, isCheckTime: Boolean): Boolean {
-            val alarmClock = getAlarmClock(context, acId) ?: return false
             //找不到 texts 直接重設
             val texts = getTexts(context, acId) ?: return true
 
@@ -88,10 +87,8 @@ class SharedService {
             //確定是舊資料才多檢查時間
             if (isCheckTime && texts.isOldData) {
                 val nowCalendar = Calendar.getInstance()
-                val alarmCalendar = Calendar.getInstance()
-                alarmCalendar.set(Calendar.HOUR_OF_DAY, alarmClock.hour)
-                alarmCalendar.set(Calendar.MINUTE, alarmClock.minute)
-                alarmCalendar.set(Calendar.SECOND, 0)
+                val alarmClock = getAlarmClock(context, acId) ?: return false
+                val alarmCalendar = getAlarmCalendar(alarmClock)
                 val differenceMinute = (alarmCalendar.timeInMillis - nowCalendar.timeInMillis) / (1000 * 60)
                 return differenceMinute in 0..39 || (prepareReceiverPI == null && alarmReceiverPI == null)
             }
