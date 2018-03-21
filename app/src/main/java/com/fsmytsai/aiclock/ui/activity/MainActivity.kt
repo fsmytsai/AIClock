@@ -159,9 +159,6 @@ class MainActivity : DownloadSpeechActivity() {
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call?, e: IOException?) {
-                runOnUiThread {
-                    SharedService.showTextToast(this@MainActivity, "請檢查網路連線")
-                }
             }
 
             override fun onResponse(call: Call?, response: Response?) {
@@ -192,9 +189,6 @@ class MainActivity : DownloadSpeechActivity() {
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call?, e: IOException?) {
-//                runOnUiThread {
-//                    SharedService.showTextToast(this@MainActivity, "請檢查網路連線")
-//                }
             }
 
             override fun onResponse(call: Call?, response: Response?) {
