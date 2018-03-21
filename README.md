@@ -13,6 +13,7 @@
 | unfinished | 一個鬧鐘可重複響鈴到醒(感覺不太需要) |
 | unfinished | 語音命令賴床或重播某段音檔等 |
 | unfinished | 自訂背景音樂 |
+| unfinished | 天氣預報及空氣品質資訊放在 header |
 
 
 # Version Features
@@ -25,6 +26,7 @@
 
 # Release Note
 ## 1.6.5 versionCode = 25
+1. 新增設置鬧鐘時靜音的功能
 1. 修正某些情況下設置鬧鐘成功後，卻跳出無法取消設置的提示
 2. 修正某些情況下兩個鬧鐘響鈴時間太接近時，第二個鬧鐘缺少資料的問題
 3. 提高穩定性
