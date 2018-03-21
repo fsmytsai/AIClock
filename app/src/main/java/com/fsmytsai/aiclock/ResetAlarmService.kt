@@ -31,9 +31,8 @@ class ResetAlarmService : Service() {
             val alarmClocks = SharedService.getAlarmClocks(this)
 
             val isCheckTime = intent?.getBooleanExtra("IsCheckTime", false) ?: false
-            (0 until alarmClocks.alarmClockList.size)
-                    .filter { alarmClocks.alarmClockList[it].isOpen && SharedService.checkNeedReset(this, alarmClocks.alarmClockList[it].acId, isCheckTime) }
-                    .mapTo(mNeedResetAlarmClocks.alarmClockList) { alarmClocks.alarmClockList[it] }
+            alarmClocks.alarmClockList.filter { it.isOpen && SharedService.checkNeedReset(this, it.acId, isCheckTime) }
+                    .mapTo(mNeedResetAlarmClocks.alarmClockList) { it }
 
             SharedService.writeDebugLog(this, "ResetAlarmService start download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
 
