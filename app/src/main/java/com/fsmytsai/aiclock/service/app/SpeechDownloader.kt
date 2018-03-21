@@ -655,6 +655,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun cleanAllOldSound() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader cleanAllOldSound")
+
         //先抓到所有還需要的檔名
         val allNeedFileName = ArrayList<String>()
         val textsList = SharedService.getTextsList(mContext) ?: return
