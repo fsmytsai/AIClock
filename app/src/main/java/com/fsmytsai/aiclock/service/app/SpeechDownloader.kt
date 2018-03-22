@@ -486,7 +486,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //取消倒數計時
         mHandler.removeCallbacksAndMessages(null)
 
-        SharedService.writeDebugLog(mContext, "SpeechDownloader foregroundCancelDownloadSound")
+        SharedService.writeDebugLog(mContext, "SpeechDownloader ACId = ${mAlarmClock.acId} foregroundCancelDownloadSound")
         mIsCanceledDownloadSound = true
         stopDownloadSound()
 
@@ -498,7 +498,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //取消倒數計時
         mHandler.removeCallbacksAndMessages(null)
 
-        SharedService.writeDebugLog(mContext, "SpeechDownloader backgroundCancelDownloadSound")
+        SharedService.writeDebugLog(mContext, "SpeechDownloader ACId = ${mAlarmClock.acId} backgroundCancelDownloadSound")
         mIsCanceledDownloadSound = true
         stopDownloadSound()
 
