@@ -13,6 +13,7 @@
 | unfinished | 語音命令賴床或重播某段音檔等 |
 | unfinished | 自訂背景音樂 |
 | unfinished | 跟著音檔播放移動 RecyclerView |
+| unfinished | 考慮是否把倒數計時移到外層 |
 
 
 # Version Features
