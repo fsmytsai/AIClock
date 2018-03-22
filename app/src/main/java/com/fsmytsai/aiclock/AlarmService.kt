@@ -200,7 +200,11 @@ class AlarmService : Service() {
                 speechDownloader.setKeepFileName(mSoundList)
                 speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
                     override fun cancel() {
-
+                        SharedService.writeDebugLog(this@AlarmService, "AlarmService cancel start reset within 40m old data alarm")
+                        val serviceIntent = Intent(this@AlarmService, ResetAlarmService::class.java)
+                        serviceIntent.putExtra("IsFromReceiver", true)
+                        serviceIntent.putExtra("IsCheckTime", true)
+                        startService(serviceIntent)
                     }
 
                     override fun startSetData() {
@@ -208,7 +212,7 @@ class AlarmService : Service() {
                     }
 
                     override fun allFinished() {
-                        SharedService.writeDebugLog(this@AlarmService, "AlarmService start reset within 40m old data alarm")
+                        SharedService.writeDebugLog(this@AlarmService, "AlarmService allFinished start reset within 40m old data alarm")
                         val serviceIntent = Intent(this@AlarmService, ResetAlarmService::class.java)
                         serviceIntent.putExtra("IsFromReceiver", true)
                         serviceIntent.putExtra("IsCheckTime", true)
