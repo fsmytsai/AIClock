@@ -1,11 +1,13 @@
 package com.fsmytsai.aiclock.service.app
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
 import android.support.v7.app.AlertDialog
 import com.fsmytsai.aiclock.AlarmReceiver
@@ -17,6 +19,7 @@ import com.fsmytsai.aiclock.model.TextsList
 import com.google.gson.Gson
 import android.widget.Toast
 import android.net.ConnectivityManager
+import android.os.Bundle
 import android.util.Log
 import java.io.File
 import java.util.*
@@ -254,6 +257,29 @@ class SharedService {
             }
 
             return if (bestLocation == null) {
+                for (provider in providers) {
+                    locationManager.requestSingleUpdate(provider, object : LocationListener {
+                        override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
+                        }
+
+                        override fun onProviderEnabled(p0: String?) {
+                        }
+
+                        override fun onProviderDisabled(p0: String?) {
+                        }
+
+                        override fun onLocationChanged(location: Location?) {
+                            if (location == null)
+                                return
+
+                            alarmClock.latitude = location.latitude
+                            alarmClock.longitude = location.longitude
+                            if (context is Activity)
+                                SharedService.showTextToast(context, "取得位置成功")
+                        }
+
+                    }, context.mainLooper)
+                }
                 false
             } else {
                 alarmClock.latitude = bestLocation.latitude

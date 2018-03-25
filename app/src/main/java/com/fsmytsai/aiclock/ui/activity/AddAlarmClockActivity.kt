@@ -131,10 +131,8 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     val isSuccess = SharedService.setLocation(this, mAlarmClock)
-                    if (!isSuccess) {
-                        SharedService.showTextToast(this, "取得位置失敗")
-                        sc_weather.isChecked = false
-                    }
+                    if (!isSuccess)
+                        SharedService.showTextToast(this, "取得位置中...")
                 } else {
                     requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION), REQUEST_LOCATION)
                 }
@@ -271,10 +269,8 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 grantResults[0] == PackageManager.PERMISSION_GRANTED &&
                 grantResults[1] == PackageManager.PERMISSION_GRANTED) {
             val isSuccess = SharedService.setLocation(this, mAlarmClock)
-            if (!isSuccess) {
-                SharedService.showTextToast(this, "取得位置失敗")
-                sc_weather.isChecked = false
-            }
+            if (!isSuccess)
+                SharedService.showTextToast(this, "取得位置中...")
         } else {
             sc_weather.isChecked = false
             SharedService.showTextToast(this, "您拒絕了天氣播報權限")
@@ -356,6 +352,11 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         if (mAlarmClock.speaker == -1) {
             SharedService.showTextToast(this, "請選擇播報者")
             return
+        }
+
+        if (sc_weather.isChecked && mAlarmClock.latitude == 1000.0) {
+            SharedService.showTextToast(this, "取得位置失敗")
+            sc_weather.isChecked = false
         }
 
         bindDownloadService(object : CanStartDownloadCallback {

@@ -245,7 +245,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                             SharedService.writeDebugLog(mContext, "SpeechDownloader update latestUrl to $latestUrl")
                             mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE).edit().putString("LatestUrl", latestUrl).apply()
                         }
-                        getTextsData()
+                        //如果有開啟天氣且為背景則設置座標
+                        if (mAlarmClock.latitude != 1000.0)
+                            setLocation()
+                        else
+                            getTextsData()
                     }
                     else -> //背景失敗
                         backgroundCancelDownloadSound()
@@ -290,24 +294,22 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         })
     }
 
+    private fun setLocation() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader setLocation lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
+        val isSuccess = SharedService.setLocation(mContext, mAlarmClock)
+        if (isSuccess) {
+            SharedService.writeDebugLog(mContext, "SpeechDownloader setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
+            getTextsData()
+        } else
+            mHandler.postDelayed({
+                SharedService.writeDebugLog(mContext, "SpeechDownloader setLocation delay 3s lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
+                getTextsData()
+            }, 1500)
+    }
+
     private fun getTextsData() {
         SharedService.writeDebugLog(mContext, "SpeechDownloader getTextsData")
-        //如果有開啟位置且為背景則抓取位置
-        if (mAlarmClock.latitude != 1000.0 && mDownloadSpeechActivity == null)
-            if (ActivityCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(mContext, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                val isSuccess = SharedService.setLocation(mContext, mAlarmClock)
-                if (!isSuccess) {
-                    SharedService.writeDebugLog(mContext, "SpeechDownloader setLocation failed")
-                }
-            } else {
-                SharedService.writeDebugLog(mContext, "SpeechDownloader no location permission")
-            }
 
-//        val url = if (mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 15)
-//            "${mContext.getString(R.string.server_url)}api/getTextData?hour=${mAlarmClock.hour}&" +
-//                    "minute=${mAlarmClock.minute}&speaker=${mAlarmClock.speaker}&category=-1&latitude=1000&longitude=0"
-//        else
         val url = "${SharedService.getLatestUrl(mContext)}api/getTextData?" +
                 "hour=${mAlarmClock.hour}&minute=${mAlarmClock.minute}&" +
                 "speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&news_count=${mAlarmClock.newsCount}&" +
