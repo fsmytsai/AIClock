@@ -65,7 +65,6 @@
 
 -keep class com.fsmytsai.aiclock.model.** { *; }
 -keep class com.liulishuo.filedownloader.** { *; }
--keep class com.github.zcweng.** { *; }
 
 #agentweb
 -keep class com.just.agentweb.** {
