@@ -194,6 +194,8 @@ class AlarmService : Service() {
                         alarmClocks.alarmClockList[i] = mAlarmClock
                 }
                 SharedService.updateAlarmClocks(this, alarmClocks)
+                SharedService.writeDebugLog(this@AlarmService, "AlarmService start reset within 40m old data alarm")
+                resetAlarm()
             } else {
                 SharedService.writeDebugLog(this, "AlarmService set next alarm")
                 val speechDownloader = SpeechDownloader(this, null)
@@ -201,10 +203,7 @@ class AlarmService : Service() {
                 speechDownloader.setFinishListener(object : SpeechDownloader.DownloadFinishListener {
                     override fun cancel() {
                         SharedService.writeDebugLog(this@AlarmService, "AlarmService cancel start reset within 40m old data alarm")
-                        val serviceIntent = Intent(this@AlarmService, ResetAlarmService::class.java)
-                        serviceIntent.putExtra("IsFromReceiver", true)
-                        serviceIntent.putExtra("IsCheckTime", true)
-                        startService(serviceIntent)
+                        resetAlarm()
                     }
 
                     override fun startSetData() {
@@ -213,16 +212,20 @@ class AlarmService : Service() {
 
                     override fun allFinished() {
                         SharedService.writeDebugLog(this@AlarmService, "AlarmService allFinished start reset within 40m old data alarm")
-                        val serviceIntent = Intent(this@AlarmService, ResetAlarmService::class.java)
-                        serviceIntent.putExtra("IsFromReceiver", true)
-                        serviceIntent.putExtra("IsCheckTime", true)
-                        startService(serviceIntent)
+                        resetAlarm()
                     }
                 })
                 speechDownloader.setAlarmClock(mAlarmClock)
             }
 
         }
+    }
+
+    private fun resetAlarm() {
+        val serviceIntent = Intent(this@AlarmService, ResetAlarmService::class.java)
+        serviceIntent.putExtra("IsFromReceiver", true)
+        serviceIntent.putExtra("IsCheckTime", true)
+        startService(serviceIntent)
     }
 
     private val mHandler = Handler()
