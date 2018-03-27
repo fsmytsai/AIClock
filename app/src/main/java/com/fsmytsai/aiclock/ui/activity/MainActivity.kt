@@ -58,7 +58,8 @@ class MainActivity : DownloadSpeechActivity() {
         return when (item?.itemId) {
             R.id.item_mute -> {
                 item.isChecked = !item.isChecked
-                mSPDatas.edit().putBoolean("IsMute", item.isChecked).apply()
+                mSPDatas.edit().putBoolean("IsMute", item.isChecked)
+                        .putBoolean("PromptMute", false).apply()
                 true
             }
             R.id.item_error_report -> {

@@ -197,12 +197,22 @@ class AlarmActivity : AppCompatActivity() {
                 if (weather.contains("品質"))
                     weather = weather.replace("。", "\n\n")
                 holder.tvWeather.text = weather
+
+                holder.llNews.setOnClickListener(null)
             } else {
                 holder.tvWeather.visibility = View.GONE
                 holder.tvTitle.visibility = View.VISIBLE
                 holder.tvDescription.visibility = View.VISIBLE
                 holder.tvTitle.text = text.title
                 holder.tvDescription.text = text.description
+
+                holder.llNews.setOnClickListener {
+                    if (SharedService.checkNetWork(this@AlarmActivity, true)) {
+                        val intent = Intent(this@AlarmActivity, WebViewActivity::class.java)
+                        intent.putExtra("URL", text.url)
+                        startActivity(intent)
+                    }
+                }
             }
 
             val previewImage = text.preview_image
@@ -214,13 +224,6 @@ class AlarmActivity : AppCompatActivity() {
                 holder.ivNews.visibility = View.GONE
             }
 
-            holder.llNews.setOnClickListener {
-                if (SharedService.checkNetWork(this@AlarmActivity, true)) {
-                    val intent = Intent(this@AlarmActivity, WebViewActivity::class.java)
-                    intent.putExtra("URL", text.url)
-                    startActivity(intent)
-                }
-            }
         }
 
         override fun getItemCount(): Int {
