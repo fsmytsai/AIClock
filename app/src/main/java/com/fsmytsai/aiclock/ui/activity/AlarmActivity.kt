@@ -9,6 +9,7 @@ import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
+import android.support.v4.content.ContextCompat
 import android.support.v4.util.LruCache
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -22,6 +23,7 @@ import com.fsmytsai.aiclock.AlarmService
 import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.service.app.SharedService
+import com.fsmytsai.aiclock.ui.view.DragImageView
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_alarm.*
 import kotlinx.android.synthetic.main.block_news.view.*
@@ -119,6 +121,52 @@ class AlarmActivity : AppCompatActivity() {
     private fun initViews() {
         rv_news.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         rv_news.adapter = NewsAdapter()
+
+        div_close.setMyDragListener(object : DragImageView.MyDragListener {
+            override fun finished() {
+                ll_mask.visibility = View.INVISIBLE
+                div_close.visibility = View.VISIBLE
+                tv_five_minute.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                tv_ten_minute.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                tv_close.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+            }
+
+            override fun down() {
+                ll_mask.visibility = View.VISIBLE
+            }
+
+            override fun up(type: Int) {
+                when (type) {
+                    3 -> finish()
+                }
+            }
+
+            override fun dragging(type: Int) {
+                when (type) {
+                    0 -> {
+                        tv_five_minute.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                        tv_ten_minute.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                        tv_close.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                    }
+                    1 -> {
+                        tv_five_minute.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentBlue))
+                        tv_ten_minute.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                        tv_close.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                    }
+                    2 -> {
+                        tv_five_minute.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                        tv_ten_minute.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentBlue))
+                        tv_close.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                    }
+                    3 -> {
+                        tv_five_minute.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                        tv_ten_minute.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentPaleBlue))
+                        tv_close.setBackgroundColor(ContextCompat.getColor(this@AlarmActivity, R.color.colorTransparentBlue))
+                    }
+                }
+            }
+
+        })
     }
 
     private fun startAlarmService() {
@@ -350,11 +398,11 @@ class AlarmActivity : AppCompatActivity() {
         })
     }
 
-    fun close(view: View) {
-        finish()
-    }
+//    fun close(view: View) {
+//        finish()
+//    }
 
     override fun onBackPressed() {
-        SharedService.showTextToast(this, "請點叉叉關閉")
+        SharedService.showTextToast(this, "請滑動叉叉關閉")
     }
 }

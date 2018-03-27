@@ -16,8 +16,55 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-        <ImageView
-            android:onClick="close"
+        <LinearLayout
+            android:id="@+id/ll_mask"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tv_close"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@color/colorTransparentPaleBlue"
+                android:gravity="center"
+                android:text="關閉"
+                android:textColor="@color/colorBlue"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/tv_ten_minute"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@color/colorTransparentPaleBlue"
+                android:gravity="center"
+                android:text="十分鐘後再響"
+                android:textColor="@color/colorBlue"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/tv_five_minute"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:background="@color/colorTransparentPaleBlue"
+                android:gravity="center"
+                android:text="五分鐘後再響"
+                android:textColor="@color/colorBlue"
+                android:textSize="20sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+        <com.fsmytsai.aiclock.ui.view.DragImageView
+            android:id="@+id/div_close"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_alignParentBottom="true"
