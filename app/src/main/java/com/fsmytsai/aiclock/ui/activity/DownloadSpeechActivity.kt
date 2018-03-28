@@ -10,7 +10,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import com.fsmytsai.aiclock.R
 import com.fsmytsai.aiclock.StartDownloadService
-import com.fsmytsai.aiclock.model.AlarmClock
+import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import kotlinx.android.synthetic.main.dialog_download.view.*
@@ -34,7 +34,7 @@ open class DownloadSpeechActivity : AppCompatActivity() {
         }
     }
 
-    fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?) {
+    fun startDownload(alarmClock: AlarmClocks.AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?) {
         outDownloadFinishListener = dfl
         mDownloadService?.startDownload(alarmClock, inDownloadFinishListener)
     }

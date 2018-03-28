@@ -4,7 +4,7 @@ import android.app.Service
 import android.content.Intent
 import android.os.IBinder
 import android.os.Binder
-import com.fsmytsai.aiclock.model.AlarmClock
+import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.activity.DownloadSpeechActivity
@@ -28,7 +28,7 @@ class StartDownloadService : Service() {
         mDownloadSpeechActivity = activity
     }
 
-    fun startDownload(alarmClock: AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?) {
+    fun startDownload(alarmClock: AlarmClocks.AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?) {
         mSpeechDownloader = SpeechDownloader(this, mDownloadSpeechActivity)
         mSpeechDownloader!!.setFinishListener(dfl)
         mSpeechDownloader!!.setAlarmClock(alarmClock)

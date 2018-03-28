@@ -11,7 +11,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
-import com.fsmytsai.aiclock.model.AlarmClock
+import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -29,7 +29,7 @@ class AlarmService : Service() {
     private lateinit var mTexts: Texts
     private val mSoundList = ArrayList<String>()
     private var mNewsCount = 0
-    private lateinit var mAlarmClock: AlarmClock
+    private lateinit var mAlarmClock: AlarmClocks.AlarmClock
 
     override fun onBind(intent: Intent): IBinder? {
         //測試到目前為止發現，僅第一次綁定會呼叫(從startService後)

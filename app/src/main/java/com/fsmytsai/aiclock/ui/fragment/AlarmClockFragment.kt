@@ -13,7 +13,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.fsmytsai.aiclock.R
-import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -179,7 +178,7 @@ class AlarmClockFragment : Fragment() {
                 return
             }
 
-            val alarmClock = Gson().fromJson(data.getStringExtra("AlarmClockJsonStr"), AlarmClock::class.java)
+            val alarmClock = Gson().fromJson(data.getStringExtra("AlarmClockJsonStr"), AlarmClocks.AlarmClock::class.java)
 
             val newPosition = data.getIntExtra("NewPosition", -1)
 

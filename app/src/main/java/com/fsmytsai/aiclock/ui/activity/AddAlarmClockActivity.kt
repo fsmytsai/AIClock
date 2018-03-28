@@ -3,7 +3,6 @@ package com.fsmytsai.aiclock.ui.activity
 import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.AudioAttributes
@@ -31,7 +30,7 @@ import com.bigkoo.pickerview.TimePickerView
 
 
 class AddAlarmClockActivity : DownloadSpeechActivity() {
-    private lateinit var mAlarmClock: AlarmClock
+    private lateinit var mAlarmClock: AlarmClocks.AlarmClock
     private var mIsNew = true
     private var mIsSpeakerPlaying = false
     private var mMPSpeaker = MediaPlayer()
@@ -194,11 +193,11 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         val alarmClockJsonStr = intent.getStringExtra("AlarmClockJsonStr")
         if (alarmClockJsonStr != null) {
             mIsNew = false
-            mAlarmClock = Gson().fromJson(alarmClockJsonStr, AlarmClock::class.java)
+            mAlarmClock = Gson().fromJson(alarmClockJsonStr, AlarmClocks.AlarmClock::class.java)
         } else {
             val newCalendar = Calendar.getInstance()
             val acId = intent.getIntExtra("acId", 0)
-            mAlarmClock = AlarmClock(acId,
+            mAlarmClock = AlarmClocks.AlarmClock(acId,
                     newCalendar.get(Calendar.HOUR_OF_DAY),
                     newCalendar.get(Calendar.MINUTE),
                     -1,

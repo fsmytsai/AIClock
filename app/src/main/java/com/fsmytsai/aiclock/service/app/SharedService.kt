@@ -12,7 +12,6 @@ import android.location.LocationManager
 import android.support.v7.app.AlertDialog
 import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.PrepareReceiver
-import com.fsmytsai.aiclock.model.AlarmClock
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.model.TextsList
@@ -126,12 +125,12 @@ class SharedService {
                 AlarmClocks(ArrayList())
         }
 
-        fun getAlarmClock(context: Context, acId: Int): AlarmClock? {
+        fun getAlarmClock(context: Context, acId: Int): AlarmClocks.AlarmClock? {
             val alarmClocks = getAlarmClocks(context)
             return alarmClocks.alarmClockList.firstOrNull { it.acId == acId }
         }
 
-        fun getAlarmCalendar(alarmClock: AlarmClock): Calendar {
+        fun getAlarmCalendar(alarmClock: AlarmClocks.AlarmClock): Calendar {
             val nowCalendar = Calendar.getInstance()
             val alarmCalendar = Calendar.getInstance()
             if (alarmClock.isRepeatArr.all { !it }) {
@@ -245,7 +244,7 @@ class SharedService {
         }
 
         @SuppressLint("MissingPermission")
-        fun setLocation(context: Context, alarmClock: AlarmClock): Boolean {
+        fun setLocation(context: Context, alarmClock: AlarmClocks.AlarmClock): Boolean {
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             val providers = locationManager.getProviders(true)
             var bestLocation: Location? = null

@@ -18,7 +18,7 @@ import android.support.v7.app.AlertDialog
 import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.PrepareReceiver
 import com.fsmytsai.aiclock.R
-import com.fsmytsai.aiclock.model.AlarmClock
+import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.model.PromptData
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.ui.activity.DownloadSpeechActivity
@@ -42,7 +42,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private var mDownloadSpeechActivity = activity
 
     //data
-    private lateinit var mAlarmClock: AlarmClock
+    private lateinit var mAlarmClock: AlarmClocks.AlarmClock
     private var mTexts: Texts? = null
     private var mPromptData: PromptData? = null
     private val mAlarmTimeList = ArrayList<Long>()
@@ -100,7 +100,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         }
     }
 
-    fun setAlarmClock(alarmClock: AlarmClock) {
+    fun setAlarmClock(alarmClock: AlarmClocks.AlarmClock) {
         SharedService.writeDebugLog(mContext, "SpeechDownloader setAlarmClock ACId = ${alarmClock.acId}")
 
         mAlarmClock = alarmClock
