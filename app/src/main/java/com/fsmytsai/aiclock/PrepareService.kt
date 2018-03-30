@@ -15,7 +15,7 @@ class PrepareService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val acId = intent?.getIntExtra("ACId", 0)
-        if (acId != 0) {
+        if (acId ?: -1 != 0) {
             val alarmClock = SharedService.getAlarmClock(this, acId!!)
             if (alarmClock == null || !SharedService.checkAlarmClockIsOpen(this, acId))
                 stopSelf()
