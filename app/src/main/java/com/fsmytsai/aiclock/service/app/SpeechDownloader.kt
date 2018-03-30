@@ -689,20 +689,24 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         mDownloadFinishListener?.allFinished()
     }
 
+    private fun cleanAllOldLater() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader cleanAllOldLater")
+        val laterAlarmClockList = SharedService.getAlarmClocks(mContext, true).alarmClockList
+        for (laterAlarmClock in laterAlarmClockList) {
+            //刪除已被關或失效的延遲鬧鐘
+            if (!laterAlarmClock.isOpen || SharedService.checkNeedReset(mContext, laterAlarmClock.acId, false)) {
+                SharedService.writeDebugLog(mContext, "SpeechDownloader deleteLaterAlarmClock acId = ${laterAlarmClock.acId}")
+                SharedService.deleteAlarmClock(mContext, laterAlarmClock.acId)
+            }
+
+        }
+        cleanAllOldSound()
+    }
+
     private val mKeepFileName = ArrayList<String>()
 
     fun setKeepFileName(keepFileName: ArrayList<String>) {
         keepFileName.mapTo(mKeepFileName) { "$it.wav" }
-    }
-
-    private fun cleanAllOldLater() {
-        SharedService.writeDebugLog(mContext, "SpeechDownloader cleanAllOldLater")
-        val needDeleteLaterAlarmClockList = SharedService.getAlarmClocks(mContext, true).alarmClockList.filter { !it.isOpen }
-        for (needDeleteLaterAlarmClock in needDeleteLaterAlarmClockList) {
-            SharedService.writeDebugLog(mContext, "SpeechDownloader cleaOldLater acId = ${needDeleteLaterAlarmClock.acId}")
-            SharedService.deleteAlarmClock(mContext, needDeleteLaterAlarmClock.acId)
-        }
-        cleanAllOldSound()
     }
 
     private fun cleanAllOldSound() {
