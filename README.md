@@ -9,11 +9,11 @@
 | unfinished | 改用空氣盒子抓空氣資料，缺點是沒 AQI 跟座標要算 |
 | unfinished | 清除伺服器舊資料 |
 | unfinished | 響鈴前跳通知看取消響鈴 |
-| unfinished | 一個鬧鐘可重複響鈴到醒(感覺不太需要) |
 | unfinished | 語音命令賴床或重播某段音檔等 |
 | unfinished | 自訂背景音樂 |
 | unfinished | 跟著音檔播放移動 RecyclerView |
 | unfinished | 考慮是否把倒數計時移到外層 |
+| unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
 
 
 # Version Features
@@ -27,8 +27,7 @@
 # Release Note
 ## 1.8.0 versionCode = 27
 1. 新增賴床延遲響鈴的功能
-2. 新增當前綜合新聞、天氣預報、空氣品質的頁面
-3. 修正響鈴時顯示的天氣預報、空氣品質等資訊也能點擊的問題
+2. 修正響鈴時顯示的天氣預報、空氣品質等資訊也能點擊的問題
 
 ## 1.7.1 versionCode = 26
 1. 修正某些情況下開啟天氣一直取得位置失敗的問題
