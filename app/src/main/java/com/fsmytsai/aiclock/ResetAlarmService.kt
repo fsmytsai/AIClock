@@ -28,7 +28,7 @@ class ResetAlarmService : Service() {
         val isFromReceiver = intent?.getBooleanExtra("IsFromReceiver", false) ?: false
 
         if (isFromMain || isFromReceiver) {
-            val alarmClocks = SharedService.getAlarmClocks(this)
+            val alarmClocks = SharedService.getAlarmClocks(this, false)
 
             val isCheckTime = intent?.getBooleanExtra("IsCheckTime", false) ?: false
             alarmClocks.alarmClockList.filter { it.isOpen && SharedService.checkNeedReset(this, it.acId, isCheckTime) }

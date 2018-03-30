@@ -75,8 +75,6 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                         .setPositiveButton("確定", { _, _ ->
                             SharedService.cancelAlarm(this, mAlarmClock.acId)
                             SharedService.deleteAlarmClock(this, mAlarmClock.acId)
-                            SharedService.deleteOldTextsData(this, mAlarmClock.acId, null, false)
-                            intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
                             intent.putExtra("IsDelete", true)
                             setResult(Activity.RESULT_OK, intent)
                             finish()
@@ -332,21 +330,13 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
     fun save(view: View) {
         pvTime.returnData()
-        //檢查時間是否重複
-        val alarmClocks = SharedService.getAlarmClocks(this)
-        for (i in 0 until alarmClocks.alarmClockList.size)
-            if (mAlarmClock.hour == alarmClocks.alarmClockList[i].hour &&
-                    mAlarmClock.minute == alarmClocks.alarmClockList[i].minute &&
-                    mAlarmClock.acId != alarmClocks.alarmClockList[i].acId) {
-                //時間完全一樣則判斷天數是否有重複
-                for (day in 0..6) {
-                    if (mAlarmClock.isRepeatArr[day] && alarmClocks.alarmClockList[i].isRepeatArr[day]) {
-                        SharedService.showTextToast(this, "錯誤，已有相同時間。")
-                        return
-                    }
-                }
 
-            }
+        //檢查時間是否重複
+        if (SharedService.isAlarmClockTimeRepeat(this, mAlarmClock, false) &&
+                SharedService.isAlarmClockTimeRepeat(this, mAlarmClock, true)) {
+            SharedService.showTextToast(this, "錯誤，已有相同時間。")
+            return
+        }
 
         if (mAlarmClock.speaker == -1) {
             SharedService.showTextToast(this, "請選擇播報者")
@@ -378,7 +368,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
     }
 
     private fun updateAlarmClock() {
-        val alarmClocks = SharedService.getAlarmClocks(this)
+        val alarmClocks = SharedService.getAlarmClocks(this, false)
 
         //檢查修改後順序有沒有改變，有改變則刪掉舊資料
         var isChangePosition = false
@@ -432,7 +422,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         }
 
         //更新資料儲存
-        SharedService.updateAlarmClocks(this, alarmClocks)
+        SharedService.updateAlarmClocks(this, alarmClocks, false)
 
         //已正確設置資料
         intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))

@@ -116,9 +116,26 @@ class SharedService {
             return false
         }
 
-        fun getAlarmClocks(context: Context): AlarmClocks {
+        fun isAlarmClockTimeRepeat(context: Context, alarmClock: AlarmClocks.AlarmClock, isLater: Boolean): Boolean {
+            val alarmClocks = SharedService.getAlarmClocks(context, isLater)
+            for (otherAlarmClock in alarmClocks.alarmClockList)
+                if (alarmClock.hour == otherAlarmClock.hour &&
+                        alarmClock.minute == otherAlarmClock.minute &&
+                        alarmClock.acId != otherAlarmClock.acId) {
+                    //時間完全一樣則判斷天數是否有重複
+                    for (day in 0..6) {
+                        if (alarmClock.isRepeatArr[day] && otherAlarmClock.isRepeatArr[day])
+                            return true
+                    }
+
+                }
+            return false
+        }
+
+        fun getAlarmClocks(context: Context, isLater: Boolean): AlarmClocks {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
-            val alarmClocksJsonStr = spDatas.getString("AlarmClocksJsonStr", "")
+            val key = if (isLater) "LaterAlarmClocksJsonStr" else "AlarmClocksJsonStr"
+            val alarmClocksJsonStr = spDatas.getString(key, "")
             return if (alarmClocksJsonStr != "")
                 Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
             else
@@ -126,7 +143,7 @@ class SharedService {
         }
 
         fun getAlarmClock(context: Context, acId: Int): AlarmClocks.AlarmClock? {
-            val alarmClocks = getAlarmClocks(context)
+            val alarmClocks = getAlarmClocks(context, acId > 1000)
             return alarmClocks.alarmClockList.firstOrNull { it.acId == acId }
         }
 
@@ -189,19 +206,22 @@ class SharedService {
             return textsList?.textsList?.firstOrNull { it.acId == acId }
         }
 
-        fun updateAlarmClocks(context: Context, alarmClocks: AlarmClocks) {
+        fun updateAlarmClocks(context: Context, alarmClocks: AlarmClocks, isLater: Boolean) {
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
-            spDatas.edit().putString("AlarmClocksJsonStr", Gson().toJson(alarmClocks)).apply()
+            val key = if (isLater) "LaterAlarmClocksJsonStr" else "AlarmClocksJsonStr"
+            spDatas.edit().putString(key, Gson().toJson(alarmClocks)).apply()
         }
 
         fun deleteAlarmClock(context: Context, acId: Int) {
-            val alarmClocks = getAlarmClocks(context)
+            val alarmClocks = getAlarmClocks(context, acId > 1000)
             for (i in 0 until alarmClocks.alarmClockList.size)
                 if (alarmClocks.alarmClockList[i].acId == acId) {
                     alarmClocks.alarmClockList.removeAt(i)
-                    SharedService.updateAlarmClocks(context, alarmClocks)
-                    return
+                    updateAlarmClocks(context, alarmClocks, acId > 1000)
+                    break
                 }
+
+            SharedService.deleteOldTextsData(context, acId, null, false)
         }
 
         fun deleteOldTextsData(context: Context, deleteACId: Int, ChangeTexts: Texts?, isAdd: Boolean) {

@@ -6,7 +6,6 @@ import android.content.ServiceConnection
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
 import android.support.v4.content.ContextCompat
@@ -21,8 +20,10 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import com.fsmytsai.aiclock.AlarmService
 import com.fsmytsai.aiclock.R
+import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.service.app.SharedService
+import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.view.DragImageView
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_alarm.*
@@ -31,15 +32,18 @@ import kotlinx.android.synthetic.main.footer.view.*
 import okhttp3.*
 import java.io.File
 import java.io.IOException
+import java.util.*
 
-class AlarmActivity : AppCompatActivity() {
+class AlarmActivity : DownloadSpeechActivity() {
     private var mAlarmService: AlarmService? = null
+    private var mAlarmClock: AlarmClocks.AlarmClock? = null
     private var mRealTexts: Texts = Texts()
     private var mIgnoreCount = 0
     private var mNowACId = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        keepFullScreen = true
         if (Build.VERSION.SDK_INT >= 27) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
@@ -96,12 +100,13 @@ class AlarmActivity : AppCompatActivity() {
 
     private fun setRealTexts(acId: Int) {
         mNowACId = acId
+        SharedService.writeDebugLog(this, "AlarmActivity mNowACId = $mNowACId")
 
         //初始化圖片快取
         initCache()
-        val alarmClock = SharedService.getAlarmClock(this, acId)
+        mAlarmClock = SharedService.getAlarmClock(this, acId)
         val texts = SharedService.getTexts(this, acId)
-        if (alarmClock != null && texts != null) {
+        if (mAlarmClock != null && texts != null) {
             //初始化 mRealTexts
             mRealTexts = Texts()
             mRealTexts.acId = texts.acId
@@ -110,7 +115,7 @@ class AlarmActivity : AppCompatActivity() {
             //過濾掉缺少音檔的 text
             for (text in texts.textList) {
                 val addToRealTextsList = (0 until text.part_count)
-                        .map { File("$filesDir/sounds/${text.text_id}-$it-${alarmClock.speaker}.wav") }
+                        .map { File("$filesDir/sounds/${text.text_id}-$it-${mAlarmClock!!.speaker}.wav") }
                         .all { it.exists() }
                 if (addToRealTextsList) mRealTexts.textList.add(text)
             }
@@ -136,8 +141,59 @@ class AlarmActivity : AppCompatActivity() {
             }
 
             override fun up(type: Int) {
-                when (type) {
-                    3 -> finish()
+                if (type == 3)
+                    finish()
+                else if (type != 0) {
+                    val alarmCalendar = Calendar.getInstance()
+                    alarmCalendar.add(Calendar.MINUTE, if (type == 1) 5 else 10)
+
+                    val alarmClocks = SharedService.getAlarmClocks(this@AlarmActivity, true)
+
+                    var biggestACId = 1000
+                    for (alarmClock in alarmClocks.alarmClockList) {
+                        if (alarmClock.acId > biggestACId)
+                            biggestACId = alarmClock.acId
+                    }
+
+                    val alarmClock = AlarmClocks.AlarmClock(biggestACId + 1,
+                            alarmCalendar.get(Calendar.HOUR_OF_DAY),
+                            alarmCalendar.get(Calendar.MINUTE),
+                            mAlarmClock!!.speaker,
+                            mAlarmClock!!.latitude,
+                            mAlarmClock!!.longitude,
+                            mAlarmClock!!.category,
+                            mAlarmClock!!.newsCount,
+                            booleanArrayOf(false, false, false, false, false, false, false),
+                            true)
+
+                    //檢查時間是否重複
+                    if (SharedService.isAlarmClockTimeRepeat(this@AlarmActivity, alarmClock, false) &&
+                            SharedService.isAlarmClockTimeRepeat(this@AlarmActivity, alarmClock, true)) {
+                        SharedService.showTextToast(this@AlarmActivity, "錯誤，已有相同時間。")
+                        return
+                    }
+
+                    bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
+                        override fun start() {
+                            startDownload(alarmClock, object : SpeechDownloader.DownloadFinishListener {
+                                override fun cancel() {
+
+                                }
+
+                                override fun startSetData() {
+                                    SharedService.writeDebugLog(this@AlarmActivity, "AlarmActivity set Later Success")
+                                    //更新資料儲存
+                                    alarmClocks.alarmClockList.add(alarmClock)
+                                    SharedService.updateAlarmClocks(this@AlarmActivity, alarmClocks, true)
+                                }
+
+                                override fun allFinished() {
+                                    finish()
+                                }
+                            })
+                        }
+                    })
+
                 }
             }
 

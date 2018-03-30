@@ -5,7 +5,6 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -13,7 +12,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.support.annotation.RequiresApi
-import android.support.v4.app.ActivityCompat
 import android.support.v7.app.AlertDialog
 import com.fsmytsai.aiclock.AlarmReceiver
 import com.fsmytsai.aiclock.PrepareReceiver
@@ -112,6 +110,10 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             //前景
             val spDatas = mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             mIsMute = spDatas.getBoolean("IsMute", false)
+            //延遲也靜音
+            if (!mIsMute)
+                mIsMute = mAlarmClock.acId > 1000
+
             if (!spDatas.getBoolean("NeverPrompt", false)) {
                 val dialogView = mDownloadSpeechActivity!!.layoutInflater.inflate(R.layout.dialog_prompt, null)
                 AlertDialog.Builder(mDownloadSpeechActivity!!)
@@ -156,16 +158,16 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         var differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
 
-        if (differenceSecond < 30) {
-            if (mDownloadSpeechActivity != null)
-                AlertDialog.Builder(mDownloadSpeechActivity!!)
-                        .setTitle("錯誤")
-                        .setMessage("時間需自少超過當前時間 30 秒。")
-                        .setPositiveButton("知道了", null)
-                        .show()
-
-            return false
-        }
+//        if (differenceSecond < 30) {
+//            if (mDownloadSpeechActivity != null)
+//                AlertDialog.Builder(mDownloadSpeechActivity!!)
+//                        .setTitle("錯誤")
+//                        .setMessage("時間需自少超過當前時間 30 秒。")
+//                        .setPositiveButton("知道了", null)
+//                        .show()
+//
+//            return false
+//        }
 
         mAlarmTimeList.clear()
 
@@ -181,12 +183,13 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         } else
             mAlarmTimeList.add(0)
 
-        if (differenceSecond >= 60)
+        if (differenceSecond >= 60) {
             mAlarmTimeList.add(differenceSecond / 60)
-        else
+            differenceSecond %= 60
+        } else
             mAlarmTimeList.add(0)
 
-        if (differenceSecond > 0 && mAlarmTimeList[0] == 0L && mAlarmTimeList[1] == 0L && mAlarmTimeList[2] == 0L)
+        if (differenceSecond > 0 && mAlarmTimeList[0] == 0L && mAlarmTimeList[1] == 0L)
             mAlarmTimeList.add(differenceSecond)
         else
             mAlarmTimeList.add(0)
@@ -573,7 +576,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                         prompt += " ${mAlarmTimeList[1]} 小時"
                     if (mAlarmTimeList[2] > 0)
                         prompt += " ${mAlarmTimeList[2]} 分鐘"
-                    if (mAlarmTimeList[3] > 0 && prompt.isEmpty())
+                    if (mAlarmTimeList[3] > 0)
                         prompt += " ${mAlarmTimeList[3]} 秒"
 
                     prompt += "後響鈴"
@@ -606,6 +609,13 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     @TargetApi(Build.VERSION_CODES.M)
     private fun setAlarm(isAbandon: Boolean) {
         SharedService.writeDebugLog(mContext, "SpeechDownloader setAlarm")
+
+        val nowCalendar = Calendar.getInstance()
+        val differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
+        //小於 8 秒就響鈴則靜音
+        if (differenceSecond < 8)
+            mIsMute = true
+
         val appContext = mContext.applicationContext
 
         //設置前先嘗試取消，避免重複設置
@@ -673,8 +683,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private fun allFinished() {
         SharedService.writeDebugLog(mContext, "SpeechDownloader allFinished")
 
-        //所有工作都結束後清舊檔
-        cleanAllOldSound()
+        //所有工作都結束後清舊資料
+        cleanAllOldLater()
 
         mDownloadFinishListener?.allFinished()
     }
@@ -683,6 +693,16 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     fun setKeepFileName(keepFileName: ArrayList<String>) {
         keepFileName.mapTo(mKeepFileName) { "$it.wav" }
+    }
+
+    private fun cleanAllOldLater() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader cleanAllOldLater")
+        val needDeleteLaterAlarmClockList = SharedService.getAlarmClocks(mContext, true).alarmClockList.filter { !it.isOpen }
+        for (needDeleteLaterAlarmClock in needDeleteLaterAlarmClockList) {
+            SharedService.writeDebugLog(mContext, "SpeechDownloader cleaOldLater acId = ${needDeleteLaterAlarmClock.acId}")
+            SharedService.deleteAlarmClock(mContext, needDeleteLaterAlarmClock.acId)
+        }
+        cleanAllOldSound()
     }
 
     private fun cleanAllOldSound() {

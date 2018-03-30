@@ -23,6 +23,7 @@ open class DownloadSpeechActivity : AppCompatActivity() {
     private lateinit var mCanStartDownloadCallback: CanStartDownloadCallback
     private var mIsStartedSetData = false
     private var mIsAccidentCanceled = false
+    var keepFullScreen = false
 
     fun bindDownloadService(canStartDownloadCallback: CanStartDownloadCallback) {
         mCanStartDownloadCallback = canStartDownloadCallback
@@ -99,16 +100,24 @@ open class DownloadSpeechActivity : AppCompatActivity() {
         mDownloadingDialog = AlertDialog.Builder(this)
                 .setCancelable(false)
                 .setView(dialogView)
-                .setNegativeButton("取消", { dialog, which ->
+                .setNegativeButton("取消", { _, _ ->
                     mDownloadService?.cancelDownloadSound()
 
                     //已在 inDownloadFinishListener 中解除綁定
 //                    unbindService(mDownloadServiceConnection)
 //                    mDownloadService = null
                 })
-                .show()
+                .create()
 
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (keepFullScreen) {
+            mDownloadingDialog!!.window.setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+            mDownloadingDialog!!.show()
+            mDownloadingDialog!!.window.decorView.systemUiVisibility = window.decorView.systemUiVisibility
+            mDownloadingDialog!!.window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+        } else {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            mDownloadingDialog!!.show()
+        }
     }
 
     fun setDownloadProgress(p: Int) {
@@ -131,7 +140,8 @@ open class DownloadSpeechActivity : AppCompatActivity() {
 
     private fun dismissDownloadingDialog() {
         mDownloadingDialog?.dismiss()
-        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        if (!keepFullScreen)
+            window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     interface CanStartDownloadCallback {

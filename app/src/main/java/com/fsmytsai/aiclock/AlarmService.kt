@@ -20,16 +20,20 @@ import com.google.gson.Gson
 import java.io.File
 
 class AlarmService : Service() {
-    private val mBinder = LocalBinder()
     private var mAlarmActivity: AlarmActivity? = null
+    private val mBinder = LocalBinder()
     private var mMPBGM = MediaPlayer()
     private var mMPNews = MediaPlayer()
+
+    //control
     private var mIsPausing = false
     private var mSpeaker = -1
+    private var mNewsCount = 0
+
+    //data
+    private lateinit var mAlarmClock: AlarmClocks.AlarmClock
     private lateinit var mTexts: Texts
     private val mSoundList = ArrayList<String>()
-    private var mNewsCount = 0
-    private lateinit var mAlarmClock: AlarmClocks.AlarmClock
 
     override fun onBind(intent: Intent): IBinder? {
         //測試到目前為止發現，僅第一次綁定會呼叫(從startService後)
@@ -187,13 +191,10 @@ class AlarmService : Service() {
             //只響一次，關閉它
             if (mAlarmClock.isRepeatArr.all { !it }) {
                 SharedService.writeDebugLog(this, "AlarmService only alarm once")
-                mAlarmClock.isOpen = false
-                val alarmClocks = SharedService.getAlarmClocks(this)
-                for (i in 0 until alarmClocks.alarmClockList.size) {
-                    if (alarmClocks.alarmClockList[i].acId == mAlarmClock.acId)
-                        alarmClocks.alarmClockList[i] = mAlarmClock
-                }
-                SharedService.updateAlarmClocks(this, alarmClocks)
+                val alarmClocks = SharedService.getAlarmClocks(this, mAlarmClock.acId > 1000)
+                alarmClocks.alarmClockList.find { it.acId == mAlarmClock.acId }!!.isOpen = false
+                SharedService.updateAlarmClocks(this, alarmClocks, mAlarmClock.acId > 1000)
+
                 SharedService.writeDebugLog(this@AlarmService, "AlarmService start reset within 40m old data alarm")
                 resetAlarm()
             } else {

@@ -38,7 +38,7 @@ class AlarmClockFragment : Fragment() {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_alarm_clock, container, false)
         mMainActivity = activity as MainActivity
-        mAlarmClocks = SharedService.getAlarmClocks(mMainActivity)
+        mAlarmClocks = SharedService.getAlarmClocks(mMainActivity, false)
         initViews(view)
         return view
     }
@@ -102,7 +102,7 @@ class AlarmClockFragment : Fragment() {
             holder.scSwitch.setOnCheckedChangeListener { view, isChecked ->
                 //更新開關資料
                 ac.isOpen = isChecked
-                SharedService.updateAlarmClocks(mMainActivity, mAlarmClocks)
+                SharedService.updateAlarmClocks(mMainActivity, mAlarmClocks, false)
                 //開啟就下載音檔並設置鬧鐘，關閉則取消鬧鐘及刪除 texts 資料
                 if (isChecked) {
                     mMainActivity.bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
@@ -140,13 +140,12 @@ class AlarmClockFragment : Fragment() {
                         .setTitle("刪除鬧鐘")
                         .setMessage("您確定要刪除 ${String.format("%02d", ac.hour)}:${String.format("%02d", ac.minute)} 的鬧鐘嗎?")
                         .setNegativeButton("取消", null)
-                        .setPositiveButton("刪除", { text, listener ->
+                        .setPositiveButton("刪除", { _, _ ->
                             mAlarmClocks.alarmClockList.removeAt(position)
                             rvAlarmClock.adapter.notifyItemRemoved(position)
                             rvAlarmClock.adapter.notifyItemRangeChanged(position, mAlarmClocks.alarmClockList.size - position)
                             SharedService.cancelAlarm(mMainActivity, ac.acId)
                             SharedService.deleteAlarmClock(mMainActivity, ac.acId)
-                            SharedService.deleteOldTextsData(mMainActivity, ac.acId, null, false)
                         })
                         .show()
 
