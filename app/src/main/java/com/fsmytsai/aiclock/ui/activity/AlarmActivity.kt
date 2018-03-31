@@ -1,8 +1,6 @@
 package com.fsmytsai.aiclock.ui.activity
 
-import android.content.ComponentName
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.*
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
@@ -40,6 +38,7 @@ class AlarmActivity : DownloadSpeechActivity() {
     private var mRealTexts: Texts = Texts()
     private var mIgnoreCount = 0
     private var mNowACId = 0
+    private lateinit var mSPDatas: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +52,7 @@ class AlarmActivity : DownloadSpeechActivity() {
         }
         hideBottomUIMenu()
         setContentView(R.layout.activity_alarm)
+        mSPDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
         val acId = intent.getIntExtra("ACId", 0)
 
         if (SharedService.checkAlarmClockTime(this, acId)) {
@@ -141,9 +141,11 @@ class AlarmActivity : DownloadSpeechActivity() {
             }
 
             override fun up(type: Int) {
-                if (type == 3)
+                if (type == 3) {
+                    mSPDatas.edit().putBoolean("PromptBall", false).apply()
                     finish()
-                else if (type != 0) {
+                } else if (type != 0) {
+                    mSPDatas.edit().putBoolean("PromptBall", false).apply()
                     val alarmCalendar = Calendar.getInstance()
                     alarmCalendar.add(Calendar.MINUTE, if (type == 1) 5 else 10)
 
@@ -194,6 +196,10 @@ class AlarmActivity : DownloadSpeechActivity() {
                         }
                     })
 
+                } else {
+                    //沒事
+                    if (mSPDatas.getBoolean("PromptBall", true))
+                        SharedService.showTextToast(this@AlarmActivity, "請拖動小球至上方區塊")
                 }
             }
 
