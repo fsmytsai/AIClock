@@ -46,7 +46,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         getAlarmClock()
         initViews()
 
-        if (spDatas.getBoolean("PromptMute", true) && !mIsMute) {
+        if (spDatas.getBoolean("PromptMute", true)) {
             AlertDialog.Builder(this)
                     .setTitle("提示")
                     .setMessage("可在主頁面右上角勾選設定鬧鐘時靜音，即可靜音試聽及提示。")
