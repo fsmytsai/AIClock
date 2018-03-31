@@ -75,22 +75,22 @@ class AlarmService : Service() {
         return mBinder
     }
 
-    fun resumePlay() {
-        if (!mIsPausing)
-            return
-
-        SharedService.writeDebugLog(this, "AlarmService resumePlay")
-        if (SharedService.isNewsPlaying) {
-            mIsPausing = false
-            mMPBGM.start()
-            mMPNews.start()
-        } else if (SharedService.reRunRunnable) {
-            mIsPausing = false
-            mMPBGM.start()
-            SharedService.reRunRunnable = false
-            mHandler.postDelayed(mRunnable, 5000)
-        }
-    }
+//    fun resumePlay() {
+//        if (!mIsPausing)
+//            return
+//
+//        SharedService.writeDebugLog(this, "AlarmService resumePlay")
+//        if (SharedService.isNewsPlaying) {
+//            mIsPausing = false
+//            mMPBGM.start()
+//            mMPNews.start()
+//        } else if (SharedService.reRunRunnable) {
+//            mIsPausing = false
+//            mMPBGM.start()
+//            SharedService.reRunRunnable = false
+//            mHandler.postDelayed(mRunnable, 5000)
+//        }
+//    }
 
 //    fun pausePlay() {
 //        SharedService.writeDebugLog(this, "AlarmService pausePlay")

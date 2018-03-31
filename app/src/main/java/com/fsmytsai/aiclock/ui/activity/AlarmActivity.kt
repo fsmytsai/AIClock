@@ -239,7 +239,7 @@ class AlarmActivity : DownloadSpeechActivity() {
             mAlarmService = binder.service
             mAlarmService!!.setAlarmActivity(this@AlarmActivity)
             //內部會自動判斷是否在暫停狀態
-            mAlarmService!!.resumePlay()
+//            mAlarmService!!.resumePlay()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
