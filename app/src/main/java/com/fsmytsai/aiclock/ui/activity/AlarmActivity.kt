@@ -100,7 +100,7 @@ class AlarmActivity : DownloadSpeechActivity() {
 
     private fun setRealTexts(acId: Int) {
         mNowACId = acId
-        SharedService.writeDebugLog(this, "AlarmActivity mNowACId = $mNowACId")
+        SharedService.writeDebugLog(this, "AlarmActivity setRealTexts mNowACId = $mNowACId")
 
         //初始化圖片快取
         initCache()
@@ -415,17 +415,19 @@ class AlarmActivity : DownloadSpeechActivity() {
 
         mOkHttpClient.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                loadingImgNameList.remove(url)
-                var i = 0
-                while (i < mImageViewList.size) {
-                    if (mImageViewList[i].tag == url) {
-                        mImageViewList[i].visibility = View.GONE
-                        mProgressBarList[i].visibility = View.GONE
-                        mImageViewList.removeAt(i)
-                        mProgressBarList.removeAt(i)
-                        i--
+                runOnUiThread {
+                    loadingImgNameList.remove(url)
+                    var i = 0
+                    while (i < mImageViewList.size) {
+                        if (mImageViewList[i].tag == url) {
+                            mImageViewList[i].visibility = View.GONE
+                            mProgressBarList[i].visibility = View.GONE
+                            mImageViewList.removeAt(i)
+                            mProgressBarList.removeAt(i)
+                            i--
+                        }
+                        i++
                     }
-                    i++
                 }
             }
 
