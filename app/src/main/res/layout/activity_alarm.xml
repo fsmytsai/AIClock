@@ -31,8 +31,8 @@
                 android:background="@color/colorTransparentPaleBlue"
                 android:gravity="center"
                 android:text="關閉"
-                android:textColor="@color/colorBlue"
-                android:textSize="20sp" />
+                android:textColor="@color/colorRed"
+                android:textSize="30sp" />
 
             <TextView
                 android:id="@+id/tv_ten_minute"
@@ -42,8 +42,8 @@
                 android:background="@color/colorTransparentPaleBlue"
                 android:gravity="center"
                 android:text="十分鐘後再響"
-                android:textColor="@color/colorBlue"
-                android:textSize="20sp" />
+                android:textColor="@color/colorRed"
+                android:textSize="30sp" />
 
             <TextView
                 android:id="@+id/tv_five_minute"
@@ -53,8 +53,8 @@
                 android:background="@color/colorTransparentPaleBlue"
                 android:gravity="center"
                 android:text="五分鐘後再響"
-                android:textColor="@color/colorBlue"
-                android:textSize="20sp" />
+                android:textColor="@color/colorRed"
+                android:textSize="30sp" />
 
             <View
                 android:layout_width="match_parent"

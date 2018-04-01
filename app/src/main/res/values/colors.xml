@@ -9,4 +9,5 @@
     <color name="colorPaleBlue">#d5e0fe</color>
     <color name="colorTransparentPaleBlue">#7fd5e0fe</color>
     <color name="colorTransparentBlue">#b4021c47</color>
+    <color name="colorRed">#800000</color>
 </resources>
