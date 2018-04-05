@@ -28,7 +28,6 @@ import com.fsmytsai.aiclock.model.*
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.view.MyRadioGroup
-import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
 import java.util.*
 import com.bigkoo.pickerview.TimePickerView
@@ -95,13 +94,13 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
     }
 
     private fun getAlarmClock() {
-        val alarmClockJsonStr = intent.getStringExtra("AlarmClockJsonStr")
-        if (alarmClockJsonStr != null) {
+        val acId = intent.getIntExtra("acId", 0)
+        val alarmClock = SharedService.getAlarmClock(this, acId)
+        if (alarmClock != null) {
             mIsNew = false
-            mAlarmClock = Gson().fromJson(alarmClockJsonStr, AlarmClocks.AlarmClock::class.java)
+            mAlarmClock = alarmClock
         } else {
             val newCalendar = Calendar.getInstance()
-            val acId = intent.getIntExtra("acId", 0)
             mAlarmClock = AlarmClocks.AlarmClock(acId,
                     newCalendar.get(Calendar.HOUR_OF_DAY),
                     newCalendar.get(Calendar.MINUTE),
@@ -428,11 +427,31 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     if (mIsPlaying && mNowPlayingFileName == mBackgroundMusicList[position]) {
                         mMediaPlayer.release()
                         mNowPlayingFileName = ""
-                        mAlarmClock.backgroundMusic = null
                     }
 
                     val deleteFile = File("$filesDir/bgmSounds/${mBackgroundMusicList[position]}")
                     if (deleteFile.delete()) {
+                        mAlarmClock.backgroundMusic = null
+
+                        var promptResetBGM = false
+
+                        val alarmClocks = SharedService.getAlarmClocks(this@AddAlarmClockActivity, false)
+                        for (alarmClock in alarmClocks.alarmClockList) {
+                            if (alarmClock.backgroundMusic == mBackgroundMusicList[position]) {
+                                alarmClock.backgroundMusic = null
+                                promptResetBGM = true
+                            }
+                        }
+
+                        if (promptResetBGM) {
+                            SharedService.updateAlarmClocks(this@AddAlarmClockActivity, alarmClocks, false)
+                            AlertDialog.Builder(this@AddAlarmClockActivity)
+                                    .setTitle("提示")
+                                    .setMessage("有鬧鐘的背景音樂使用此音檔，已將其重設為預設。")
+                                    .setPositiveButton("知道了", null)
+                                    .show()
+                        }
+
                         mBackgroundMusicList.removeAt(position)
                         rv_background_music.adapter.notifyItemRemoved(position)
                         rv_background_music.adapter.notifyItemRangeChanged(position, mBackgroundMusicList.size - position)
@@ -614,7 +633,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         SharedService.updateAlarmClocks(this, alarmClocks, false)
 
         //已正確設置資料
-        intent.putExtra("AlarmClockJsonStr", Gson().toJson(mAlarmClock))
+        intent.putExtra("ACId", mAlarmClock.acId)
         intent.putExtra("IsNew", mIsNew)
         setResult(Activity.RESULT_OK, intent)
     }
