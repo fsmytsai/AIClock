@@ -19,7 +19,6 @@ import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.activity.AddAlarmClockActivity
 import com.fsmytsai.aiclock.ui.activity.DownloadSpeechActivity
 import com.fsmytsai.aiclock.ui.activity.MainActivity
-import com.google.gson.Gson
 import kotlinx.android.synthetic.main.block_alarm_clock.view.*
 import kotlinx.android.synthetic.main.footer.view.*
 import kotlinx.android.synthetic.main.fragment_alarm_clock.view.*
@@ -130,7 +129,7 @@ class AlarmClockFragment : Fragment() {
 
             holder.rlAlarmClockBlock.setOnClickListener {
                 val intent = Intent(mMainActivity, AddAlarmClockActivity::class.java)
-                intent.putExtra("AlarmClockJsonStr", Gson().toJson(ac))
+                intent.putExtra("acId", ac.acId)
                 mNowPosition = position
                 startActivityForResult(intent, ADD_ALARM_CLOCK)
             }
@@ -177,7 +176,10 @@ class AlarmClockFragment : Fragment() {
                 return
             }
 
-            val alarmClock = Gson().fromJson(data.getStringExtra("AlarmClockJsonStr"), AlarmClocks.AlarmClock::class.java)
+            val acId = data.getIntExtra("ACId", -1)
+            if (acId == -1)
+                return
+            val alarmClock = SharedService.getAlarmClock(mMainActivity, acId)!!
 
             val newPosition = data.getIntExtra("NewPosition", -1)
 

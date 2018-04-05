@@ -3,19 +3,12 @@ package com.fsmytsai.aiclock
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.ui.activity.AlarmActivity
-
 
 class AlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val acId = intent.getIntExtra("ACId", 0)
-
-        //當設置完後單純按返回鍵沒殺掉整個App的話會抓到舊資料
-//        val isOpen = SharedService.checkAlarmClockIsOpen(context, acId)
-//        val isRightTime = SharedService.checkAlarmClockTime(context, acId)
-//        SharedService.writeDebugLog(context, "AlarmReceiver isOpen = $isOpen isRightTime = $isRightTime")
         if (acId != 0) {
             val startAlarmIntent = Intent(context, AlarmActivity::class.java)
             startAlarmIntent.putExtra("ACId", acId)

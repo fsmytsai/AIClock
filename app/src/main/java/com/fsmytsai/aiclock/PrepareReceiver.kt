@@ -4,10 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
-import com.fsmytsai.aiclock.service.app.SpeechDownloader
-import com.google.gson.Gson
 
 class PrepareReceiver : BroadcastReceiver() {
 

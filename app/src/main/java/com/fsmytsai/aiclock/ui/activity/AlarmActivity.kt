@@ -166,7 +166,8 @@ class AlarmActivity : DownloadSpeechActivity() {
                             mAlarmClock!!.category,
                             mAlarmClock!!.newsCount,
                             booleanArrayOf(false, false, false, false, false, false, false),
-                            true)
+                            true,
+                            mAlarmClock!!.backgroundMusic)
 
                     //檢查時間是否重複
                     if (SharedService.isAlarmClockTimeRepeat(this@AlarmActivity, alarmClock, false) &&
