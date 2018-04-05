@@ -44,12 +44,11 @@ class SharedService {
         }
 
         fun cancelAlarm(context: Context, acId: Int) {
-            val appContext = context.applicationContext
             //取消準備
-            var intent = Intent(appContext, PrepareReceiver::class.java)
+            var intent = Intent(context, PrepareReceiver::class.java)
             intent.putExtra("ACId", acId)
-            var pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_NO_CREATE)
-            val am = appContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            var pi = PendingIntent.getBroadcast(context, acId, intent, PendingIntent.FLAG_NO_CREATE)
+            val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             if (pi == null) {
                 writeDebugLog(context, "SharedService cancelAlarm PrepareReceiver pi dose not exist")
             } else {
@@ -59,9 +58,9 @@ class SharedService {
             }
 
             //取消響鈴
-            intent = Intent(appContext, AlarmReceiver::class.java)
+            intent = Intent(context, AlarmReceiver::class.java)
             intent.putExtra("ACId", acId)
-            pi = PendingIntent.getBroadcast(appContext, acId, intent, PendingIntent.FLAG_NO_CREATE)
+            pi = PendingIntent.getBroadcast(context, acId, intent, PendingIntent.FLAG_NO_CREATE)
             if (pi == null) {
                 writeDebugLog(context, "SharedService cancelAlarm AlarmReceiver pi dose not exist")
             } else {
@@ -328,11 +327,10 @@ class SharedService {
 
         fun writeDebugLog(context: Context, logContent: String) {
             Log.d("AIClockDebugLog", logContent)
+            File("${context.filesDir}/logs/").mkdir()
             val nowCalendar = Calendar.getInstance()
             val logFileName = "${nowCalendar.get(Calendar.YEAR)}-${nowCalendar.get(Calendar.MONTH) + 1}-${nowCalendar.get(Calendar.DAY_OF_MONTH)}.txt"
             val file = File("${context.filesDir}/logs/$logFileName")
-
-            File("${context.filesDir}/logs/").mkdir()
 
             val time = "${nowCalendar.get(Calendar.HOUR_OF_DAY)}:${nowCalendar.get(Calendar.MINUTE)}:${nowCalendar.get(Calendar.SECOND)}"
             try {

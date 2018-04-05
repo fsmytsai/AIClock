@@ -93,9 +93,10 @@ class MainActivity : DownloadSpeechActivity() {
                 true
             }
             R.id.item_about -> {
+                val pInfo = packageManager.getPackageInfo(packageName, 0)
                 AlertDialog.Builder(this)
                         .setTitle("關於")
-                        .setMessage("當前版本號：${SharedService.getVersionCode(this)}\n\n本程式所有新聞來源皆為newsapi.org\n\n背景音樂來自 youtube 的創作者工具箱")
+                        .setMessage("當前版本：${pInfo.versionName}\n\n徵懂 UI、UX 設計的合作夥伴\n\n本程式所有新聞來源皆為newsapi.org\n\n背景音樂來自 youtube 的創作者工具箱")
                         .setPositiveButton("知道了", null)
                         .show()
                 true
