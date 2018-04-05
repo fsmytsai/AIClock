@@ -23,7 +23,10 @@ import android.util.Log
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
-
+import android.content.Context.POWER_SERVICE
+import android.os.PowerManager
+import android.view.Display
+import android.hardware.display.DisplayManager
 
 /**
  * Created by user on 2018/2/17.
@@ -245,6 +248,22 @@ class SharedService {
                 textsList.textsList.add(ChangeTexts!!)
                 spDatas.edit().putString("TextsListJsonStr", Gson().toJson(textsList)).apply()
             }
+        }
+
+        fun isScreenOn(context: Context): Boolean {
+            if (android.os.Build.VERSION.SDK_INT >= 20) {
+                val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+                val displays = dm.displays
+                for (display in displays) {
+                    if (display.state == Display.STATE_ON || display.state == Display.STATE_UNKNOWN) {
+                        return true
+                    }
+                }
+                return false
+            }
+
+            val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
+            return powerManager.isScreenOn
         }
 
         fun getVersionCode(context: Context): Int {
