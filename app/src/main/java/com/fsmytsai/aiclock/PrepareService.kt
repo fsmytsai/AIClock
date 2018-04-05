@@ -1,13 +1,19 @@
 package com.fsmytsai.aiclock
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
+import android.support.v4.app.NotificationCompat
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 
 class PrepareService : Service() {
+    private var mIsStartedForeground = false
     private val mWaitToPrepareAlarmClocks = AlarmClocks()
     override fun onBind(intent: Intent): IBinder? {
         return null
@@ -20,6 +26,23 @@ class PrepareService : Service() {
             if (alarmClock == null || !SharedService.checkAlarmClockIsOpen(this, acId))
                 stopSelf()
             else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && SharedService.isScreenOn(this)) {
+                    mIsStartedForeground = true
+                    SharedService.writeDebugLog(this, "PrepareService prepareAlarm in Android O and screenOn")
+                    val CHANNEL_ID = "prepareAlarm"
+                    val channel = NotificationChannel(CHANNEL_ID,
+                            "AI Clock NotificationChannel Name",
+                            NotificationManager.IMPORTANCE_DEFAULT)
+
+                    (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
+
+                    val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                            .setContentTitle("AI 智能鬧鐘")
+                            .setContentText("準備 AI 智能鬧鐘中...").build()
+
+                    startForeground(1, notification)
+                }
+
                 if (mWaitToPrepareAlarmClocks.alarmClockList.size == 0) {
                     mWaitToPrepareAlarmClocks.alarmClockList.add(alarmClock)
                     SharedService.writeDebugLog(this, "PrepareService startDownload")

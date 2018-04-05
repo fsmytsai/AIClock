@@ -3,6 +3,7 @@ package com.fsmytsai.aiclock
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
@@ -16,7 +17,11 @@ class PrepareReceiver : BroadcastReceiver() {
         if (acId != 0) {
             val serviceIntent = Intent(context, PrepareService::class.java)
             serviceIntent.putExtra("ACId", acId)
-            context.startService(serviceIntent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && SharedService.isScreenOn(context)) {
+                context.startForegroundService(serviceIntent)
+            } else {
+                context.startService(serviceIntent)
+            }
         }
     }
 }
