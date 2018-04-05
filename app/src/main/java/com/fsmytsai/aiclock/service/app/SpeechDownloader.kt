@@ -158,17 +158,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         var differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
 
-//        if (differenceSecond < 30) {
-//            if (mDownloadSpeechActivity != null)
-//                AlertDialog.Builder(mDownloadSpeechActivity!!)
-//                        .setTitle("錯誤")
-//                        .setMessage("時間需自少超過當前時間 30 秒。")
-//                        .setPositiveButton("知道了", null)
-//                        .show()
-//
-//            return false
-//        }
-
         mAlarmTimeList.clear()
 
         if (differenceSecond >= 60 * 60 * 24) {
