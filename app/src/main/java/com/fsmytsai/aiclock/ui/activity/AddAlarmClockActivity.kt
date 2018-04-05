@@ -428,6 +428,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     if (mIsPlaying && mNowPlayingFileName == mBackgroundMusicList[position]) {
                         mMediaPlayer.release()
                         mNowPlayingFileName = ""
+                        mAlarmClock.backgroundMusic = null
                     }
 
                     val deleteFile = File("$filesDir/bgmSounds/${mBackgroundMusicList[position]}")
