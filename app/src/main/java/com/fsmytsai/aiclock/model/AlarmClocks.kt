@@ -16,7 +16,8 @@ data class AlarmClocks(
             var category: Int,
             var newsCount: Int,
             var isRepeatArr: BooleanArray,
-            var isOpen: Boolean
+            var isOpen: Boolean,
+            var backgroundMusic: String? = null
     )
 }
 

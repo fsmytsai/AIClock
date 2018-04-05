@@ -26,8 +26,7 @@ class AlarmService : Service() {
     private var mMPNews = MediaPlayer()
 
     //control
-    private var mIsPausing = false
-    private var mSpeaker = -1
+//    private var mIsPausing = false
     private var mNewsCount = 0
 
     //data
@@ -41,8 +40,6 @@ class AlarmService : Service() {
         if (mTexts.acId != 0) {
             mAlarmClock = SharedService.getAlarmClock(this, mTexts.acId)!!
 
-            mSpeaker = mAlarmClock.speaker
-
             //排列音檔播放順序
             for (text in mTexts.textList) {
                 if (text.description != "time" && text.description != "weather") {
@@ -50,13 +47,13 @@ class AlarmService : Service() {
                     mSoundList.add("news$mNewsCount")
                 }
 
-                (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it-$mSpeaker" }
+                (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it-${mAlarmClock.speaker}" }
             }
 
             //判斷是否為舊資料
             if (mTexts.isOldData) {
                 //第一個播放的如果是 time 則把提示加入 time 之後
-                if (mTexts.textList[0].description == "time" && "${mTexts.textList[0].text_id}-0-$mSpeaker" == mSoundList[0]) {
+                if (mTexts.textList[0].description == "time" && "${mTexts.textList[0].text_id}-0-${mAlarmClock.speaker}" == mSoundList[0]) {
                     SharedService.writeDebugLog(this, "AlarmService insert olddata after time")
                     mSoundList.add(1, "olddata")
                 } else {
@@ -129,8 +126,8 @@ class AlarmService : Service() {
         try {
             mMPNews.setDataSource(this, uri)
         } catch (e: Exception) {
-            SharedService.writeDebugLog(this, "AlarmService setDataSource failed uri = $uri")
-            mMPNews.setDataSource(this, Uri.parse("android.resource://$packageName/raw/${SharedService.speakerArr[mSpeaker]}_lost"))
+            SharedService.writeDebugLog(this, "AlarmService playNews setDataSource failed uri = $uri")
+            mMPNews.setDataSource(this, Uri.parse("android.resource://$packageName/raw/${SharedService.speakerArr[mAlarmClock.speaker]}_lost"))
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -152,7 +149,7 @@ class AlarmService : Service() {
             if (mSoundList.size > 0) {
                 mMPNews = MediaPlayer()
                 if (mSoundList[0].startsWith("news") || mSoundList[0] == "olddata" || mSoundList[0] == "bye")
-                    playNews(Uri.parse("android.resource://$packageName/raw/${SharedService.speakerArr[mSpeaker]}_${mSoundList[0]}"))
+                    playNews(Uri.parse("android.resource://$packageName/raw/${SharedService.speakerArr[mAlarmClock.speaker]}_${mSoundList[0]}"))
                 else
                     playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
             } else {
@@ -168,7 +165,17 @@ class AlarmService : Service() {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun startBGM() {
-        mMPBGM.setDataSource(this, Uri.parse("android.resource://$packageName/raw/bgm"))
+        if (mAlarmClock.backgroundMusic == null)
+            mMPBGM.setDataSource(this, Uri.parse("android.resource://$packageName/raw/bgm"))
+        else {
+            val uri = Uri.parse("$filesDir/bgmSounds/${mAlarmClock.backgroundMusic}")
+            try {
+                mMPBGM.setDataSource(this, uri)
+            } catch (e: Exception) {
+                SharedService.writeDebugLog(this, "AlarmService startBGM setDataSource failed uri = $uri")
+                mMPBGM.setDataSource(this, Uri.parse("android.resource://$packageName/raw/bgm"))
+            }
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val audioAttributes = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
@@ -180,12 +187,11 @@ class AlarmService : Service() {
         mMPBGM.setOnCompletionListener {
             mMPBGM.start()
         }
-        mMPBGM.setVolume(1f, 1f)
         mMPBGM.prepare()
         mMPBGM.start()
 
         //沒發生意外才開始播報新聞
-        if (mSpeaker != -1) {
+        if (mAlarmClock.speaker != -1) {
             mHandler.postDelayed(mRunnable, 5000)
 
             //只響一次，關閉它
@@ -233,7 +239,7 @@ class AlarmService : Service() {
     private val mRunnable = Runnable {
         mMPBGM.setVolume(0.1f, 0.1f)
         if (mSoundList[0].startsWith("news") || mSoundList[0] == "olddata") {
-            playNews(Uri.parse("android.resource://$packageName/raw/${SharedService.speakerArr[mSpeaker]}_${mSoundList[0]}"))
+            playNews(Uri.parse("android.resource://$packageName/raw/${SharedService.speakerArr[mAlarmClock.speaker]}_${mSoundList[0]}"))
         } else
             playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
     }

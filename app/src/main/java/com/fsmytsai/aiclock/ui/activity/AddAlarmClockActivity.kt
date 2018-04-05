@@ -3,6 +3,7 @@ package com.fsmytsai.aiclock.ui.activity
 import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.AudioAttributes
@@ -14,9 +15,13 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
+import android.support.v7.widget.GridLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.view.LayoutInflater
 import com.fsmytsai.aiclock.R
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.RadioButton
 import com.bigkoo.pickerview.OptionsPickerView
 import com.fsmytsai.aiclock.model.*
@@ -27,16 +32,31 @@ import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
 import java.util.*
 import com.bigkoo.pickerview.TimePickerView
+import com.fsmytsai.aiclock.service.app.FileChooser
+import kotlinx.android.synthetic.main.block_background_music.view.*
+import kotlinx.android.synthetic.main.footer_background_music.view.*
+import java.io.*
+import kotlin.collections.ArrayList
 
 
 class AddAlarmClockActivity : DownloadSpeechActivity() {
-    private lateinit var mAlarmClock: AlarmClocks.AlarmClock
-    private var mIsNew = true
-    private var mIsSpeakerPlaying = false
-    private var mMPSpeaker = MediaPlayer()
+    private var mMediaPlayer = MediaPlayer()
+    private lateinit var mFileChooser: FileChooser
 
-    private val REQUEST_LOCATION = 888
+    //data
+    private lateinit var mAlarmClock: AlarmClocks.AlarmClock
+
+    private val mBackgroundMusicList = ArrayList<String>()
+
+    //control
+    private var mIsNew = true
     private var mIsMute = false
+    private var mIsPlaying = false
+    private var mNowPlayingFileName = ""
+
+    //CODE
+    private val REQUEST_LOCATION = 888
+    private val REQUEST_EXTERNAL_STORAGE = 18
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,6 +64,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         val spDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
         mIsMute = spDatas.getBoolean("IsMute", false)
         getAlarmClock()
+        setBackgroundMusicList()
         initViews()
 
         if (spDatas.getBoolean("PromptMute", true)) {
@@ -57,9 +78,49 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         }
     }
 
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        val id = item?.itemId
+
+        if (id == android.R.id.home) {
+            finish()
+            return true
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
     override fun onStop() {
         super.onStop()
-        mMPSpeaker.release()
+        mMediaPlayer.release()
+    }
+
+    private fun getAlarmClock() {
+        val alarmClockJsonStr = intent.getStringExtra("AlarmClockJsonStr")
+        if (alarmClockJsonStr != null) {
+            mIsNew = false
+            mAlarmClock = Gson().fromJson(alarmClockJsonStr, AlarmClocks.AlarmClock::class.java)
+        } else {
+            val newCalendar = Calendar.getInstance()
+            val acId = intent.getIntExtra("acId", 0)
+            mAlarmClock = AlarmClocks.AlarmClock(acId,
+                    newCalendar.get(Calendar.HOUR_OF_DAY),
+                    newCalendar.get(Calendar.MINUTE),
+                    -1,
+                    1000.0,
+                    0.0,
+                    -1,
+                    6,
+                    booleanArrayOf(false, false, false, false, false, false, false),
+                    true)
+        }
+    }
+
+    private fun setBackgroundMusicList() {
+        mBackgroundMusicList.clear()
+        mBackgroundMusicList.add("預設")
+        File("$filesDir/bgmSounds/").mkdir()
+        val directory = File("$filesDir/bgmSounds")
+        directory.listFiles().mapTo(mBackgroundMusicList) { it.name }
     }
 
     @TargetApi(Build.VERSION_CODES.M)
@@ -100,8 +161,6 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         }
 
         rg_speaker.setOnCheckedChangeListener { _, checkedId ->
-            if (mIsSpeakerPlaying)
-                mMPSpeaker.stop()
             var uri: Uri? = null
             when (checkedId) {
                 R.id.rb_f1 -> {
@@ -117,8 +176,11 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     uri = Uri.parse("android.resource://$packageName/raw/m1_hello")
                 }
             }
-            if (!mIsMute)
+            if (!mIsMute) {
+                if (mIsPlaying)
+                    mMediaPlayer.release()
                 startPlaying(uri!!)
+            }
         }
 
         sc_weather.isChecked = mAlarmClock.latitude != 1000.0
@@ -185,27 +247,8 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     }
                 }
 
-    }
-
-    private fun getAlarmClock() {
-        val alarmClockJsonStr = intent.getStringExtra("AlarmClockJsonStr")
-        if (alarmClockJsonStr != null) {
-            mIsNew = false
-            mAlarmClock = Gson().fromJson(alarmClockJsonStr, AlarmClocks.AlarmClock::class.java)
-        } else {
-            val newCalendar = Calendar.getInstance()
-            val acId = intent.getIntExtra("acId", 0)
-            mAlarmClock = AlarmClocks.AlarmClock(acId,
-                    newCalendar.get(Calendar.HOUR_OF_DAY),
-                    newCalendar.get(Calendar.MINUTE),
-                    -1,
-                    1000.0,
-                    0.0,
-                    -1,
-                    6,
-                    booleanArrayOf(false, false, false, false, false, false, false),
-                    true)
-        }
+        rv_background_music.layoutManager = GridLayoutManager(this, 3)
+        rv_background_music.adapter = BackgroundMusicAdapter()
     }
 
     private val pvTime by lazy {
@@ -262,37 +305,47 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_LOCATION && grantResults.size == 2 &&
-                grantResults[0] == PackageManager.PERMISSION_GRANTED &&
-                grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-            val isSuccess = SharedService.setLocation(this, mAlarmClock)
-            if (!isSuccess)
-                SharedService.showTextToast(this, "取得位置中...")
-        } else {
-            sc_weather.isChecked = false
-            SharedService.showTextToast(this, "您拒絕了天氣播報權限")
-        }
+        if (requestCode == REQUEST_LOCATION)
+            if (grantResults.size == 2 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED &&
+                    grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                val isSuccess = SharedService.setLocation(this, mAlarmClock)
+                if (!isSuccess)
+                    SharedService.showTextToast(this, "取得位置中...")
+            } else {
+                sc_weather.isChecked = false
+                SharedService.showTextToast(this, "您拒絕了天氣播報權限")
+            }
+
+        if (requestCode == REQUEST_EXTERNAL_STORAGE)
+            if (grantResults.size == 1 &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                chooseAudio()
+            else
+                SharedService.showTextToast(this, "您拒絕了選擇檔案的權限")
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private fun startPlaying(uri: Uri) {
-        mMPSpeaker = MediaPlayer()
-        mMPSpeaker.setDataSource(this, uri)
+        mMediaPlayer = MediaPlayer()
+        mMediaPlayer.setDataSource(this, uri)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             val audioAttributes = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)
                     .build()
-            mMPSpeaker.setAudioAttributes(audioAttributes)
+            mMediaPlayer.setAudioAttributes(audioAttributes)
         } else {
-            mMPSpeaker.setAudioStreamType(AudioManager.STREAM_ALARM)
+            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_ALARM)
         }
-        mMPSpeaker.setOnCompletionListener {
-            mIsSpeakerPlaying = false
+        mMediaPlayer.setOnCompletionListener {
+            mNowPlayingFileName = ""
+            mIsPlaying = false
+            mMediaPlayer.release()
         }
-        mMPSpeaker.setVolume(1f, 1f)
-        mMPSpeaker.prepare()
-        mMPSpeaker.start()
-        mIsSpeakerPlaying = true
+        mMediaPlayer.setScreenOnWhilePlaying(true)
+        mMediaPlayer.prepare()
+        mMediaPlayer.start()
+        mIsPlaying = true
     }
 
     fun clickRepeat(view: View) {
@@ -317,18 +370,153 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        val id = item?.itemId
+    private inner class BackgroundMusicAdapter : RecyclerView.Adapter<BackgroundMusicAdapter.ViewHolder>() {
 
-        if (id == android.R.id.home) {
-            finish()
-            return true
+        val TYPE_FOOTER = 1  //说明是带有Footer的
+        val TYPE_NORMAL = 2  //说明是不带有header和footer的
+
+        override fun getItemViewType(position: Int): Int {
+            return if (position == itemCount - 1) TYPE_FOOTER else TYPE_NORMAL
         }
 
-        return super.onOptionsItemSelected(item)
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = if (viewType == TYPE_FOOTER)
+                LayoutInflater.from(parent.context).inflate(R.layout.footer_background_music, parent, false)
+            else
+                LayoutInflater.from(parent.context).inflate(R.layout.block_background_music, parent, false)
+
+            return ViewHolder(view)
+        }
+
+        @TargetApi(Build.VERSION_CODES.M)
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            if (getItemViewType(position) == TYPE_FOOTER) {
+                holder.tvSelect.setOnClickListener {
+                    if (ActivityCompat.checkSelfPermission(this@AddAlarmClockActivity, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                        chooseAudio()
+                    } else {
+                        requestPermissions(arrayOf(android.Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_EXTERNAL_STORAGE)
+                    }
+                }
+                return
+            }
+
+            if (position == 0) {
+                if (mAlarmClock.backgroundMusic == null) {
+                    holder.tvBackgroundMusic.setBackgroundResource(R.drawable.button_rounded2)
+                    holder.tvBackgroundMusic.setTextColor(Color.WHITE)
+                } else {
+                    holder.tvBackgroundMusic.setBackgroundResource(R.drawable.button_rounded)
+                    holder.tvBackgroundMusic.setTextColor(Color.BLACK)
+                }
+            } else {
+                if (mAlarmClock.backgroundMusic == mBackgroundMusicList[position]) {
+                    holder.tvBackgroundMusic.setBackgroundResource(R.drawable.button_rounded2)
+                    holder.tvBackgroundMusic.setTextColor(Color.WHITE)
+                } else {
+                    holder.tvBackgroundMusic.setBackgroundResource(R.drawable.button_rounded)
+                    holder.tvBackgroundMusic.setTextColor(Color.BLACK)
+                }
+            }
+
+            holder.tvBackgroundMusic.text = mBackgroundMusicList[position]
+            if (position == 0)
+                holder.ivDelete.visibility = View.GONE
+            else {
+                holder.ivDelete.visibility = View.VISIBLE
+                holder.ivDelete.setOnClickListener {
+                    if (mIsPlaying && mNowPlayingFileName == mBackgroundMusicList[position]) {
+                        mMediaPlayer.release()
+                        mNowPlayingFileName = ""
+                    }
+
+                    val deleteFile = File("$filesDir/bgmSounds/${mBackgroundMusicList[position]}")
+                    if (deleteFile.delete()) {
+                        mBackgroundMusicList.removeAt(position)
+                        rv_background_music.adapter.notifyItemRemoved(position)
+                        rv_background_music.adapter.notifyItemRangeChanged(position, mBackgroundMusicList.size - position)
+                    } else
+                        SharedService.showTextToast(this@AddAlarmClockActivity, "刪除失敗")
+                }
+            }
+
+            holder.tvBackgroundMusic.setOnClickListener {
+                if (position == 0)
+                    mAlarmClock.backgroundMusic = null
+                else
+                    mAlarmClock.backgroundMusic = mBackgroundMusicList[position]
+
+                rv_background_music.adapter.notifyDataSetChanged()
+
+                if (!mIsMute) {
+                    if (mIsPlaying)
+                        mMediaPlayer.release()
+                    val tempFileName: String
+                    val uri = if (mAlarmClock.backgroundMusic != null) {
+                        tempFileName = mBackgroundMusicList[position]
+                        Uri.parse("$filesDir/bgmSounds/$tempFileName")
+                    } else {
+                        tempFileName = "bgm"
+                        Uri.parse("android.resource://$packageName/raw/bgm")
+                    }
+                    if (mNowPlayingFileName == tempFileName)
+                        mNowPlayingFileName = ""
+                    else {
+                        mNowPlayingFileName = tempFileName
+                        SharedService.showTextToast(this@AddAlarmClockActivity, "再點一次停止試聽")
+                        startPlaying(uri!!)
+                    }
+                }
+            }
+        }
+
+        override fun getItemCount(): Int {
+            return mBackgroundMusicList.size + 1
+        }
+
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val tvBackgroundMusic = itemView.tv_background_music
+            val ivDelete = itemView.iv_delete
+            val tvSelect = itemView.tv_select
+        }
+
+    }
+
+    private fun chooseAudio() {
+        mFileChooser = FileChooser(this)
+        mFileChooser.showFileChooser("audio/*", "選擇音檔", false, true)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == FileChooser.ACTIVITY_FILE_CHOOSER) {
+            if (mFileChooser.onActivityResult(requestCode, resultCode, data)) {
+                val file = mFileChooser.chosenFiles[0]
+                val bytes = ByteArray(file.length().toInt())
+                val newFile = File("$filesDir/bgmSounds/${file.name}")
+                try {
+                    val buf = BufferedInputStream(FileInputStream(file))
+                    buf.read(bytes, 0, bytes.size)
+                    buf.close()
+                    val outputStream = FileOutputStream(newFile)
+                    outputStream.write(bytes)
+                    outputStream.close()
+                } catch (e: FileNotFoundException) {
+                    e.printStackTrace()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+
+                mBackgroundMusicList.add(file.name)
+                rv_background_music.adapter.notifyItemInserted(mBackgroundMusicList.lastIndex)
+            }
+        }
     }
 
     fun save(view: View) {
+        if (mIsPlaying)
+            mMediaPlayer.release()
+
         pvTime.returnData()
 
         //檢查時間是否重複

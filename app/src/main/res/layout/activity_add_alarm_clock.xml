@@ -132,14 +132,6 @@
                     android:layout_height="wrap_content"
                     android:checked="true" />
 
-                <!--<com.suke.widget.SwitchButton-->
-                <!--android:id="@+id/sb_weather"-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--app:sb_checked_color="@color/colorBlue"-->
-                <!--app:sb_checkline_color="@color/colorMainYellow"-->
-                <!--app:sb_checkline_width="2dp"-->
-                <!--app:sb_uncheckcircle_color="@android:color/holo_red_dark" />-->
             </LinearLayout>
 
             <LinearLayout
@@ -175,7 +167,9 @@
                             android:layout_weight="1"
                             android:checked="true"
                             android:tag="-1"
-                            android:text="關閉" />
+                            android:text="關閉"
+                            android:textColor="@android:color/black"
+                            android:textSize="16sp" />
 
                         <RadioButton
                             android:id="@+id/rb_general"
@@ -183,7 +177,9 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:tag="0"
-                            android:text="綜合" />
+                            android:text="綜合"
+                            android:textColor="@android:color/black"
+                            android:textSize="16sp" />
 
                         <RadioButton
                             android:id="@+id/rb_business"
@@ -191,7 +187,9 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:tag="1"
-                            android:text="財經" />
+                            android:text="財經"
+                            android:textColor="@android:color/black"
+                            android:textSize="16sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -206,7 +204,9 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:tag="2"
-                            android:text="娛樂" />
+                            android:text="娛樂"
+                            android:textColor="@android:color/black"
+                            android:textSize="16sp" />
 
                         <RadioButton
                             android:id="@+id/rb_health"
@@ -214,7 +214,9 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:tag="3"
-                            android:text="健康" />
+                            android:text="健康"
+                            android:textColor="@android:color/black"
+                            android:textSize="16sp" />
 
                         <RadioButton
                             android:id="@+id/rb_science"
@@ -222,7 +224,9 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:tag="4"
-                            android:text="科學" />
+                            android:text="科學"
+                            android:textColor="@android:color/black"
+                            android:textSize="16sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -237,7 +241,9 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:tag="5"
-                            android:text="體育" />
+                            android:text="體育"
+                            android:textColor="@android:color/black"
+                            android:textSize="16sp" />
 
                         <!--<RadioButton-->
                         <!--android:id="@+id/rb_technology"-->
@@ -255,6 +261,7 @@
                     </LinearLayout>
 
                 </com.fsmytsai.aiclock.ui.view.MyRadioGroup>
+
             </LinearLayout>
 
             <LinearLayout
@@ -281,7 +288,10 @@
                     android:focusable="false"
                     android:gravity="center"
                     android:inputType="number"
-                    android:text="6" />
+                    android:text="6"
+                    android:textColor="@android:color/black"
+                    android:textSize="18sp" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -400,6 +410,21 @@
                 </LinearLayout>
 
             </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="10dp"
+                android:text="背景音樂"
+                android:textColor="@android:color/black"
+                android:textSize="18sp" />
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rv_background_music"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp" />
 
         </LinearLayout>
     </ScrollView>
