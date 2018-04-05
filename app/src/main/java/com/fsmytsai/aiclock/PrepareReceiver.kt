@@ -17,7 +17,7 @@ class PrepareReceiver : BroadcastReceiver() {
         if (acId != 0) {
             val serviceIntent = Intent(context, PrepareService::class.java)
             serviceIntent.putExtra("ACId", acId)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && SharedService.isScreenOn(context)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !SharedService.isScreenOn(context)) {
                 context.startForegroundService(serviceIntent)
             } else {
                 context.startService(serviceIntent)
