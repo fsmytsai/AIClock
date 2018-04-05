@@ -170,7 +170,7 @@ class AlarmActivity : DownloadSpeechActivity() {
                             mAlarmClock!!.backgroundMusic)
 
                     //檢查時間是否重複
-                    if (SharedService.isAlarmClockTimeRepeat(this@AlarmActivity, alarmClock, false) &&
+                    if (SharedService.isAlarmClockTimeRepeat(this@AlarmActivity, alarmClock, false) ||
                             SharedService.isAlarmClockTimeRepeat(this@AlarmActivity, alarmClock, true)) {
                         SharedService.showTextToast(this@AlarmActivity, "錯誤，已有相同時間。")
                         return

@@ -540,7 +540,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         pvTime.returnData()
 
         //檢查時間是否重複
-        if (SharedService.isAlarmClockTimeRepeat(this, mAlarmClock, false) &&
+        if (SharedService.isAlarmClockTimeRepeat(this, mAlarmClock, false) ||
                 SharedService.isAlarmClockTimeRepeat(this, mAlarmClock, true)) {
             SharedService.showTextToast(this, "錯誤，已有相同時間。")
             return

@@ -119,40 +119,20 @@ class SharedService {
         }
 
         fun isAlarmClockTimeRepeat(context: Context, alarmClock: AlarmClocks.AlarmClock, isLater: Boolean): Boolean {
+            val alarmCalendar = getAlarmCalendar(alarmClock)
             val alarmClocks = SharedService.getAlarmClocks(context, isLater)
-            for (otherAlarmClock in alarmClocks.alarmClockList)
-                if (alarmClock.hour == otherAlarmClock.hour &&
-                        alarmClock.minute == otherAlarmClock.minute &&
-                        alarmClock.acId != otherAlarmClock.acId) {
-                    //時間完全一樣則判斷天數是否有重複
-                    for (day in 0..6) {
-                        if (alarmClock.isRepeatArr[day] && otherAlarmClock.isRepeatArr[day])
-                            return true
-                    }
-
-                }
+            for (otherAlarmClock in alarmClocks.alarmClockList) {
+                val otherAlarmCalendar = getAlarmCalendar(otherAlarmClock)
+                if (alarmCalendar.timeInMillis / 1000 == otherAlarmCalendar.timeInMillis / 1000)
+                    return true
+            }
             return false
-        }
-
-        fun getAlarmClocks(context: Context, isLater: Boolean): AlarmClocks {
-            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
-            val key = if (isLater) "LaterAlarmClocksJsonStr" else "AlarmClocksJsonStr"
-            val alarmClocksJsonStr = spDatas.getString(key, "")
-            return if (alarmClocksJsonStr != "")
-                Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
-            else
-                AlarmClocks(ArrayList())
-        }
-
-        fun getAlarmClock(context: Context, acId: Int): AlarmClocks.AlarmClock? {
-            val alarmClocks = getAlarmClocks(context, acId > 1000)
-            return alarmClocks.alarmClockList.firstOrNull { it.acId == acId }
         }
 
         fun getAlarmCalendar(alarmClock: AlarmClocks.AlarmClock): Calendar {
             val nowCalendar = Calendar.getInstance()
             val alarmCalendar = Calendar.getInstance()
-            if (alarmClock.isRepeatArr.all { !it }) {
+            if (alarmClock.isRepeatArr.none { it }) {
                 //全部沒選，只響一次
                 alarmCalendar.set(Calendar.HOUR_OF_DAY, alarmClock.hour)
                 alarmCalendar.set(Calendar.MINUTE, alarmClock.minute)
@@ -194,6 +174,21 @@ class SharedService {
                 alarmCalendar.set(Calendar.SECOND, 0)
             }
             return alarmCalendar
+        }
+
+        fun getAlarmClocks(context: Context, isLater: Boolean): AlarmClocks {
+            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            val key = if (isLater) "LaterAlarmClocksJsonStr" else "AlarmClocksJsonStr"
+            val alarmClocksJsonStr = spDatas.getString(key, "")
+            return if (alarmClocksJsonStr != "")
+                Gson().fromJson(alarmClocksJsonStr, AlarmClocks::class.java)
+            else
+                AlarmClocks(ArrayList())
+        }
+
+        fun getAlarmClock(context: Context, acId: Int): AlarmClocks.AlarmClock? {
+            val alarmClocks = getAlarmClocks(context, acId > 1000)
+            return alarmClocks.alarmClockList.firstOrNull { it.acId == acId }
         }
 
         fun getTextsList(context: Context): TextsList? {
