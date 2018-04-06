@@ -37,6 +37,7 @@ class AlarmService : Service() {
     override fun onBind(intent: Intent): IBinder? {
         //測試到目前為止發現，僅第一次綁定會呼叫(從startService後)
         mTexts = Gson().fromJson(intent.getStringExtra("TextsJsonStr"), Texts::class.java)
+        SharedService.writeDebugLog(this, "AlarmService onBind acId = ${mTexts.acId}")
         if (mTexts.acId != 0) {
             mAlarmClock = SharedService.getAlarmClock(this, mTexts.acId)!!
 
