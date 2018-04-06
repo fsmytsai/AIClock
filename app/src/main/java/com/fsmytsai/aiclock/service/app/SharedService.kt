@@ -23,10 +23,7 @@ import android.util.Log
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
-import android.content.Context.POWER_SERVICE
-import android.os.PowerManager
-import android.view.Display
-import android.hardware.display.DisplayManager
+import com.fsmytsai.aiclock.BuildConfig
 
 /**
  * Created by user on 2018/2/17.
@@ -321,7 +318,9 @@ class SharedService {
         }
 
         fun writeDebugLog(context: Context, logContent: String) {
-            Log.d("AIClockDebugLog", logContent)
+            if (BuildConfig.DEBUG) {
+                Log.d("AIClockDebugLog", logContent)
+            }
             File("${context.filesDir}/logs/").mkdir()
             val nowCalendar = Calendar.getInstance()
             val logFileName = "${nowCalendar.get(Calendar.YEAR)}-${nowCalendar.get(Calendar.MONTH) + 1}-${nowCalendar.get(Calendar.DAY_OF_MONTH)}.txt"
