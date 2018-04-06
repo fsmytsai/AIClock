@@ -13,7 +13,7 @@
 | unfinished | 跟著音檔播放移動 RecyclerView |
 | unfinished | 考慮是否把倒數計時移到外層 |
 | unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
-
+| unfinished | 卡住原因可能為 appendText 太多次，造成頻繁開啟串流被 Andorid Block |
 
 # Version Features
 ## 第一版包含以下功能：
