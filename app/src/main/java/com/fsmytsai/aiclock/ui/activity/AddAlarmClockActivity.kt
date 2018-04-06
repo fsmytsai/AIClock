@@ -514,21 +514,27 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 val file = mFileChooser.chosenFiles[0]
                 val bytes = ByteArray(file.length().toInt())
                 val newFile = File("$filesDir/bgmSounds/${file.name}")
-                try {
-                    val buf = BufferedInputStream(FileInputStream(file))
-                    buf.read(bytes, 0, bytes.size)
-                    buf.close()
-                    val outputStream = FileOutputStream(newFile)
-                    outputStream.write(bytes)
-                    outputStream.close()
-                } catch (e: FileNotFoundException) {
-                    e.printStackTrace()
-                } catch (e: IOException) {
-                    e.printStackTrace()
+
+                if (newFile.exists())
+                    SharedService.showTextToast(this, "音檔已存在")
+                else {
+                    try {
+                        val buf = BufferedInputStream(FileInputStream(file))
+                        buf.read(bytes, 0, bytes.size)
+                        buf.close()
+                        val outputStream = FileOutputStream(newFile)
+                        outputStream.write(bytes)
+                        outputStream.close()
+                    } catch (e: FileNotFoundException) {
+                        e.printStackTrace()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+
+                    mBackgroundMusicList.add(file.name)
+                    rv_background_music.adapter.notifyItemInserted(mBackgroundMusicList.lastIndex)
                 }
 
-                mBackgroundMusicList.add(file.name)
-                rv_background_music.adapter.notifyItemInserted(mBackgroundMusicList.lastIndex)
             }
         }
     }
