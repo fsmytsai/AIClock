@@ -14,6 +14,7 @@
 | unfinished | 考慮是否把倒數計時移到外層 |
 | unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
 | unfinished | 卡住原因可能為 appendText 太多次，造成頻繁開啟串流被 Andorid Block |
+| unfinished | 換掉整體色調避免被嘴抄襲 |
 
 # Version Features
 ## 第一版包含以下功能：
