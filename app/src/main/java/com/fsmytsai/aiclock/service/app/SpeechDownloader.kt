@@ -395,10 +395,13 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     fun stopDownloadSound() {
-        SharedService.writeDebugLog(mContext, "SpeechDownloader stopDownloadSound")
         if (mIsStartedDownloadSound) {
+            SharedService.writeDebugLog(mContext, "SpeechDownloader stopDownloadSound mIsStartedDownloadSound")
             FileDownloader.getImpl().pause(mQueueTarget)
-        }
+            FileDownloader.getImpl().unBindService()
+        } else
+            SharedService.writeDebugLog(mContext, "SpeechDownloader stopDownloadSound")
+
         mIsStoppedDownloadSound = true
     }
 
@@ -554,6 +557,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             }
 
             SharedService.writeDebugLog(mContext, "SpeechDownloader download finish")
+            FileDownloader.getImpl().unBindService()
 
             setData()
             if (mDownloadSpeechActivity != null) {
