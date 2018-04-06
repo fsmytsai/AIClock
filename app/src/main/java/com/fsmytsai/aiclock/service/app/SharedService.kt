@@ -244,21 +244,21 @@ class SharedService {
             }
         }
 
-        fun isScreenOn(context: Context): Boolean {
-            if (android.os.Build.VERSION.SDK_INT >= 20) {
-                val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-                val displays = dm.displays
-                for (display in displays) {
-                    if (display.state == Display.STATE_ON || display.state == Display.STATE_UNKNOWN) {
-                        return true
-                    }
-                }
-                return false
-            }
-
-            val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
-            return powerManager.isScreenOn
-        }
+//        fun isScreenOn(context: Context): Boolean {
+//            if (android.os.Build.VERSION.SDK_INT >= 20) {
+//                val dm = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+//                val displays = dm.displays
+//                for (display in displays) {
+//                    if (display.state == Display.STATE_ON || display.state == Display.STATE_UNKNOWN) {
+//                        return true
+//                    }
+//                }
+//                return false
+//            }
+//
+//            val powerManager = context.getSystemService(POWER_SERVICE) as PowerManager
+//            return powerManager.isScreenOn
+//        }
 
         fun getVersionCode(context: Context): Int {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)

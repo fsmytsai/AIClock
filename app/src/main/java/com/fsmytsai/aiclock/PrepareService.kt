@@ -26,23 +26,6 @@ class PrepareService : Service() {
             if (alarmClock == null || !SharedService.checkAlarmClockIsOpen(this, acId))
                 stopSelf()
             else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !SharedService.isScreenOn(this)) {
-                    mIsStartedForeground = true
-                    SharedService.writeDebugLog(this, "PrepareService prepareAlarm in Android O and screenOff")
-                    val CHANNEL_ID = "prepareAlarm"
-                    val channel = NotificationChannel(CHANNEL_ID,
-                            "AI Clock NotificationChannel Name",
-                            NotificationManager.IMPORTANCE_DEFAULT)
-
-                    (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
-
-                    val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                            .setContentTitle("AI 智能鬧鐘")
-                            .setContentText("準備 AI 智能鬧鐘中...").build()
-
-                    startForeground(1, notification)
-                }
-
                 if (mWaitToPrepareAlarmClocks.alarmClockList.size == 0) {
                     mWaitToPrepareAlarmClocks.alarmClockList.add(alarmClock)
                     SharedService.writeDebugLog(this, "PrepareService startDownload")
