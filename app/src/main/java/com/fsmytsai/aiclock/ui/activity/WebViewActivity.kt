@@ -21,15 +21,26 @@ class WebViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= 27) {
             setShowWhenLocked(true)
-            setTurnScreenOn(true)
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_FULLSCREEN)
         } else {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
-        hideBottomUIMenu()
         setContentView(R.layout.activity_web_view)
 
         initViews()
+    }
+
+    override fun onStart() {
+        if (Build.VERSION.SDK_INT < 19) {
+            val v = this.window.decorView
+            v.systemUiVisibility = View.GONE
+        } else {
+            val decorView = window.decorView
+            val uiOptions = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+            decorView.systemUiVisibility = uiOptions
+        }
+        super.onStart()
     }
 
     private fun initViews() {
@@ -53,18 +64,6 @@ class WebViewActivity : AppCompatActivity() {
                 .createAgentWeb()
                 .ready()
                 .go(link)
-    }
-
-    private fun hideBottomUIMenu() {
-        if (Build.VERSION.SDK_INT < 19) {
-            val v = this.window.decorView
-            v.systemUiVisibility = View.GONE
-        } else {
-            val decorView = window.decorView
-            val uiOptions = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN)
-            decorView.systemUiVisibility = uiOptions
-        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {

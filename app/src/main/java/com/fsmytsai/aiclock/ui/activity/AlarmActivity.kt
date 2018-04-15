@@ -42,15 +42,13 @@ class AlarmActivity : DownloadSpeechActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        keepFullScreen = true
         if (Build.VERSION.SDK_INT >= 27) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_FULLSCREEN)
         } else {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
-        hideBottomUIMenu()
         setContentView(R.layout.activity_alarm)
         mSPDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
         val acId = intent.getIntExtra("ACId", 0)
@@ -65,16 +63,17 @@ class AlarmActivity : DownloadSpeechActivity() {
         }
     }
 
-    private fun hideBottomUIMenu() {
+    override fun onStart() {
         if (Build.VERSION.SDK_INT < 19) {
             val v = this.window.decorView
             v.systemUiVisibility = View.GONE
         } else {
             val decorView = window.decorView
             val uiOptions = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_FULLSCREEN)
+                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
             decorView.systemUiVisibility = uiOptions
         }
+        super.onStart()
     }
 
     override fun onNewIntent(intent: Intent?) {
