@@ -38,7 +38,7 @@ class AlarmService : Service() {
         //測試到目前為止發現，僅第一次綁定會呼叫(從startService後)
         mTexts = Gson().fromJson(intent.getStringExtra("TextsJsonStr"), Texts::class.java)
         SharedService.writeDebugLog(this, "AlarmService onBind acId = ${mTexts.acId}")
-        if (mTexts.acId != 0) {
+        if (mTexts.acId != 0 && mTexts.textList.isNotEmpty()) {
             mAlarmClock = SharedService.getAlarmClock(this, mTexts.acId)!!
 
             //排列音檔播放順序
@@ -63,10 +63,10 @@ class AlarmService : Service() {
                     mSoundList.add(0, "olddata")
                 }
             }
-        }
 
-        //最後加上 bye
-        mSoundList.add("bye")
+            //最後加上 bye
+            mSoundList.add("bye")
+        }
 
         startBGM()
 
@@ -192,7 +192,7 @@ class AlarmService : Service() {
         mMPBGM.start()
 
         //沒發生意外才開始播報新聞
-        if (mAlarmClock.speaker != -1) {
+        if (mSoundList.isNotEmpty()) {
             mHandler.postDelayed(mRunnable, 5000)
 
             //只響一次，關閉它
