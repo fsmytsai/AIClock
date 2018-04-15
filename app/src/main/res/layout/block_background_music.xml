@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="40dp">
+    android:layout_height="wrap_content">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="5dp"
         android:layout_marginStart="5dp"
         android:layout_marginTop="10dp"
@@ -14,12 +14,11 @@
         <TextView
             android:id="@+id/tv_background_music"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:background="@drawable/button_rounded"
             android:ellipsize="end"
-            android:gravity="center"
             android:maxLines="1"
-            android:text="預設"
+            android:padding="5dp"
             android:textColor="@android:color/black"
             android:textSize="16sp" />
 

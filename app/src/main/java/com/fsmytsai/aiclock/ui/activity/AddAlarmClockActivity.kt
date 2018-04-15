@@ -17,11 +17,8 @@ import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.view.LayoutInflater
+import android.view.*
 import com.fsmytsai.aiclock.R
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
 import android.widget.RadioButton
 import com.bigkoo.pickerview.OptionsPickerView
 import com.fsmytsai.aiclock.model.*
@@ -458,6 +455,16 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     } else
                         SharedService.showTextToast(this@AddAlarmClockActivity, "刪除失敗")
                 }
+            }
+
+            val layout = holder.tvBackgroundMusic.layout
+            holder.tvBackgroundMusic.gravity = Gravity.CENTER
+            if (layout != null) {
+                val lines = layout.lineCount
+                if (lines > 0)
+                    if (layout.getEllipsisCount(lines - 1) > 0) {
+                        holder.tvBackgroundMusic.gravity = Gravity.START
+                    }
             }
 
             holder.tvBackgroundMusic.setOnClickListener {
