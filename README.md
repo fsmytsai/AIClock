@@ -13,7 +13,8 @@
 | unfinished | 跟著音檔播放移動 RecyclerView |
 | unfinished | 考慮是否把倒數計時移到外層 |
 | unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
-
+| unfinished | 卡住原因可能為 appendText 太多次，造成頻繁開啟串流被 Andorid Block |
+| unfinished | 換掉整體色調避免被嘴抄襲 |
 
 # Version Features
 ## 第一版包含以下功能：
@@ -26,6 +27,10 @@
 7. 可查看正在播報新聞
 
 # Release Note
+## 1.9.1 versionCode = 30
+1. 修正手機系統大字體時，背景音樂選項跑版的問題
+2. 修正某些情況下響鈴時閃退的問題
+
 ## 1.9.0 versionCode = 29
 1. 新增背景音樂自訂的功能
 2. 修正響鈴時間有可能重複的問題
