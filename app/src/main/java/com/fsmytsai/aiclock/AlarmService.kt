@@ -231,7 +231,7 @@ class AlarmService : Service() {
 
     private fun resetAlarm() {
         val serviceIntent = Intent(this@AlarmService, ResetAlarmService::class.java)
-        serviceIntent.putExtra("IsFromReceiver", true)
+        serviceIntent.putExtra("isFromMain", true)
         serviceIntent.putExtra("IsCheckTime", true)
         startService(serviceIntent)
     }

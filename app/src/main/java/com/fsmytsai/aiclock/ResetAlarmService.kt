@@ -28,9 +28,27 @@ class ResetAlarmService : Service() {
         val isFromReceiver = intent?.getBooleanExtra("IsFromReceiver", false) ?: false
 
         if (isFromMain || isFromReceiver) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !isFromMain) {
+                mIsStartedForeground = true
+                SharedService.writeDebugLog(this, "ResetAlarmService resetAlarm in Android O")
+                val CHANNEL_ID = "resetAlarm"
+                val channel = NotificationChannel(CHANNEL_ID,
+                        "AI Clock NotificationChannel Name",
+                        NotificationManager.IMPORTANCE_DEFAULT)
+
+                (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
+
+                val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+                        .setContentTitle("AI 智能鬧鐘")
+                        .setContentText("重新設定 AI 智能鬧鐘中...").build()
+
+                startForeground(1, notification)
+            }
+
             val alarmClocks = SharedService.getAlarmClocks(this, false)
 
             val isCheckTime = intent?.getBooleanExtra("IsCheckTime", false) ?: false
+
             alarmClocks.alarmClockList.filter { it.isOpen && SharedService.checkNeedReset(this, it.acId, isCheckTime) }
                     .mapTo(mNeedResetAlarmClocks.alarmClockList) { it }
 
@@ -39,23 +57,6 @@ class ResetAlarmService : Service() {
             if (mNeedResetAlarmClocks.alarmClockList.size == 0)
                 stopSelf()
             else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !mIsStartedForeground && !isFromMain) {
-                    mIsStartedForeground = true
-                    SharedService.writeDebugLog(this, "ResetAlarmService resetAlarm in Android O")
-                    val CHANNEL_ID = "resetAlarm"
-                    val channel = NotificationChannel(CHANNEL_ID,
-                            "AI Clock NotificationChannel Name",
-                            NotificationManager.IMPORTANCE_DEFAULT)
-
-                    (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(channel)
-
-                    val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-                            .setContentTitle("AI 智能鬧鐘")
-                            .setContentText("重新設定 AI 智能鬧鐘中...").build()
-
-                    startForeground(1, notification)
-                }
-
                 startReset()
             }
         } else {
