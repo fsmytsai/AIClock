@@ -1,19 +1,13 @@
 package com.fsmytsai.aiclock
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.Service
-import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.IBinder
-import android.support.v4.app.NotificationCompat
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 
 class PrepareService : Service() {
-    private var mIsStartedForeground = false
     private val mWaitToPrepareAlarmClocks = AlarmClocks()
     override fun onBind(intent: Intent): IBinder? {
         return null
