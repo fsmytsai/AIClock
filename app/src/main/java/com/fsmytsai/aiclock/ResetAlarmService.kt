@@ -76,9 +76,9 @@ class ResetAlarmService : Service() {
                 } else
                     SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService cancel download isEmpty")
 
-                if (mNeedResetAlarmClocks.alarmClockList.isEmpty()) {
+                if (mNeedResetAlarmClocks.alarmClockList.isEmpty())
                     stopSelf()
-                } else
+                else
                     startReset()
             }
 
@@ -92,9 +92,9 @@ class ResetAlarmService : Service() {
                     SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService finished download mNeedResetCount = ${mNeedResetAlarmClocks.alarmClockList.size}")
                 } else
                     SharedService.writeDebugLog(this@ResetAlarmService, "ResetAlarmService finished download isEmpty")
-                if (mNeedResetAlarmClocks.alarmClockList.isEmpty()) {
+                if (mNeedResetAlarmClocks.alarmClockList.isEmpty())
                     stopSelf()
-                } else
+                else
                     startReset()
             }
         })
