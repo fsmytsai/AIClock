@@ -217,7 +217,7 @@ public class FileChooser {
                 if (docId.startsWith("raw:")) {
                     docId = docId.replaceFirst("raw:", "");
                     return createFileObjFromPath(docId, mustCanRead);
-                }else{
+                } else {
                     final Uri downloadUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.parseLong(docId));
                     String path = queryAbsolutePath(context, downloadUri);
                     return createFileObjFromPath(path, mustCanRead);
@@ -422,8 +422,7 @@ public class FileChooser {
 
                     chosenFiles = getFilesFromUris(activity, new Uri[]{oneUri}, mustCanRead);
                     return true;
-                }
-                else if (Build.VERSION.SDK_INT >= 16) {
+                } else if (Build.VERSION.SDK_INT >= 16) {
                     // 複選
                     final ClipData clipData = data.getClipData();
                     if (clipData != null) {

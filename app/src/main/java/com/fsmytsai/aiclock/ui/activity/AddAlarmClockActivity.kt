@@ -517,7 +517,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == FileChooser.ACTIVITY_FILE_CHOOSER) {
-            if (mFileChooser.onActivityResult(requestCode, resultCode, data)) {
+            if (mFileChooser.onActivityResult(requestCode, resultCode, data) && mFileChooser.chosenFiles.isNotEmpty()) {
                 val file = mFileChooser.chosenFiles[0]
                 val bytes = ByteArray(file.length().toInt())
                 val newFile = File("$filesDir/bgmSounds/${file.name}")
@@ -541,8 +541,8 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     mBackgroundMusicList.add(file.name)
                     rv_background_music.adapter.notifyItemInserted(mBackgroundMusicList.lastIndex)
                 }
-
-            }
+            } else
+                SharedService.showTextToast(this, "選擇檔案失敗")
         }
     }
 
