@@ -191,10 +191,7 @@ class AlarmService : Service() {
         mMPBGM.prepare()
         mMPBGM.start()
 
-        //沒發生意外才開始播報新聞
-        if (mSoundList.isNotEmpty()) {
-            mHandler.postDelayed(mRunnable, 5000)
-
+        if (mAlarmClock != null) {
             //只響一次，關閉它
             if (mAlarmClock!!.isRepeatArr.all { !it }) {
                 SharedService.writeDebugLog(this, "AlarmService only alarm once")
@@ -225,8 +222,12 @@ class AlarmService : Service() {
                 })
                 speechDownloader.setAlarmClock(mAlarmClock!!)
             }
-
         }
+
+        //沒發生意外才開始播報新聞
+        if (mSoundList.isNotEmpty())
+            mHandler.postDelayed(mRunnable, 5000)
+
     }
 
     private fun resetAlarm() {
