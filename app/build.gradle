@@ -11,8 +11,8 @@ android {
         applicationId "com.fsmytsai.aiclock"
         minSdkVersion 17
         targetSdkVersion 27
-        versionCode 31
-        versionName "1.9.2"
+        versionCode 32
+        versionName "1.9.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -30,7 +30,7 @@ dependencies {
             dirs 'libs'
         }
     }
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support:design:27.1.1'
     implementation 'com.android.support:support-v4:27.1.1'
