@@ -27,6 +27,7 @@ import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_alarm.*
 import kotlinx.android.synthetic.main.block_news.view.*
 import kotlinx.android.synthetic.main.footer.view.*
+import kotlinx.android.synthetic.main.header_alarm.view.*
 import okhttp3.*
 import java.io.File
 import java.io.IOException
@@ -50,6 +51,7 @@ class AlarmActivity : DownloadSpeechActivity() {
             window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
         setContentView(R.layout.activity_alarm)
+        keepFullScreen = true
         mSPDatas = getSharedPreferences("Datas", Context.MODE_PRIVATE)
         val acId = intent.getIntExtra("ACId", 0)
 
@@ -109,6 +111,7 @@ class AlarmActivity : DownloadSpeechActivity() {
             //初始化 mRealTexts
             mRealTexts = Texts()
             mRealTexts.acId = texts.acId
+            mRealTexts.time = texts.time
             mRealTexts.isOldData = texts.isOldData
 
             //過濾掉缺少音檔的 text
@@ -271,23 +274,29 @@ class AlarmActivity : DownloadSpeechActivity() {
     private inner class NewsAdapter : RecyclerView.Adapter<NewsAdapter.ViewHolder>() {
         val TYPE_FOOTER = 1
         val TYPE_NORMAL = 2
-        private var mFooterView: View? = null
+        val TYPE_HEADER = 3
 
         override fun getItemViewType(position: Int): Int {
+            if (position == 0 && !mRealTexts.time.isNullOrBlank())
+                return TYPE_HEADER
             return if (position == itemCount - 1) TYPE_FOOTER else TYPE_NORMAL
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val context = parent.context
-            if (viewType == TYPE_FOOTER) {
-                mFooterView = LayoutInflater.from(context).inflate(R.layout.footer, parent, false)
-                return ViewHolder(mFooterView!!)
+            val view = when (viewType) {
+                TYPE_HEADER -> LayoutInflater.from(parent.context).inflate(R.layout.header_alarm, parent, false)
+                TYPE_FOOTER -> LayoutInflater.from(parent.context).inflate(R.layout.footer, parent, false)
+                else -> LayoutInflater.from(parent.context).inflate(R.layout.block_news, parent, false)
             }
-            val view = LayoutInflater.from(context).inflate(R.layout.block_news, parent, false)
             return ViewHolder(view)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            if (getItemViewType(position) == TYPE_HEADER) {
+                holder.tvTime.text = "取得資料時間：${mRealTexts.time}"
+                return
+            }
+
             if (getItemViewType(position) == TYPE_FOOTER) {
                 if (mRealTexts.textList.size == 0)
                     holder.tvFooter.text = "發生意外，無新聞資料!\n建議刪除此鬧鐘資料並重新設置"
@@ -296,7 +305,7 @@ class AlarmActivity : DownloadSpeechActivity() {
                 return
             }
 
-            val text = mRealTexts.textList[position + mIgnoreCount]
+            val text = mRealTexts.textList[position + mIgnoreCount - if (mRealTexts.time.isNullOrBlank()) 0 else 1]
 
             if (text.description == "weather") {
                 holder.tvWeather.visibility = View.VISIBLE
@@ -337,10 +346,11 @@ class AlarmActivity : DownloadSpeechActivity() {
         }
 
         override fun getItemCount(): Int {
-            return mRealTexts.textList.size - mIgnoreCount + 1
+            return mRealTexts.textList.size - mIgnoreCount + if (mRealTexts.time.isNullOrBlank()) 1 else 2
         }
 
         inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val tvTime = itemView.tv_time
             val tvWeather = itemView.tv_weather
             val tvTitle = itemView.tv_title
             val tvDescription = itemView.tv_description

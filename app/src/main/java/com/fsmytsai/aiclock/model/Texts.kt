@@ -7,6 +7,7 @@ package com.fsmytsai.aiclock.model
 data class Texts(
         var acId: Int = 0,
         var isOldData: Boolean = true,
+        var time: String? = "",
         val textList: ArrayList<Text> = ArrayList()
 ) {
     data class Text(
