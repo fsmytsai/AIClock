@@ -9,7 +9,6 @@
 | unfinished | 改用空氣盒子抓空氣資料，缺點是沒 AQI 跟座標要算 |
 | unfinished | 清除伺服器舊資料 |
 | unfinished | 語音命令賴床或重播某段音檔等 |
-| unfinished | 跟著音檔播放移動 RecyclerView |
 | unfinished | 考慮是否把倒數計時移到外層 |
 | unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
 | unfinished | 卡住原因可能為伺服器端音檔遺失，應該設置 TimeOut |
