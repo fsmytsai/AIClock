@@ -8,13 +8,13 @@
 | unfinished | 考慮是否要將響鈴時的順序改成先開 service 再從 service 開 activity |
 | unfinished | 改用空氣盒子抓空氣資料，缺點是沒 AQI 跟座標要算 |
 | unfinished | 清除伺服器舊資料 |
-| unfinished | 響鈴前跳通知看取消響鈴 |
 | unfinished | 語音命令賴床或重播某段音檔等 |
-| unfinished | 跟著音檔播放移動 RecyclerView |
 | unfinished | 考慮是否把倒數計時移到外層 |
 | unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
-| unfinished | 卡住原因可能為 appendText 太多次，造成頻繁開啟串流被 Andorid Block |
-| unfinished | 換掉整體色調避免被嘴抄襲 |
+| unfinished | 卡住原因可能為伺服器端音檔遺失，應該設置 TimeOut |
+| unfinished | 美化版面 |
+| unfinished | 設置延遲鬧鐘後，出現通知可取消響鈴 |
+| unfinished | 狀態列顯示鬧鐘提示 |
 
 # Version Features
 ## 第一版包含以下功能：
@@ -27,6 +27,9 @@
 7. 可查看正在播報新聞
 
 # Release Note
+## 1.10.0 versionCode = 33
+1. 新增響鈴前通知，可提前取消響鈴
+
 ## 1.9.3 versionCode = 32
 1. 新增取得資料的時間提示
 2. 修正某些情況下選取背景音樂閃退的問題
