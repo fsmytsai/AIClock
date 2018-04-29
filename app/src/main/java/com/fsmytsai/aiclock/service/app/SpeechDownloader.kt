@@ -32,9 +32,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
-/**
- * Created by tsaiminyuan on 2018/2/18.
- */
 
 class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private var mContext = context
