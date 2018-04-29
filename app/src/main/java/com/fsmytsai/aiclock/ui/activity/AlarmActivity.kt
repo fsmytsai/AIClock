@@ -103,12 +103,15 @@ class AlarmActivity : DownloadSpeechActivity() {
     private fun setRealTexts(acId: Int) {
         //重疊呼叫的首個方法
         mNowACId = acId
+        SharedService.writeDebugLog(this, "AlarmActivity setRealTexts mNowACId = $mNowACId")
 
         //關閉通知
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.cancel(mNowACId)
 
-        SharedService.writeDebugLog(this, "AlarmActivity setRealTexts mNowACId = $mNowACId")
+        //計算響鈴次數
+        val alarmTimes = mSPDatas.getInt("AlarmTimes", 0)
+        mSPDatas.edit().putInt("AlarmTimes", alarmTimes + 1).apply()
 
         //初始化圖片快取
         initCache()

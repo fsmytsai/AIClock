@@ -35,6 +35,34 @@ class MainActivity : DownloadSpeechActivity() {
         val resetAlarmServiceIntent = Intent(this, ResetAlarmService::class.java)
         resetAlarmServiceIntent.putExtra("IsFromMain", true)
         startService(resetAlarmServiceIntent)
+
+        //評分提示
+        val alarmTimes = mSPDatas.getInt("AlarmTimes", 0)
+        if (alarmTimes >= 3) {
+            if (!mSPDatas.getBoolean("NeverStar", false)) {
+                AlertDialog.Builder(this@MainActivity)
+                        .setCancelable(false)
+                        .setTitle("使用者體驗調查")
+                        .setMessage("不知道您對免費的 AI 智能鬧鐘是否滿意呢？\n\n" +
+                                "希望您能前往 Play 商店給予 AI 智能鬧鐘 5 星評分，鼓勵快爆肝的作者\uD83D\uDE2D\n\n" +
+                                "也可以使用許願、問題回報等功能告知作者希望改進的部分唷！")
+                        .setNegativeButton("不再顯示", { _, _ ->
+                            mSPDatas.edit().putBoolean("NeverStar", true).apply()
+                        })
+                        .setNeutralButton("關閉", null)
+                        .setPositiveButton("前往 Play 商店評分", { _, _ ->
+                            mSPDatas.edit().putBoolean("NeverStar", true).apply()
+                            try {
+                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
+                            } catch (anfe: android.content.ActivityNotFoundException) {
+                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+                            }
+
+                        })
+                        .show()
+            }
+        }
+
     }
 
     private fun initViews() {
@@ -215,7 +243,7 @@ class MainActivity : DownloadSpeechActivity() {
                                         mSPDatas.edit().putInt("DoNotUpdateVersionCode", latestVersionCode).apply()
                                     })
                                     .setNeutralButton("稍後提醒", null)
-                                    .setPositiveButton("前往 Google Play 更新", { _, _ ->
+                                    .setPositiveButton("前往 Play 商店更新", { _, _ ->
                                         try {
                                             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
                                         } catch (anfe: android.content.ActivityNotFoundException) {
