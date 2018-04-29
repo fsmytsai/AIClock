@@ -36,6 +36,8 @@ open class DownloadSpeechActivity : AppCompatActivity() {
     }
 
     fun startDownload(alarmClock: AlarmClocks.AlarmClock, dfl: SpeechDownloader.DownloadFinishListener?) {
+        mIsStartedSetData = false
+        mIsAccidentCanceled = false
         outDownloadFinishListener = dfl
         mDownloadService?.startDownload(alarmClock, inDownloadFinishListener)
     }
@@ -68,11 +70,11 @@ open class DownloadSpeechActivity : AppCompatActivity() {
             //避免在 AddAlarmClockActivity 已完成後才按取消，且 destroy 頁面造成 service 自殺，再次 unbind 造成的 crash
             if (!mIsAccidentCanceled) {
                 dismissDownloadingDialog()
-                try {
-                    unbindService(mDownloadServiceConnection)
-                } catch (e: Exception) {
-                    SharedService.writeDebugLog(this@DownloadSpeechActivity, "DownloadSpeechActivity allFinished unbindService failed")
-                }
+            }
+            try {
+                unbindService(mDownloadServiceConnection)
+            } catch (e: Exception) {
+                SharedService.writeDebugLog(this@DownloadSpeechActivity, "DownloadSpeechActivity allFinished unbindService failed")
             }
             mDownloadService = null
             outDownloadFinishListener?.allFinished()
