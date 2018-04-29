@@ -311,7 +311,7 @@ class AlarmActivity : DownloadSpeechActivity() {
                 if (mRealTexts.textList.size == 0)
                     holder.tvFooter.text = "發生意外，無新聞資料!\n建議刪除此鬧鐘資料並重新設置"
                 else
-                    holder.tvFooter.text = "到底囉!"
+                    holder.tvFooter.text = "祝您有美好的一天！"
                 return
             }
 
