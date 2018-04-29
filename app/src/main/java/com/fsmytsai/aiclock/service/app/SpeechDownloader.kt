@@ -91,7 +91,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         } else {
             SharedService.writeDebugLog(mContext, "SpeechDownloader overtime background and reset alarm time")
             //mRunnable 時間可能已錯亂
-            getAlarmTime()
+            setAlarmTime()
             backgroundCancelDownloadSound()
         }
     }
@@ -101,11 +101,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         mAlarmClock = alarmClock
 
-        //倒數計時 60 秒
-        mHandler.postDelayed(mRunnable, 60000)
-
         if (mDownloadSpeechActivity != null) {
             //前景
+
             val spDatas = mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             mIsMute = spDatas.getBoolean("IsMute", false)
             //延遲也靜音
@@ -121,47 +119,33 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                             if (dialogView.cb_never_prompt.isChecked) {
                                 spDatas.edit().putBoolean("NeverPrompt", true).apply()
                             }
-                            getAlarmTime()
-                            //沒網路取消下載
-                            if (SharedService.checkNetWork(mContext, true))
-                                checkLatestUrl()
-                            else
-                                foregroundCancelDownloadSound()
+                            setAlarmTime()
+                            checkLatestUrl()
                         })
                         .setNegativeButton("取消", { _, _ ->
                             foregroundCancelDownloadSound()
                         })
                         .show()
             } else {
-                getAlarmTime()
-                //沒網路取消下載
-                if (SharedService.checkNetWork(mContext, true))
-                    checkLatestUrl()
-                else
-                    foregroundCancelDownloadSound()
+                setAlarmTime()
+                checkLatestUrl()
             }
 
         } else {
             //背景
-            getAlarmTime()
+            setAlarmTime()
 
             //40分鐘內響鈴，且沒開天氣及新聞則直接設置鬧鐘
             if (mAlarmTimeList[0] == 0L && mAlarmTimeList[1] == 0L && mAlarmTimeList[2] <= 40 &&
                     mAlarmClock.latitude == 1000.0 && mAlarmClock.category == -1)
                 setAlarm(false)
-            else {
-                //沒網路取消下載
-                if (SharedService.checkNetWork(mContext, false))
-                    checkLatestUrl()
-                else
-                    backgroundCancelDownloadSound()
-            }
-
+            else
+                checkLatestUrl()
 
         }
     }
 
-    private fun getAlarmTime() {
+    private fun setAlarmTime() {
         val nowCalendar = Calendar.getInstance()
         mAlarmCalendar = SharedService.getAlarmCalendar(mAlarmClock, false)
 
@@ -197,6 +181,10 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private fun checkLatestUrl() {
         SharedService.writeDebugLog(mContext, "SpeechDownloader checkLatestUrl")
+
+        //倒數計時 60 秒
+        mHandler.postDelayed(mRunnable, 60000)
+
         val request = Request.Builder()
                 .url("${SharedService.getLatestUrl(mContext)}api/getLatestUrl")
                 .build()
@@ -637,8 +625,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         }
         alarmIntent.putExtra("ACId", mAlarmClock.acId)
 
-        //設置前先更新資料(不是放棄)
-        if (!isAbandon)
+        //設置前先更新資料(不是放棄及有取得資料)
+        if (!isAbandon && mTexts != null)
             SharedService.deleteOldTextsData(mContext, mAlarmClock.acId, mTexts, true)
 
         val pi = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT)
@@ -676,6 +664,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             channel.lightColor = Color.BLUE
             channel.enableVibration(true)
             channel.vibrationPattern = longArrayOf(0)
+            channel.importance = NotificationManager.IMPORTANCE_LOW
 
             notificationManager.createNotificationChannel(channel)
             NotificationCompat.Builder(mContext, "AlarmNotification")
@@ -687,6 +676,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         builder.setOngoing(true)
         builder.setSmallIcon(R.drawable.icon)
         builder.setVibrate(longArrayOf(0))
+        builder.setDefaults(0)
+        builder.setSound(null)
         val notification = builder.build()
         notificationManager.notify(mAlarmClock.acId, notification)
     }
