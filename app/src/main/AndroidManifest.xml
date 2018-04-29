@@ -86,10 +86,18 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
-
         <activity
             android:name=".ui.activity.WebViewActivity"
             android:screenOrientation="portrait" />
+
+        <receiver
+            android:name=".CancelReceiver"
+            android:enabled="true"
+            android:exported="false" />
+        <receiver
+            android:name=".CloseReceiver"
+            android:enabled="true"
+            android:exported="false"></receiver>
     </application>
 
 </manifest>

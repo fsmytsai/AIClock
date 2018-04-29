@@ -3,6 +3,7 @@ package com.fsmytsai.aiclock.service.app
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlarmManager
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -61,6 +62,8 @@ class SharedService {
             if (pi == null) {
                 writeDebugLog(context, "SharedService cancelAlarm AlarmReceiver pi dose not exist")
             } else {
+                val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                manager.cancel(acId)
                 writeDebugLog(context, "SharedService cancelAlarm AlarmReceiver success")
                 am.cancel(pi)
                 pi.cancel()
@@ -89,7 +92,7 @@ class SharedService {
             if (isCheckTime && texts.isOldData) {
                 val nowCalendar = Calendar.getInstance()
                 val alarmClock = getAlarmClock(context, acId) ?: return false
-                val alarmCalendar = getAlarmCalendar(alarmClock)
+                val alarmCalendar = getAlarmCalendar(alarmClock, false)
                 val differenceMinute = (alarmCalendar.timeInMillis - nowCalendar.timeInMillis) / (1000 * 60)
                 return differenceMinute in 0..39 || (prepareReceiverPI == null && alarmReceiverPI == null)
             }
@@ -116,17 +119,17 @@ class SharedService {
         }
 
         fun isAlarmClockTimeRepeat(context: Context, alarmClock: AlarmClocks.AlarmClock, isLater: Boolean): Boolean {
-            val alarmCalendar = getAlarmCalendar(alarmClock)
+            val alarmCalendar = getAlarmCalendar(alarmClock, false)
             val alarmClocks = SharedService.getAlarmClocks(context, isLater)
-            for (otherAlarmClock in alarmClocks.alarmClockList) {
-                val otherAlarmCalendar = getAlarmCalendar(otherAlarmClock)
+            for (otherAlarmClock in alarmClocks.alarmClockList.filter { it.acId != alarmClock.acId }) {
+                val otherAlarmCalendar = getAlarmCalendar(otherAlarmClock, false)
                 if (alarmCalendar.timeInMillis / 1000 == otherAlarmCalendar.timeInMillis / 1000)
                     return true
             }
             return false
         }
 
-        fun getAlarmCalendar(alarmClock: AlarmClocks.AlarmClock): Calendar {
+        fun getAlarmCalendar(alarmClock: AlarmClocks.AlarmClock, isCancel: Boolean): Calendar {
             val nowCalendar = Calendar.getInstance()
             val alarmCalendar = Calendar.getInstance()
             if (alarmClock.isRepeatArr.none { it }) {
@@ -140,6 +143,7 @@ class SharedService {
                 }
             } else {
                 var addDate = 0
+                var isIgnore = isCancel
 
                 //排列7天內的DAY_OF_WEEK，由於 SUNDAY = 1 ，所以要減回來。
                 val days = ArrayList<Int>()
@@ -150,19 +154,40 @@ class SharedService {
                     if (alarmClock.isRepeatArr[i]) {
                         //當天有圈，判斷設置的時間是否大於現在時間
                         if (i == nowCalendar.get(Calendar.DAY_OF_WEEK) - 1) {
-                            if (alarmClock.hour > nowCalendar.get(Calendar.HOUR_OF_DAY))
-                                break
-                            else if (alarmClock.hour == nowCalendar.get(Calendar.HOUR_OF_DAY) &&
-                                    alarmClock.minute > nowCalendar.get(Calendar.MINUTE))
-                                break
-                            else
-                            //當天有圈但設置時間小於現在時間，等於下星期的今天
+                            if (alarmClock.hour > nowCalendar.get(Calendar.HOUR_OF_DAY)) {
+                                //忽略第一次
+                                if (isIgnore) {
+                                    isIgnore = false
+                                    addDate++
+                                } else
+                                    break
+                            } else if (alarmClock.hour == nowCalendar.get(Calendar.HOUR_OF_DAY) &&
+                                    alarmClock.minute > nowCalendar.get(Calendar.MINUTE)) {
+                                //忽略第一次
+                                if (isIgnore) {
+                                    isIgnore = false
+                                    addDate++
+                                } else
+                                    break
+                            } else {
+                                //當天有圈但設置時間小於現在時間，等於下星期的今天
                                 addDate++
-                        } else
-                        //不是當天代表可結束計算
-                            break
-                    } else
+                            }
+
+                        } else {
+                            //忽略第一次
+                            if (isIgnore) {
+                                isIgnore = false
+                                addDate++
+                            } else {
+                                //不是當天代表可結束計算
+                                break
+                            }
+                        }
+                    } else {
+                        //沒圈，繼續加
                         addDate++
+                    }
                 }
 
                 alarmCalendar.add(Calendar.DATE, addDate)

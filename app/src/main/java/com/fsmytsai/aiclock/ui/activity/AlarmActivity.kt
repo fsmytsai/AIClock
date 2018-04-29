@@ -1,5 +1,6 @@
 package com.fsmytsai.aiclock.ui.activity
 
+import android.app.NotificationManager
 import android.content.*
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -100,7 +101,13 @@ class AlarmActivity : DownloadSpeechActivity() {
     }
 
     private fun setRealTexts(acId: Int) {
+        //重疊呼叫的首個方法
         mNowACId = acId
+
+        //關閉通知
+        val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        manager.cancel(mNowACId)
+
         SharedService.writeDebugLog(this, "AlarmActivity setRealTexts mNowACId = $mNowACId")
 
         //初始化圖片快取

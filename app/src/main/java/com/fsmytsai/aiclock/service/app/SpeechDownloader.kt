@@ -1,10 +1,10 @@
 package com.fsmytsai.aiclock.service.app
 
 import android.annotation.TargetApi
-import android.app.AlarmManager
-import android.app.PendingIntent
+import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
@@ -12,10 +12,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.support.annotation.RequiresApi
+import android.support.v4.app.NotificationCompat
 import android.support.v7.app.AlertDialog
-import com.fsmytsai.aiclock.AlarmReceiver
-import com.fsmytsai.aiclock.PrepareReceiver
-import com.fsmytsai.aiclock.R
+import android.widget.RemoteViews
+import com.fsmytsai.aiclock.*
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.model.PromptData
 import com.fsmytsai.aiclock.model.Texts
@@ -152,7 +152,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private fun getAlarmTime(): Boolean {
         val nowCalendar = Calendar.getInstance()
-        mAlarmCalendar = SharedService.getAlarmCalendar(mAlarmClock)
+        mAlarmCalendar = SharedService.getAlarmCalendar(mAlarmClock, false)
 
         var differenceSecond = (mAlarmCalendar.timeInMillis - nowCalendar.timeInMillis) / 1000
 
@@ -625,6 +625,10 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             //40分鐘內成功設置則轉為新資料
             if (!isAbandon)
                 mTexts?.isOldData = false
+
+            //顯示通知
+            showAlarmNotification()
+
             Intent(mContext, AlarmReceiver::class.java)
         }
         alarmIntent.putExtra("ACId", mAlarmClock.acId)
@@ -640,6 +644,47 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
             else -> am.set(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
         }
+    }
+
+    private fun showAlarmNotification() {
+        SharedService.writeDebugLog(mContext, "SpeechDownloader showAlarmNotification")
+        val remoteViews = RemoteViews(mContext.packageName, R.layout.block_alarm_notification)
+
+        val dateFormatter = SimpleDateFormat("HH:mm", Locale.TAIWAN)
+        remoteViews.setTextViewText(R.id.tv_content, "鬧鐘將在 ${dateFormatter.format(mAlarmCalendar.time)} 響鈴")
+
+        val closeIntent = Intent(mContext, CloseReceiver::class.java)
+        closeIntent.putExtra("ACId", mAlarmClock.acId)
+        val closePendingIntent = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, closeIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        remoteViews.setOnClickPendingIntent(R.id.tv_close, closePendingIntent)
+
+        val cancelIntent = Intent(mContext, CancelReceiver::class.java)
+        cancelIntent.putExtra("ACId", mAlarmClock.acId)
+        val cancelPendingIntent = PendingIntent.getBroadcast(mContext, mAlarmClock.acId, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        remoteViews.setOnClickPendingIntent(R.id.tv_cancel, cancelPendingIntent)
+
+        val notificationManager = mContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        val builder = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = NotificationChannel("AlarmNotification",
+                    "AI Clock", NotificationManager.IMPORTANCE_DEFAULT)
+            channel.enableLights(true)
+            channel.lightColor = Color.BLUE
+            channel.enableVibration(true)
+            channel.vibrationPattern = longArrayOf(0)
+
+            notificationManager.createNotificationChannel(channel)
+            NotificationCompat.Builder(mContext, "AlarmNotification")
+        } else {
+            NotificationCompat.Builder(mContext)
+        }
+
+        builder.setContent(remoteViews)
+        builder.setOngoing(true)
+        builder.setSmallIcon(R.drawable.icon)
+        builder.setVibrate(longArrayOf(0))
+        val notification = builder.build()
+        notificationManager.notify(mAlarmClock.acId, notification)
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
