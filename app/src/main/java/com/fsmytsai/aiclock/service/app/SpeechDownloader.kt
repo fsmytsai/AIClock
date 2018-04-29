@@ -121,9 +121,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                             if (dialogView.cb_never_prompt.isChecked) {
                                 spDatas.edit().putBoolean("NeverPrompt", true).apply()
                             }
-
-                            //沒網路或離響鈴時間小於30秒取消下載
-                            if (getAlarmTime())
+                            getAlarmTime()
+                            //沒網路取消下載
+                            if (SharedService.checkNetWork(mContext, true))
                                 checkLatestUrl()
                             else
                                 foregroundCancelDownloadSound()
@@ -133,8 +133,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                         })
                         .show()
             } else {
-                //沒網路或離響鈴時間小於30秒取消下載
-                if (getAlarmTime())
+                getAlarmTime()
+                //沒網路取消下載
+                if (SharedService.checkNetWork(mContext, true))
                     checkLatestUrl()
                 else
                     foregroundCancelDownloadSound()
@@ -142,15 +143,25 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
         } else {
             //背景
-            //沒網路或離響鈴時間小於30秒取消下載
-            if (getAlarmTime())
-                checkLatestUrl()
-            else
-                backgroundCancelDownloadSound()
+            getAlarmTime()
+
+            //40分鐘內響鈴，且沒開天氣及新聞則直接設置鬧鐘
+            if (mAlarmTimeList[0] == 0L && mAlarmTimeList[1] == 0L && mAlarmTimeList[2] <= 40 &&
+                    mAlarmClock.latitude == 1000.0 && mAlarmClock.category == -1)
+                setAlarm(false)
+            else {
+                //沒網路取消下載
+                if (SharedService.checkNetWork(mContext, false))
+                    checkLatestUrl()
+                else
+                    backgroundCancelDownloadSound()
+            }
+
+
         }
     }
 
-    private fun getAlarmTime(): Boolean {
+    private fun getAlarmTime() {
         val nowCalendar = Calendar.getInstance()
         mAlarmCalendar = SharedService.getAlarmCalendar(mAlarmClock, false)
 
@@ -182,12 +193,6 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             mAlarmTimeList.add(0)
 
         SharedService.writeDebugLog(mContext, "SpeechDownloader mAlarmTimeList = ${mAlarmTimeList[0]} ${mAlarmTimeList[1]} ${mAlarmTimeList[2]} ${mAlarmTimeList[3]}")
-
-        //檢查網路，前景執行就顯示無網路提示
-        if (!SharedService.checkNetWork(mContext, mDownloadSpeechActivity != null))
-            return false
-
-        return true
     }
 
     private fun checkLatestUrl() {
@@ -614,9 +619,8 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         //設置前先嘗試取消，避免重複設置
         SharedService.cancelAlarm(mContext, mAlarmClock.acId)
 
-        //超過 40 分鐘才響鈴且需要更新資料及音檔(天氣或新聞)，則設置一個提前 40 分鐘的任務重新抓取新聞天氣
-        val alarmIntent = if ((mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 40) &&
-                (mAlarmClock.latitude != 1000.0 || mAlarmClock.category != -1)) {
+        //超過 40 分鐘才響鈴，則設置一個提前 40 分鐘的任務重新抓取新聞天氣
+        val alarmIntent = if (mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 40) {
             SharedService.writeDebugLog(mContext, "SpeechDownloader setAlarm success ${mAlarmTimeList[0]}d ${mAlarmTimeList[1]}h ${mAlarmTimeList[2]}m later alarm")
             mAlarmCalendar.add(Calendar.MINUTE, -40)
             Intent(mContext, PrepareReceiver::class.java)
