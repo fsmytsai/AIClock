@@ -18,6 +18,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
             android:name=".ui.activity.MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -29,6 +30,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.activity.AddAlarmClockActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -57,6 +59,7 @@
             android:name=".PrepareService"
             android:enabled="true"
             android:exported="false" />
+
         <service
             android:name=".StartDownloadService"
             android:enabled="true"
@@ -86,6 +89,7 @@
             android:exported="false"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
+
         <activity
             android:name=".ui.activity.WebViewActivity"
             android:screenOrientation="portrait" />
@@ -94,10 +98,16 @@
             android:name=".CancelReceiver"
             android:enabled="true"
             android:exported="false" />
+
         <receiver
             android:name=".CloseReceiver"
             android:enabled="true"
-            android:exported="false"></receiver>
+            android:exported="false" />
+
+        <service
+            android:name=".CancelService"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>
