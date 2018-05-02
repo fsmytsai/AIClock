@@ -3,7 +3,6 @@ package com.fsmytsai.aiclock
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import com.fsmytsai.aiclock.service.app.SharedService
 
 class PrepareReceiver : BroadcastReceiver() {
