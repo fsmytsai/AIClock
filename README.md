@@ -14,7 +14,7 @@
 | unfinished | 卡住原因可能為伺服器端音檔遺失，應該設置 TimeOut |
 | unfinished | 美化版面 |
 | unfinished | 設置延遲鬧鐘後，出現通知可取消響鈴 |
-| unfinished | 狀態列顯示鬧鐘提示 |
+| unfinished | 許願及問題回報，在確認成功前不要關閉視窗 |
 
 # Version Features
 ## 第一版包含以下功能：
