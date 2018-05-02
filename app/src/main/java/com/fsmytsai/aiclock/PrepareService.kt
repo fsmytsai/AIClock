@@ -15,11 +15,12 @@ class PrepareService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val acId = intent?.getIntExtra("ACId", 0)
-        if (acId ?: -1 != 0) {
-            val alarmClock = SharedService.getAlarmClock(this, acId!!)
-            if (alarmClock == null || !SharedService.checkAlarmClockIsOpen(this, acId))
+        if (acId != null && acId != 0) {
+            val alarmClock = SharedService.getAlarmClock(this, acId)
+            if (alarmClock == null || !SharedService.checkAlarmClockIsOpen(this, acId)) {
+                SharedService.writeDebugLog(this, "PrepareService alarmClock is null or not open")
                 stopSelf()
-            else {
+            } else {
                 if (mWaitToPrepareAlarmClocks.alarmClockList.size == 0) {
                     mWaitToPrepareAlarmClocks.alarmClockList.add(alarmClock)
                     SharedService.writeDebugLog(this, "PrepareService startDownload")
@@ -29,7 +30,9 @@ class PrepareService : Service() {
                     SharedService.writeDebugLog(this, "PrepareService add to wait No. ${mWaitToPrepareAlarmClocks.alarmClockList.size}")
                 }
             }
-
+        } else {
+            SharedService.writeDebugLog(this, "PrepareService acId is null or 0")
+            stopSelf()
         }
         return super.onStartCommand(intent, flags, startId)
     }
