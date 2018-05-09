@@ -1,12 +1,11 @@
 package com.fsmytsai.aiclock.service.app
 
 import android.annotation.SuppressLint
-import android.app.Activity
-import android.app.AlarmManager
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
@@ -20,15 +19,15 @@ import com.google.gson.Gson
 import android.widget.Toast
 import android.net.ConnectivityManager
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 import com.fsmytsai.aiclock.BuildConfig
+import com.fsmytsai.aiclock.R
 
-/**
- * Created by user on 2018/2/17.
- */
+
 class SharedService {
     companion object {
         var isNewsPlaying = false
@@ -395,6 +394,30 @@ class SharedService {
                     .setMessage(errorMessage)
                     .setPositiveButton("知道了", null)
                     .show()
+        }
+
+        fun getActionBarSize(context: Context): Int {
+            val styledAttributes = context.theme.obtainStyledAttributes(intArrayOf(android.R.attr.actionBarSize))
+            val actionBarSize = styledAttributes.getDimension(0, 0f).toInt()
+            styledAttributes.recycle()
+            return actionBarSize
+        }
+
+        private var mLoadingDialog: Dialog? = null
+
+        fun showLoadingDialog(activity: AppCompatActivity) {
+            val dialogView = activity.layoutInflater.inflate(R.layout.dialog_loading, null)
+            mLoadingDialog = android.app.AlertDialog.Builder(activity)
+                    .setView(dialogView)
+                    .setCancelable(false)
+                    .create()
+            mLoadingDialog!!.window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            mLoadingDialog!!.show()
+        }
+
+        fun hideLoadingDialog() {
+            mLoadingDialog?.dismiss()
+            mLoadingDialog = null
         }
     }
 }
