@@ -10,11 +10,12 @@
 | unfinished | 清除伺服器舊資料 |
 | unfinished | 語音命令賴床或重播某段音檔等 |
 | unfinished | 考慮是否把倒數計時移到外層 |
-| unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
 | unfinished | 卡住原因可能為伺服器端音檔遺失，應該設置 TimeOut |
 | unfinished | 美化版面 |
-| unfinished | 設置延遲鬧鐘後，出現通知可取消響鈴 |
-| unfinished | 狀態列顯示鬧鐘提示 |
+| unfinished | 設定可永固通知、首頁新聞類別 |
+| unfinished | 許願及問題回報，在確認成功前不要關閉視窗 |
+| unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
+| unfinished | 自選天氣預報位置 |
 
 # Version Features
 ## 第一版包含以下功能：
@@ -27,9 +28,12 @@
 7. 可查看正在播報新聞
 
 # Release Note
+## 1.10.1 versionCode = 34
+1. 提高穩定性
+
 ## 1.10.0 versionCode = 33
 1. 新增響鈴前通知，可提前取消響鈴
-2. 修正主頁面有時打開鬧鐘沒有反應的問題
+2. 修正於主頁面開啟鬧鐘時，有時會沒有反應的問題
 
 ## 1.9.3 versionCode = 32
 1. 新增取得資料的時間提示
