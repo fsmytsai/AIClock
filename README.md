@@ -10,11 +10,12 @@
 | unfinished | 清除伺服器舊資料 |
 | unfinished | 語音命令賴床或重播某段音檔等 |
 | unfinished | 考慮是否把倒數計時移到外層 |
-| unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
 | unfinished | 卡住原因可能為伺服器端音檔遺失，應該設置 TimeOut |
 | unfinished | 美化版面 |
-| unfinished | 設置延遲鬧鐘後，出現通知可取消響鈴 |
+| unfinished | 設定可永固通知、首頁新聞類別 |
 | unfinished | 許願及問題回報，在確認成功前不要關閉視窗 |
+| unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
+| unfinished | 自選天氣預報位置 |
 
 # Version Features
 ## 第一版包含以下功能：
