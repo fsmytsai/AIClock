@@ -13,8 +13,8 @@
         <item name="tabMaxWidth">700dp</item>
         <item name="tabSelectedTextColor">#e5004f</item>
         <item name="tabTextColor">#FFFFFF</item>
-        <item name="tabIndicatorColor">@color/colorMainYellow</item>
-        <item name="tabIndicatorHeight">4dp</item>
+        <item name="tabIndicatorColor">@android:color/white</item>
+        <item name="tabIndicatorHeight">3dp</item>
         <item name="tabPaddingStart">12dp</item>
         <item name="tabPaddingEnd">12dp</item>
         <item name="tabBackground">?attr/selectableItemBackground</item>
