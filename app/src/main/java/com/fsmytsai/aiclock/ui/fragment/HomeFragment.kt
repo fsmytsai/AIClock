@@ -249,6 +249,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun getOnlyTextData() {
+        mRootView.srl_home.isRefreshing = true
         val request = Request.Builder()
                 .url("${SharedService.getLatestUrl(mMainActivity)}api/getOnlyTextData?version_code=${SharedService.getVersionCode(mMainActivity)}&" +
                         "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}&category=${mAlarmClock.category}")
