@@ -62,16 +62,6 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         getAlarmClock()
         setBackgroundMusicList()
         initViews()
-
-        if (spDatas.getBoolean("PromptMute", true)) {
-            AlertDialog.Builder(this)
-                    .setTitle("提示")
-                    .setMessage("可在主頁面右上角勾選設定鬧鐘時靜音，即可靜音試聽及提示。")
-                    .setPositiveButton("知道了", { _, _ ->
-                        spDatas.edit().putBoolean("PromptMute", false).apply()
-                    })
-                    .show()
-        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
