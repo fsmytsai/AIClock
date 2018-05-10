@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.support.v4.app.NotificationCompat
-import android.view.View
 import android.widget.RemoteViews
 import com.fsmytsai.aiclock.CloseReceiver
 import com.fsmytsai.aiclock.R
@@ -15,16 +14,13 @@ import com.fsmytsai.aiclock.R
 class FixedNotificationManagement {
     companion object {
         private fun show(context: Context) {
-            val remoteViews = RemoteViews(context.packageName, R.layout.block_alarm_notification)
-
-            remoteViews.setTextViewText(R.id.tv_content, "已開啟鬧鐘")
+            val remoteViews = RemoteViews(context.packageName, R.layout.block_fixed_notification)
 
             val closeIntent = Intent(context, CloseReceiver::class.java)
             closeIntent.putExtra("ACId", 999)
             val closePendingIntent = PendingIntent.getBroadcast(context, 999, closeIntent, PendingIntent.FLAG_UPDATE_CURRENT)
             remoteViews.setOnClickPendingIntent(R.id.tv_close, closePendingIntent)
 
-            remoteViews.setViewVisibility(R.id.tv_cancel, View.GONE)
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             val builder = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
