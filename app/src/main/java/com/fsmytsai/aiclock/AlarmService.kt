@@ -13,6 +13,7 @@ import android.os.Handler
 import android.os.IBinder
 import com.fsmytsai.aiclock.model.AlarmClocks
 import com.fsmytsai.aiclock.model.Texts
+import com.fsmytsai.aiclock.service.app.FixedNotificationManagement
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.activity.AlarmActivity
@@ -198,6 +199,9 @@ class AlarmService : Service() {
                 val alarmClocks = SharedService.getAlarmClocks(this, mAlarmClock!!.acId > 1000)
                 alarmClocks.alarmClockList.find { it.acId == mAlarmClock!!.acId }!!.isOpen = false
                 SharedService.updateAlarmClocks(this, alarmClocks, mAlarmClock!!.acId > 1000)
+
+                SharedService.writeDebugLog(this, "AlarmService check Fixed")
+                FixedNotificationManagement.check(this)
 
                 SharedService.writeDebugLog(this@AlarmService, "AlarmService start reset within 40m old data alarm")
                 resetAlarm()

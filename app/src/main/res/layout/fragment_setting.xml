@@ -88,6 +88,44 @@
             android:background="@color/colorBlue" />
 
         <LinearLayout
+            android:id="@+id/ll_fixed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="14dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:text="固定鬧鐘圖示"
+                android:textColor="@color/colorBlue"
+                android:textSize="20sp" />
+
+            <ImageView
+                android:id="@+id/iv_fixed_info"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/info" />
+
+            <android.support.v7.widget.SwitchCompat
+                android:id="@+id/sc_fixed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:clickable="false" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/colorBlue" />
+
+        <LinearLayout
             android:id="@+id/ll_error_report"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

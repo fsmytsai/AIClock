@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.fsmytsai.aiclock.R
+import com.fsmytsai.aiclock.service.app.FixedNotificationManagement
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.ui.activity.MainActivity
 import kotlinx.android.synthetic.main.dialog_wish.view.*
@@ -60,12 +61,29 @@ class SettingFragment : Fragment() {
             AlertDialog.Builder(mMainActivity)
                     .setCancelable(false)
                     .setTitle("預先取得資料及音檔")
-                    .setMessage("在設置鬧鐘時，預先取得天氣、空氣品質、最新頭條新聞及音檔。\n\n專門用於響鈴前無法正常取得最新資料時顯示，適合睡覺習慣關閉網路的人使用。")
+                    .setMessage("在設置鬧鐘時，不管距離響鈴多久，都預先取得天氣、空氣品質、最新頭條新聞及音檔。\n\n專門用於響鈴前無法正常取得最新資料時顯示，適合睡覺習慣關閉網路的人使用。")
                     .setPositiveButton("知道了", null)
                     .show()
         }
         val isAdvance = mMainActivity.spDatas.getBoolean("IsAdvance", false)
         mRootView.sc_advance.isChecked = isAdvance
+
+        mRootView.ll_fixed.setOnClickListener {
+            val isFixed = mMainActivity.spDatas.getBoolean("IsFixed", false)
+            mRootView.sc_fixed.isChecked = !isFixed
+            mMainActivity.spDatas.edit().putBoolean("IsFixed", !isFixed).apply()
+            FixedNotificationManagement.check(mMainActivity)
+        }
+        mRootView.iv_fixed_info.setOnClickListener {
+            AlertDialog.Builder(mMainActivity)
+                    .setCancelable(false)
+                    .setTitle("固定鬧鐘圖示")
+                    .setMessage("當有設置鬧鐘時，永久固定一個通知並顯示鬧鐘圖示。")
+                    .setPositiveButton("知道了", null)
+                    .show()
+        }
+        val isFixed = mMainActivity.spDatas.getBoolean("IsFixed", false)
+        mRootView.sc_fixed.isChecked = isFixed
 
         mRootView.ll_error_report.setOnClickListener {
             if (SharedService.checkNetWork(mMainActivity, true)) {

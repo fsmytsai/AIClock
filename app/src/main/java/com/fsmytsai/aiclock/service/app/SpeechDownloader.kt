@@ -693,10 +693,11 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> am.setExact(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
             else -> am.set(AlarmManager.RTC_WAKEUP, mAlarmCalendar.timeInMillis, pi)
         }
+
+        FixedNotificationManagement.check(mContext)
     }
 
     private fun showAlarmNotification() {
-
         SharedService.writeDebugLog(mContext, "SpeechDownloader showAlarmNotification")
         val remoteViews = RemoteViews(mContext.packageName, R.layout.block_alarm_notification)
 

@@ -67,6 +67,8 @@ class SharedService {
                 am.cancel(pi)
                 pi.cancel()
             }
+
+            FixedNotificationManagement.check(context)
         }
 
         fun checkAlarmClockIsOpen(context: Context, acId: Int): Boolean {

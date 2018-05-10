@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import com.fsmytsai.aiclock.service.app.FixedNotificationManagement
 import com.fsmytsai.aiclock.service.app.SharedService
 import java.util.*
 
@@ -31,6 +32,7 @@ class CancelService : Service() {
                     val alarmClocks = SharedService.getAlarmClocks(this, alarmClock.acId > 1000)
                     alarmClocks.alarmClockList.find { it.acId == alarmClock.acId }!!.isOpen = false
                     SharedService.updateAlarmClocks(this, alarmClocks, alarmClock.acId > 1000)
+                    FixedNotificationManagement.check(this)
                 } else {
                     //跳過 40 分鐘內響鈴的這次
                     val alarmCalendar = SharedService.getAlarmCalendar(alarmClock, true)
