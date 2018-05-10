@@ -5,7 +5,6 @@
     tools:context="com.fsmytsai.aiclock.ui.activity.AlarmActivity">
 
     <RelativeLayout
-        android:id="@+id/rl_news"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/colorPaleYellow"
@@ -71,6 +70,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="20dp"
             android:src="@drawable/close" />
+
     </RelativeLayout>
 
 </FrameLayout>

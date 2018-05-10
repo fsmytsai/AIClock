@@ -482,10 +482,6 @@ class AlarmActivity : DownloadSpeechActivity() {
         })
     }
 
-//    fun close(view: View) {
-//        finish()
-//    }
-
     override fun onBackPressed() {
         SharedService.showTextToast(this, "請滑動叉叉關閉")
     }
