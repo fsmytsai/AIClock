@@ -47,6 +47,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     //control
     private var mIsMute = false
+    private var mIsAdvance = false
     private var mNeedDownloadCount = 0f
     private var mErrorDownloadCount = 0
     private var mDownloadedCount = 0f
@@ -107,6 +108,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
             val spDatas = mContext.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             mIsMute = spDatas.getBoolean("IsMute", false)
+            mIsAdvance = spDatas.getBoolean("IsAdvance", false)
 
             if (mAlarmClock.acId < 999 && !spDatas.getBoolean("NeverPrompt", false)) {
                 val dialogView = mDownloadSpeechActivity!!.layoutInflater.inflate(R.layout.dialog_prompt, null)
@@ -301,13 +303,21 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     }
 
     private fun getTextsData() {
-        SharedService.writeDebugLog(mContext, "SpeechDownloader getTextsData")
-
-        val url = "${SharedService.getLatestUrl(mContext)}api/getTextData?" +
-                "hour=${mAlarmClock.hour}&minute=${mAlarmClock.minute}&" +
-                "speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&news_count=${mAlarmClock.newsCount}&" +
-                "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}&" +
-                "version_code=${SharedService.getVersionCode(mContext)}"
+        val url = if (!mIsAdvance && (mAlarmTimeList[0] > 0 || mAlarmTimeList[1] > 0 || mAlarmTimeList[2] > 40)) {
+            SharedService.writeDebugLog(mContext, "SpeechDownloader getTextsData fast")
+            "${SharedService.getLatestUrl(mContext)}api/getTextData?" +
+                    "hour=${mAlarmClock.hour}&minute=${mAlarmClock.minute}&" +
+                    "speaker=${mAlarmClock.speaker}&category=-1&news_count=0&" +
+                    "latitude=1000.0&longitude=0.0&" +
+                    "version_code=${SharedService.getVersionCode(mContext)}"
+        } else {
+            SharedService.writeDebugLog(mContext, "SpeechDownloader getTextsData complete")
+            "${SharedService.getLatestUrl(mContext)}api/getTextData?" +
+                    "hour=${mAlarmClock.hour}&minute=${mAlarmClock.minute}&" +
+                    "speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&news_count=${mAlarmClock.newsCount}&" +
+                    "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}&" +
+                    "version_code=${SharedService.getVersionCode(mContext)}"
+        }
 
         val request = Request.Builder()
                 .url(url)
