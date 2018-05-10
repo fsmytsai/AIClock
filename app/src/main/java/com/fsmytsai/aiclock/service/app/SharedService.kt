@@ -30,8 +30,6 @@ import com.fsmytsai.aiclock.R
 
 class SharedService {
     companion object {
-        var isNewsPlaying = false
-        var reRunRunnable = false
         val speakerArr = arrayOf("f1", "f2", "m1")
 
         fun getLatestUrl(context: Context): String {

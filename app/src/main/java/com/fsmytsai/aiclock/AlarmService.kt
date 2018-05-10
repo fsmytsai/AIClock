@@ -108,8 +108,6 @@ class AlarmService : Service() {
         mHandler.removeCallbacksAndMessages(null)
         mMPNews.release()
         mMPBGM.release()
-        SharedService.isNewsPlaying = false
-        SharedService.reRunRunnable = false
         super.onDestroy()
     }
 
@@ -156,13 +154,11 @@ class AlarmService : Service() {
                     playNews(Uri.fromFile(File("$filesDir/sounds/${mSoundList[0]}.wav")))
             } else {
                 mMPBGM.setVolume(1f, 1f)
-                SharedService.isNewsPlaying = false
             }
         }
 
         mMPNews.prepare()
         mMPNews.start()
-        SharedService.isNewsPlaying = true
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
