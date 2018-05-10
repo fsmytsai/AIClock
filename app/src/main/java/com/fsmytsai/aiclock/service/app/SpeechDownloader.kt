@@ -311,7 +311,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                     "latitude=1000.0&longitude=0.0&" +
                     "version_code=${SharedService.getVersionCode(mContext)}"
         } else {
-            SharedService.writeDebugLog(mContext, "SpeechDownloader getTextsData complete")
+            SharedService.writeDebugLog(mContext, "SpeechDownloader getTextsData complete mIsAdvance = $mIsAdvance")
             "${SharedService.getLatestUrl(mContext)}api/getTextData?" +
                     "hour=${mAlarmClock.hour}&minute=${mAlarmClock.minute}&" +
                     "speaker=${mAlarmClock.speaker}&category=${mAlarmClock.category}&news_count=${mAlarmClock.newsCount}&" +
