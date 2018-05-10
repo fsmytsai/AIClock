@@ -184,6 +184,7 @@ class HomeFragment : Fragment() {
     private fun setData() {
         mSoundList.clear()
         mNewsCount = 0
+        mMainActivity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         //排列音檔播放順序
         for (text in mTexts.textList) {
             if (text.description != "weather") {
@@ -227,8 +228,12 @@ class HomeFragment : Fragment() {
                 else
                     playNews(Uri.fromFile(File("${mMainActivity.filesDir}/sounds/${mSoundList[0]}.wav")))
             } else {
-                pausePlay()
-                releasePlay()
+                mIsPlaying = false
+                mIsDownloadComplete = false
+                mRootView.iv_control.setImageResource(R.drawable.play)
+                mMainActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                mMPBGM.pause()
+                mMPBGM.release()
             }
         }
 
