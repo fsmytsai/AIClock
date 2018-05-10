@@ -785,8 +785,9 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
     private fun allFinished() {
         SharedService.writeDebugLog(mContext, "SpeechDownloader allFinished")
 
-        //所有工作都結束後清舊資料
-        cleanAllOldLater()
+        //所有工作都結束後清舊資料(除了主頁)
+        if (mAlarmClock.acId != 999)
+            cleanAllOldLater()
 
         mDownloadFinishListener?.allFinished()
     }

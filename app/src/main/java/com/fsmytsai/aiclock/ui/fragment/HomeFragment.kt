@@ -155,7 +155,8 @@ class HomeFragment : Fragment() {
 
     override fun onStop() {
         SharedService.writeDebugLog(mMainActivity, "HomeFragment onStop")
-        pausePlay()
+        if (mIsPlaying)
+            pausePlay()
         super.onStop()
     }
 
@@ -165,7 +166,7 @@ class HomeFragment : Fragment() {
         super.onDestroy()
     }
 
-    private fun pausePlay(){
+    private fun pausePlay() {
         mIsPlaying = false
         mMPBGM.pause()
         mMPNews.pause()
@@ -173,7 +174,7 @@ class HomeFragment : Fragment() {
         mMainActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
-    private fun releasePlay(){
+    private fun releasePlay() {
         mIsDownloadComplete = false
         mMPNews.release()
         mMPBGM.release()
