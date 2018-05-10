@@ -25,7 +25,7 @@ class ViewPagerAdapter(fm: FragmentManager, private val fragments: List<Fragment
 
             val drawable = ContextCompat.getDrawable(context, tabIcons!![position])
 
-            val height = (SharedService.getActionBarSize(context) * 0.7).toInt()
+            val height = (SharedService.getActionBarSize(context) * 0.6).toInt()
 
             drawable!!.setBounds(0, 0, height, height)
             val imageSpan = ImageSpan(drawable)

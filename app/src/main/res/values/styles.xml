@@ -14,7 +14,7 @@
         <item name="tabSelectedTextColor">#e5004f</item>
         <item name="tabTextColor">#FFFFFF</item>
         <item name="tabIndicatorColor">@color/colorMainYellow</item>
-        <item name="tabIndicatorHeight">2dp</item>
+        <item name="tabIndicatorHeight">4dp</item>
         <item name="tabPaddingStart">12dp</item>
         <item name="tabPaddingEnd">12dp</item>
         <item name="tabBackground">?attr/selectableItemBackground</item>
