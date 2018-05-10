@@ -1,10 +1,14 @@
 package com.fsmytsai.aiclock.ui.fragment
 
 
+import android.annotation.TargetApi
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaPlayer
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
@@ -15,6 +19,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.ProgressBar
 import com.fsmytsai.aiclock.R
@@ -30,6 +35,7 @@ import kotlinx.android.synthetic.main.block_news.view.*
 import kotlinx.android.synthetic.main.footer.view.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import okhttp3.*
+import java.io.File
 import java.io.IOException
 import java.util.ArrayList
 
@@ -37,6 +43,8 @@ import java.util.ArrayList
 class HomeFragment : Fragment() {
     private lateinit var mMainActivity: MainActivity
     private lateinit var mRootView: View
+    private var mMPBGM = MediaPlayer()
+    private var mMPNews = MediaPlayer()
 
     private var mTexts = Texts()
     private val mAlarmClock = AlarmClocks.AlarmClock(
@@ -53,6 +61,7 @@ class HomeFragment : Fragment() {
 
     private var mFooterText = "取得資料中..."
     private var mIsPlaying = false
+    private var mIsDownloadComplete = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -97,14 +106,34 @@ class HomeFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            if (mIsPlaying) {
+            if (mIsDownloadComplete) {
+                if (mIsPlaying) {
+                    pausePlay()
+                } else {
+                    mIsPlaying = true
+                    mMPBGM.start()
+                    mMPNews.start()
+                    mRootView.iv_control.setImageResource(R.drawable.pause)
+                    mMainActivity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
 
             } else {
+                mMPBGM = MediaPlayer()
+                mMPNews = MediaPlayer()
+                mMPBGM.setDataSource(mMainActivity, Uri.parse("android.resource://${mMainActivity.packageName}/raw/bgm"))
+                mMPBGM.setOnCompletionListener {
+                    mMPBGM.start()
+                }
+                mMPBGM.prepare()
+                mMPBGM.start()
+
                 mMainActivity.bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
                     override fun start() {
                         mMainActivity.startDownload(mAlarmClock, object : SpeechDownloader.DownloadFinishListener {
                             override fun cancel() {
-
+                                mMPBGM.pause()
+                                mMPBGM.release()
+                                mMPNews.release()
                             }
 
                             override fun startSetData() {
@@ -113,14 +142,98 @@ class HomeFragment : Fragment() {
 
                             override fun allFinished() {
                                 mIsPlaying = true
+                                mIsDownloadComplete = true
                                 mRootView.iv_control.setImageResource(R.drawable.pause)
-
+                                setData()
                             }
                         })
                     }
                 })
             }
         }
+    }
+
+    override fun onStop() {
+        SharedService.writeDebugLog(mMainActivity, "HomeFragment onStop")
+        pausePlay()
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        SharedService.writeDebugLog(mMainActivity, "HomeFragment onDestroy")
+        releasePlay()
+        super.onDestroy()
+    }
+
+    private fun pausePlay(){
+        mIsPlaying = false
+        mMPBGM.pause()
+        mMPNews.pause()
+        mRootView.iv_control.setImageResource(R.drawable.play)
+        mMainActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    private fun releasePlay(){
+        mIsDownloadComplete = false
+        mMPNews.release()
+        mMPBGM.release()
+    }
+
+    private val mSoundList = ArrayList<String>()
+    private var mNewsCount = 0
+    private fun setData() {
+        mSoundList.clear()
+        mNewsCount = 0
+        //排列音檔播放順序
+        for (text in mTexts.textList) {
+            if (text.description != "weather") {
+                mNewsCount++
+                mSoundList.add("news$mNewsCount")
+            }
+
+            (0 until text.part_count).mapTo(mSoundList) { "${text.text_id}-$it-${mAlarmClock.speaker}" }
+        }
+        //最後加上 bye
+        mSoundList.add("bye")
+
+        mMPBGM.setVolume(0.1f, 0.1f)
+        if (mSoundList[0].startsWith("news")) {
+            playNews(Uri.parse("android.resource://${mMainActivity.packageName}/raw/${SharedService.speakerArr[mAlarmClock.speaker]}_${mSoundList[0]}"))
+        } else
+            playNews(Uri.fromFile(File("${mMainActivity.filesDir}/sounds/${mSoundList[0]}.wav")))
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun playNews(uri: Uri) {
+        //雖然開始播放前已全部檢查過，但保險起見也加上 try catch
+        try {
+            mMPNews.setDataSource(mMainActivity, uri)
+        } catch (e: Exception) {
+            SharedService.writeDebugLog(mMainActivity, "HomeFragment playNews setDataSource failed uri = $uri")
+            mMPNews.setDataSource(mMainActivity, Uri.parse("android.resource://${mMainActivity.packageName}/raw/${SharedService.speakerArr[mAlarmClock!!.speaker]}_lost"))
+        }
+
+        mMPNews.setOnCompletionListener {
+            mMPNews.release()
+
+            //如果還沒播放 bye 則一直刪，由於是播放完才刪除，所以不可放進下面的 if 中
+            if (mSoundList.size > 0)
+                mSoundList.removeAt(0)
+
+            if (mSoundList.size > 0) {
+                mMPNews = MediaPlayer()
+                if (mSoundList[0].startsWith("news") || mSoundList[0] == "bye")
+                    playNews(Uri.parse("android.resource://${mMainActivity.packageName}/raw/${SharedService.speakerArr[mAlarmClock.speaker]}_${mSoundList[0]}"))
+                else
+                    playNews(Uri.fromFile(File("${mMainActivity.filesDir}/sounds/${mSoundList[0]}.wav")))
+            } else {
+                pausePlay()
+                releasePlay()
+            }
+        }
+
+        mMPNews.prepare()
+        mMPNews.start()
     }
 
     private fun refresh() {
@@ -160,6 +273,11 @@ class HomeFragment : Fragment() {
                         initCache()
                         mFooterText = "祝您有美好的一天！"
                         mRootView.rv_home.adapter.notifyDataSetChanged()
+
+                        if (mIsDownloadComplete) {
+                            pausePlay()
+                            releasePlay()
+                        }
 
                     } else {
                         SharedService.handleError(mMainActivity, statusCode!!, resMessage!!)
