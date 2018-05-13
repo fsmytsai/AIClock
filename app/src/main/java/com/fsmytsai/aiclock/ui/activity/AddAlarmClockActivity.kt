@@ -29,6 +29,7 @@ import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
 import java.util.*
 import com.bigkoo.pickerview.TimePickerView
 import com.fsmytsai.aiclock.service.app.FileChooser
+import com.fsmytsai.aiclock.service.app.LocationService
 import kotlinx.android.synthetic.main.block_background_music.view.*
 import kotlinx.android.synthetic.main.footer_background_music.view.*
 import java.io.*
@@ -175,9 +176,21 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             if (isChecked) {
                 if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    val isSuccess = SharedService.setLocation(this, mAlarmClock)
-                    if (!isSuccess)
-                        SharedService.showTextToast(this, "取得位置中...")
+                    LocationService.getLocation(this, object : LocationService.GetLocationListener {
+                        override fun success(latitude: Double, longitude: Double) {
+                            SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置成功")
+                            SharedService.writeDebugLog(this@AddAlarmClockActivity, "AddAlarmClockActivity setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
+                            mAlarmClock.latitude = latitude
+                            mAlarmClock.longitude = longitude
+                        }
+
+                        override fun failed() {
+                            SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置失敗")
+                            SharedService.writeDebugLog(this@AddAlarmClockActivity, "AddAlarmClockActivity setLocation failed")
+                            sc_weather.isChecked = false
+                        }
+
+                    })
                 } else {
                     requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION), REQUEST_LOCATION)
                 }
@@ -292,12 +305,22 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_LOCATION)
-            if (grantResults.size == 2 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED &&
-                    grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                val isSuccess = SharedService.setLocation(this, mAlarmClock)
-                if (!isSuccess)
-                    SharedService.showTextToast(this, "取得位置中...")
+            if (grantResults.size == 2 && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                LocationService.getLocation(this, object : LocationService.GetLocationListener {
+                    override fun success(latitude: Double, longitude: Double) {
+                        SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置成功")
+                        SharedService.writeDebugLog(this@AddAlarmClockActivity, "AddAlarmClockActivity setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
+                        mAlarmClock.latitude = latitude
+                        mAlarmClock.longitude = longitude
+                    }
+
+                    override fun failed() {
+                        SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置失敗")
+                        SharedService.writeDebugLog(this@AddAlarmClockActivity, "AddAlarmClockActivity setLocation failed")
+                        sc_weather.isChecked = false
+                    }
+
+                })
             } else {
                 sc_weather.isChecked = false
                 SharedService.showTextToast(this, "您拒絕了天氣播報權限")

@@ -291,15 +291,19 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private fun setLocation() {
         SharedService.writeDebugLog(mContext, "SpeechDownloader setLocation lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
-        val isSuccess = SharedService.setLocation(mContext, mAlarmClock)
-        if (isSuccess) {
-            SharedService.writeDebugLog(mContext, "SpeechDownloader setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
-            getTextsData()
-        } else
-            mHandler.postDelayed({
-                SharedService.writeDebugLog(mContext, "SpeechDownloader setLocation delay 3s lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
+        LocationService.getLocation(mContext, object : LocationService.GetLocationListener {
+            override fun success(latitude: Double, longitude: Double) {
+                mAlarmClock.latitude = latitude
+                mAlarmClock.longitude = longitude
+                SharedService.writeDebugLog(mContext, "SpeechDownloader setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
                 getTextsData()
-            }, 1500)
+            }
+
+            override fun failed() {
+                SharedService.writeDebugLog(mContext, "SpeechDownloader setLocation failed")
+                getTextsData()
+            }
+        })
     }
 
     private fun getTextsData() {
