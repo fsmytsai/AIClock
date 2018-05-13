@@ -17,6 +17,8 @@ import okhttp3.*
 import java.io.IOException
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
+import android.support.v4.view.ViewPager
+import android.view.View
 import com.fsmytsai.aiclock.service.app.ViewPagerAdapter
 import com.fsmytsai.aiclock.ui.fragment.HomeFragment
 import com.fsmytsai.aiclock.ui.fragment.SettingFragment
@@ -80,10 +82,30 @@ class MainActivity : DownloadSpeechActivity() {
         vp_home.adapter = viewPagerAdapter
         vp_home.offscreenPageLimit = 2
         vp_home.currentItem = 1
+        vp_home.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+            override fun onPageScrollStateChanged(state: Int) {
+            }
+
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+            }
+
+            override fun onPageSelected(position: Int) {
+                if (position == 0)
+                    tv_setting.visibility = View.VISIBLE
+                else
+                    tv_setting.visibility = View.GONE
+            }
+
+        })
 
         tl_home.tabMode = TabLayout.MODE_FIXED
         tl_home.tabGravity = TabLayout.GRAVITY_FILL
         tl_home.setupWithViewPager(vp_home)
+
+        tv_setting.setOnClickListener {
+            val homeFragment = supportFragmentManager.findFragmentByTag("android:switcher:" + R.id.vp_home + ":0") as HomeFragment
+            homeFragment.setting()
+        }
     }
 
     private fun checkLatestUrl() {

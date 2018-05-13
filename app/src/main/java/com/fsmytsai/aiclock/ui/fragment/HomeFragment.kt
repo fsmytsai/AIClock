@@ -2,6 +2,7 @@ package com.fsmytsai.aiclock.ui.fragment
 
 
 import android.annotation.TargetApi
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -28,6 +29,7 @@ import com.fsmytsai.aiclock.model.Texts
 import com.fsmytsai.aiclock.service.app.LocationService
 import com.fsmytsai.aiclock.service.app.SharedService
 import com.fsmytsai.aiclock.service.app.SpeechDownloader
+import com.fsmytsai.aiclock.ui.activity.AddAlarmClockActivity
 import com.fsmytsai.aiclock.ui.activity.DownloadSpeechActivity
 import com.fsmytsai.aiclock.ui.activity.MainActivity
 import com.fsmytsai.aiclock.ui.activity.WebViewActivity
@@ -61,6 +63,7 @@ class HomeFragment : Fragment() {
             false)
 
     private var mFooterText = "取得位置中..."
+    private var mIsDownloading = false
     private var mIsPlaying = false
     private var mIsDownloadComplete = false
 
@@ -69,28 +72,8 @@ class HomeFragment : Fragment() {
         mMainActivity = activity as MainActivity
         mRootView = inflater.inflate(R.layout.fragment_home, container, false)
         initViews()
-        setLocation()
+        setAlarmData()
         return mRootView
-    }
-
-    private fun setLocation() {
-        if (ActivityCompat.checkSelfPermission(mMainActivity, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(mMainActivity, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            LocationService.getLocation(mMainActivity, object : LocationService.GetLocationListener {
-                override fun success(latitude: Double, longitude: Double) {
-                    mAlarmClock.latitude = latitude
-                    mAlarmClock.longitude = longitude
-                    SharedService.writeDebugLog(mMainActivity, "HomeFragment setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
-                    refresh()
-                }
-
-                override fun failed() {
-                    SharedService.writeDebugLog(mMainActivity, "HomeFragment setLocation failed")
-                    refresh()
-                }
-            })
-        } else
-            refresh()
     }
 
     private fun initViews() {
@@ -112,8 +95,13 @@ class HomeFragment : Fragment() {
         mRootView.rv_home.adapter = NewsAdapter()
 
         mRootView.iv_control.setOnClickListener {
-            if (mTexts.textList.size == 0) {
+            if(mTexts.textList.size == 0){
                 SharedService.showTextToast(mMainActivity, "無資料可播放")
+                return@setOnClickListener
+            }
+
+            if (mIsDownloading || mRootView.srl_home.isRefreshing) {
+                SharedService.showTextToast(mMainActivity, "載入資料中，請稍後再試...")
                 return@setOnClickListener
             }
 
@@ -129,19 +117,32 @@ class HomeFragment : Fragment() {
                 }
 
             } else {
+                mIsDownloading = true
                 mMPBGM = MediaPlayer()
                 mMPNews = MediaPlayer()
-                mMPBGM.setDataSource(mMainActivity, Uri.parse("android.resource://${mMainActivity.packageName}/raw/bgm"))
+                if (mAlarmClock.backgroundMusic == null)
+                    mMPBGM.setDataSource(mMainActivity, Uri.parse("android.resource://${mMainActivity.packageName}/raw/bgm"))
+                else {
+                    val uri = Uri.parse("${mMainActivity.filesDir}/bgmSounds/${mAlarmClock.backgroundMusic}")
+                    try {
+                        mMPBGM.setDataSource(mMainActivity, uri)
+                    } catch (e: Exception) {
+                        SharedService.writeDebugLog(mMainActivity, "HomeFragment startBGM setDataSource failed uri = $uri")
+                        mMPBGM.setDataSource(mMainActivity, Uri.parse("android.resource://${mMainActivity.packageName}/raw/bgm"))
+                    }
+                }
                 mMPBGM.setOnCompletionListener {
                     mMPBGM.start()
                 }
                 mMPBGM.prepare()
                 mMPBGM.start()
 
+                mMainActivity.downloadTitle = "取得資料中..."
                 mMainActivity.bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
                     override fun start() {
                         mMainActivity.startDownload(mAlarmClock, object : SpeechDownloader.DownloadFinishListener {
                             override fun cancel() {
+                                mIsDownloading = false
                                 mMPBGM.pause()
                                 mMPBGM.release()
                                 mMPNews.release()
@@ -152,6 +153,7 @@ class HomeFragment : Fragment() {
                             }
 
                             override fun allFinished() {
+                                mIsDownloading = false
                                 mIsPlaying = true
                                 mIsDownloadComplete = true
                                 mRootView.iv_control.setImageResource(R.drawable.pause)
@@ -161,6 +163,43 @@ class HomeFragment : Fragment() {
                     }
                 })
             }
+        }
+    }
+
+    private fun setAlarmData() {
+        val speaker = mMainActivity.spDatas.getInt("HomeSpeaker", 0)
+        val category = mMainActivity.spDatas.getInt("HomeCategory", 0)
+        val newsCount = mMainActivity.spDatas.getInt("HomeNewsCount", 6)
+        val backgroundMusic = mMainActivity.spDatas.getString("HomeBackgroundMusic", null)
+
+        mAlarmClock.speaker = speaker
+        mAlarmClock.category = category
+        mAlarmClock.newsCount = newsCount
+        mAlarmClock.backgroundMusic = backgroundMusic
+
+        val hasPermission = ActivityCompat.checkSelfPermission(mMainActivity, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(mMainActivity, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        val weather = mMainActivity.spDatas.getBoolean("HomeWeather", hasPermission)
+        if (weather) {
+            mRootView.srl_home.isRefreshing = true
+            LocationService.getLocation(mMainActivity, object : LocationService.GetLocationListener {
+                override fun success(latitude: Double, longitude: Double) {
+                    mAlarmClock.latitude = latitude
+                    mAlarmClock.longitude = longitude
+                    SharedService.writeDebugLog(mMainActivity, "HomeFragment setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
+                    refresh()
+                }
+
+                override fun failed() {
+                    SharedService.writeDebugLog(mMainActivity, "HomeFragment setLocation failed")
+                    refresh()
+                }
+            })
+        } else {
+            mAlarmClock.latitude = 1000.0
+            mAlarmClock.longitude = 0.0
+            refresh()
         }
     }
 
@@ -174,7 +213,8 @@ class HomeFragment : Fragment() {
         mRootView.srl_home.isRefreshing = true
         val request = Request.Builder()
                 .url("${SharedService.getLatestUrl(mMainActivity)}api/getOnlyTextData?version_code=${SharedService.getVersionCode(mMainActivity)}&" +
-                        "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}&category=${mAlarmClock.category}")
+                        "latitude=${mAlarmClock.latitude}&longitude=${mAlarmClock.longitude}&" +
+                        "category=${mAlarmClock.category}&news_count=${mAlarmClock.newsCount}")
                 .build()
 
         OkHttpClient().newCall(request).enqueue(object : Callback {
@@ -496,4 +536,24 @@ class HomeFragment : Fragment() {
         })
     }
 
+    private val SETTING = 65
+
+    fun setting() {
+        val settingIntent = Intent(mMainActivity, AddAlarmClockActivity::class.java)
+        settingIntent.putExtra("IsHome", true)
+        settingIntent.putExtra("AlarmClock", Gson().toJson(mAlarmClock))
+        startActivityForResult(settingIntent, SETTING)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == Activity.RESULT_OK && requestCode == SETTING) {
+            mMainActivity.spDatas.edit().putInt("HomeSpeaker", data!!.getIntExtra("Speaker", 0))
+                    .putBoolean("HomeWeather", data.getBooleanExtra("Weather", false))
+                    .putInt("HomeCategory", data.getIntExtra("Category", 0))
+                    .putInt("HomeNewsCount", data.getIntExtra("NewsCount", 0))
+                    .putString("HomeBackgroundMusic", data.getStringExtra("BackgroundMusic")).apply()
+            setAlarmData()
+        }
+    }
 }

@@ -104,6 +104,7 @@ class AlarmClockFragment : Fragment() {
                 SharedService.updateAlarmClocks(mMainActivity, mAlarmClocks, false)
                 //開啟就下載音檔並設置鬧鐘，關閉則取消鬧鐘及刪除 texts 資料
                 if (isChecked) {
+                    mMainActivity.downloadTitle = "設置智能鬧鐘中..."
                     mMainActivity.bindDownloadService(object : DownloadSpeechActivity.CanStartDownloadCallback {
                         override fun start() {
                             mMainActivity.startDownload(ac, object : SpeechDownloader.DownloadFinishListener {

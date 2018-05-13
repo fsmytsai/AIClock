@@ -30,6 +30,7 @@ import java.util.*
 import com.bigkoo.pickerview.TimePickerView
 import com.fsmytsai.aiclock.service.app.FileChooser
 import com.fsmytsai.aiclock.service.app.LocationService
+import com.google.gson.Gson
 import kotlinx.android.synthetic.main.block_background_music.view.*
 import kotlinx.android.synthetic.main.footer_background_music.view.*
 import java.io.*
@@ -47,6 +48,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
     //control
     private var mIsNew = true
+    private var mIsHome = false
     private var mIsMute = false
     private var mIsPlaying = false
     private var mNowPlayingFileName = ""
@@ -82,24 +84,30 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
     }
 
     private fun getAlarmClock() {
-        val acId = intent.getIntExtra("acId", 0)
-        val alarmClock = SharedService.getAlarmClock(this, acId)
-        if (alarmClock != null) {
-            mIsNew = false
-            mAlarmClock = alarmClock
+        mIsHome = intent.getBooleanExtra("IsHome", false)
+        if (mIsHome) {
+            mAlarmClock = Gson().fromJson(intent.getStringExtra("AlarmClock"), AlarmClocks.AlarmClock::class.java)
         } else {
-            val newCalendar = Calendar.getInstance()
-            mAlarmClock = AlarmClocks.AlarmClock(acId,
-                    newCalendar.get(Calendar.HOUR_OF_DAY),
-                    newCalendar.get(Calendar.MINUTE),
-                    -1,
-                    1000.0,
-                    0.0,
-                    -1,
-                    6,
-                    booleanArrayOf(false, false, false, false, false, false, false),
-                    true)
+            val acId = intent.getIntExtra("acId", 0)
+            val alarmClock = SharedService.getAlarmClock(this, acId)
+            if (alarmClock != null) {
+                mIsNew = false
+                mAlarmClock = alarmClock
+            } else {
+                val newCalendar = Calendar.getInstance()
+                mAlarmClock = AlarmClocks.AlarmClock(acId,
+                        newCalendar.get(Calendar.HOUR_OF_DAY),
+                        newCalendar.get(Calendar.MINUTE),
+                        -1,
+                        1000.0,
+                        0.0,
+                        -1,
+                        6,
+                        booleanArrayOf(false, false, false, false, false, false, false),
+                        true)
+            }
         }
+
     }
 
     private fun setBackgroundMusicList() {
@@ -112,25 +120,29 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
 
     @TargetApi(Build.VERSION_CODES.M)
     private fun initViews() {
-        if (mIsNew)
-            tv_toolBar.text = "新增智能鬧鐘"
-        else {
-            tv_toolBar_delete.visibility = View.VISIBLE
-            tv_toolBar_delete.setOnClickListener {
-                AlertDialog.Builder(this)
-                        .setTitle("刪除智能鬧鐘")
-                        .setMessage("您確定要刪除嗎?")
-                        .setPositiveButton("確定", { _, _ ->
-                            SharedService.cancelAlarm(this, mAlarmClock.acId)
-                            SharedService.deleteAlarmClock(this, mAlarmClock.acId)
-                            intent.putExtra("IsDelete", true)
-                            setResult(Activity.RESULT_OK, intent)
-                            finish()
-                        })
-                        .setNegativeButton("取消", null)
-                        .show()
+        when {
+            mIsHome -> {
+                tv_toolBar.text = "主頁設定"
             }
-            tv_toolBar.text = "編輯智能鬧鐘"
+            mIsNew -> tv_toolBar.text = "新增智能鬧鐘"
+            else -> {
+                tv_toolBar_delete.visibility = View.VISIBLE
+                tv_toolBar_delete.setOnClickListener {
+                    AlertDialog.Builder(this)
+                            .setTitle("刪除智能鬧鐘")
+                            .setMessage("您確定要刪除嗎?")
+                            .setPositiveButton("確定", { _, _ ->
+                                SharedService.cancelAlarm(this, mAlarmClock.acId)
+                                SharedService.deleteAlarmClock(this, mAlarmClock.acId)
+                                intent.putExtra("IsDelete", true)
+                                setResult(Activity.RESULT_OK, intent)
+                                finish()
+                            })
+                            .setNegativeButton("取消", null)
+                            .show()
+                }
+                tv_toolBar.text = "編輯智能鬧鐘"
+            }
         }
 
         setSupportActionBar(toolbar)
@@ -138,8 +150,14 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         supportActionBar?.setHomeButtonEnabled(true)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        pvTime.setKeyBackCancelable(false)
-        pvTime.show(ll_time)
+        if (mIsHome) {
+            ll_time.visibility = View.GONE
+            v_line.visibility = View.GONE
+        } else {
+            pvTime.setKeyBackCancelable(false)
+            pvTime.show(ll_time)
+        }
+
 
         when (mAlarmClock.speaker) {
             0 -> rb_f1.isChecked = true
@@ -176,6 +194,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             if (isChecked) {
                 if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
                     LocationService.getLocation(this, object : LocationService.GetLocationListener {
                         override fun success(latitude: Double, longitude: Double) {
                             SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置成功")
@@ -198,8 +217,15 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 mAlarmClock.latitude = 1000.0
         }
 
+        if (mIsHome)
+            ll_news_switch.visibility = View.GONE
+
         when (mAlarmClock.category) {
-            -1 -> rb_no.isChecked = true
+            -1 -> {
+                sc_news.isChecked = false
+                ll_news_type.visibility = View.GONE
+                ll_news_count.visibility = View.GONE
+            }
             0 -> rb_general.isChecked = true
             1 -> rb_business.isChecked = true
             2 -> rb_entertainment.isChecked = true
@@ -207,6 +233,19 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             4 -> rb_science.isChecked = true
             5 -> rb_sports.isChecked = true
 //            6 -> rb_technology.isChecked = true
+        }
+
+        sc_news.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                mAlarmClock.category = 0
+                ll_news_type.visibility = View.VISIBLE
+                ll_news_count.visibility = View.VISIBLE
+                rb_general.isChecked = true
+            } else {
+                mAlarmClock.category = -1
+                ll_news_type.visibility = View.GONE
+                ll_news_count.visibility = View.GONE
+            }
         }
 
         rg_category.setOnCheckedChangeListener(object : MyRadioGroup.OnCheckedChangeListener {
@@ -220,11 +259,6 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             }
         })
 
-        if (mAlarmClock.category != -1)
-            ll_news_count.visibility = View.VISIBLE
-        else
-            ll_news_count.visibility = View.GONE
-
         et_news_count.setText("${mAlarmClock.newsCount}")
         et_news_count.setOnClickListener {
             pvNewsCount.setNPicker(arrayListOf("6", "7", "8", "9", "10"), null, null)
@@ -232,19 +266,24 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             pvNewsCount.show()
         }
 
-        val circleTextviewFull = ContextCompat.getDrawable(this, R.drawable.circle_textview_full)
-        (0..6).filter { mAlarmClock.isRepeatArr[it] }
-                .forEach {
-                    when (it) {
-                        0 -> tv_sun.background = circleTextviewFull
-                        1 -> tv_mon.background = circleTextviewFull
-                        2 -> tv_tues.background = circleTextviewFull
-                        3 -> tv_wednes.background = circleTextviewFull
-                        4 -> tv_thurs.background = circleTextviewFull
-                        5 -> tv_fri.background = circleTextviewFull
-                        6 -> tv_satur.background = circleTextviewFull
+        if (mIsHome)
+            ll_repeat_day.visibility = View.GONE
+        else {
+            val circleTextviewFull = ContextCompat.getDrawable(this, R.drawable.circle_textview_full)
+            (0..6).filter { mAlarmClock.isRepeatArr[it] }
+                    .forEach {
+                        when (it) {
+                            0 -> tv_sun.background = circleTextviewFull
+                            1 -> tv_mon.background = circleTextviewFull
+                            2 -> tv_tues.background = circleTextviewFull
+                            3 -> tv_wednes.background = circleTextviewFull
+                            4 -> tv_thurs.background = circleTextviewFull
+                            5 -> tv_fri.background = circleTextviewFull
+                            6 -> tv_satur.background = circleTextviewFull
+                        }
                     }
-                }
+        }
+
 
         rv_background_music.layoutManager = GridLayoutManager(this, 3)
         rv_background_music.adapter = BackgroundMusicAdapter()
@@ -563,42 +602,49 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         if (mIsPlaying)
             mMediaPlayer.release()
 
-        pvTime.returnData()
-
-        //檢查時間是否重複
-        if (SharedService.isAlarmClockTimeRepeat(this, mAlarmClock, false) ||
-                SharedService.isAlarmClockTimeRepeat(this, mAlarmClock, true)) {
-            SharedService.showTextToast(this, "錯誤，已有相同時間。")
-            return
-        }
-
-        if (mAlarmClock.speaker == -1) {
-            SharedService.showTextToast(this, "請選擇播報者")
-            return
-        }
-
-        if (sc_weather.isChecked && mAlarmClock.latitude == 1000.0) {
-            SharedService.showTextToast(this, "取得位置失敗")
-            sc_weather.isChecked = false
-        }
-
-        bindDownloadService(object : CanStartDownloadCallback {
-            override fun start() {
-                startDownload(mAlarmClock, object : SpeechDownloader.DownloadFinishListener {
-                    override fun cancel() {
-
-                    }
-
-                    override fun startSetData() {
-                        updateAlarmClock()
-                    }
-
-                    override fun allFinished() {
-                        finish()
-                    }
-                })
+        if (mIsHome) {
+            val resultIntent = Intent()
+            resultIntent.putExtra("Speaker", mAlarmClock.speaker)
+            resultIntent.putExtra("Weather", mAlarmClock.latitude != 1000.0)
+            resultIntent.putExtra("Category", mAlarmClock.category)
+            resultIntent.putExtra("NewsCount", mAlarmClock.newsCount)
+            resultIntent.putExtra("BackgroundMusic", mAlarmClock.backgroundMusic)
+            setResult(Activity.RESULT_OK, resultIntent)
+            finish()
+        } else {
+            if (mAlarmClock.speaker == -1) {
+                SharedService.showTextToast(this, "請選擇播報者")
+                return
             }
-        })
+
+            pvTime.returnData()
+
+            //檢查時間是否重複
+            if (SharedService.isAlarmClockTimeRepeat(this, mAlarmClock, false) ||
+                    SharedService.isAlarmClockTimeRepeat(this, mAlarmClock, true)) {
+                SharedService.showTextToast(this, "錯誤，已有相同時間。")
+                return
+            }
+
+            bindDownloadService(object : CanStartDownloadCallback {
+                override fun start() {
+                    startDownload(mAlarmClock, object : SpeechDownloader.DownloadFinishListener {
+                        override fun cancel() {
+
+                        }
+
+                        override fun startSetData() {
+                            updateAlarmClock()
+                        }
+
+                        override fun allFinished() {
+                            finish()
+                        }
+                    })
+                }
+            })
+        }
+
     }
 
     private fun updateAlarmClock() {
