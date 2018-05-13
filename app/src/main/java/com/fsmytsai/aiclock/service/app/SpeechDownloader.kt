@@ -377,7 +377,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
         SharedService.writeDebugLog(mContext, "SpeechDownloader letServerDownloadSpeech")
 
         val url = "${SharedService.getLatestUrl(mContext)}api/downloadSpeech?" +
-                "text_id_list_str=$mTextIdListStr&speaker=${mAlarmClock.speaker}"
+                "text_id_list_str=$mTextIdListStr&speaker=${mAlarmClock.speaker}&version_code=${SharedService.getVersionCode(mContext)}"
 
         val request = Request.Builder()
                 .url(url)
