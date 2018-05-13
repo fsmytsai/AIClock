@@ -22,14 +22,11 @@ import com.fsmytsai.aiclock.R
 import android.widget.RadioButton
 import com.bigkoo.pickerview.OptionsPickerView
 import com.fsmytsai.aiclock.model.*
-import com.fsmytsai.aiclock.service.app.SharedService
-import com.fsmytsai.aiclock.service.app.SpeechDownloader
 import com.fsmytsai.aiclock.ui.view.MyRadioGroup
 import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
 import java.util.*
 import com.bigkoo.pickerview.TimePickerView
-import com.fsmytsai.aiclock.service.app.FileChooser
-import com.fsmytsai.aiclock.service.app.LocationService
+import com.fsmytsai.aiclock.service.app.*
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.block_background_music.view.*
 import kotlinx.android.synthetic.main.footer_background_music.view.*
@@ -194,21 +191,22 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             if (isChecked) {
                 if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
+                    LoadingService.showLoadingDialog(this)
                     LocationService.getLocation(this, object : LocationService.GetLocationListener {
                         override fun success(latitude: Double, longitude: Double) {
                             SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置成功")
-                            SharedService.writeDebugLog(this@AddAlarmClockActivity, "AddAlarmClockActivity setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
                             mAlarmClock.latitude = latitude
                             mAlarmClock.longitude = longitude
+                            SharedService.writeDebugLog(this@AddAlarmClockActivity, "AddAlarmClockActivity setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
+                            LoadingService.hideLoadingDialog()
                         }
 
                         override fun failed() {
                             SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置失敗")
                             SharedService.writeDebugLog(this@AddAlarmClockActivity, "AddAlarmClockActivity setLocation failed")
                             sc_weather.isChecked = false
+                            LoadingService.hideLoadingDialog()
                         }
-
                     })
                 } else {
                     requestPermissions(arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION), REQUEST_LOCATION)
@@ -345,20 +343,22 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_LOCATION)
             if (grantResults.size == 2 && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                LoadingService.showLoadingDialog(this)
                 LocationService.getLocation(this, object : LocationService.GetLocationListener {
                     override fun success(latitude: Double, longitude: Double) {
                         SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置成功")
-                        SharedService.writeDebugLog(this@AddAlarmClockActivity, "AddAlarmClockActivity setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
                         mAlarmClock.latitude = latitude
                         mAlarmClock.longitude = longitude
+                        SharedService.writeDebugLog(this@AddAlarmClockActivity, "AddAlarmClockActivity setLocation success lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
+                        LoadingService.hideLoadingDialog()
                     }
 
                     override fun failed() {
                         SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置失敗")
                         SharedService.writeDebugLog(this@AddAlarmClockActivity, "AddAlarmClockActivity setLocation failed")
                         sc_weather.isChecked = false
+                        LoadingService.hideLoadingDialog()
                     }
-
                 })
             } else {
                 sc_weather.isChecked = false
