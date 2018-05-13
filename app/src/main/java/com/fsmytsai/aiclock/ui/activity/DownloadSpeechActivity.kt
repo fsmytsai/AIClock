@@ -24,6 +24,7 @@ open class DownloadSpeechActivity : AppCompatActivity() {
     private var mIsStartedSetData = false
     private var mIsAccidentCanceled = false
     var keepFullScreen = false
+    var downloadTitle = "設置智能鬧鐘中..."
 
     fun bindDownloadService(canStartDownloadCallback: CanStartDownloadCallback) {
         mCanStartDownloadCallback = canStartDownloadCallback
@@ -96,6 +97,7 @@ open class DownloadSpeechActivity : AppCompatActivity() {
 
     fun showDownloadingDialog() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_download, null)
+        dialogView.tv_title.text = downloadTitle
         pbDownloading = dialogView.pb_downloading
         tvDownloading = dialogView.tv_downloading
 
