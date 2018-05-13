@@ -12,9 +12,9 @@
 | unfinished | 考慮是否把倒數計時移到外層 |
 | unfinished | 卡住原因可能為伺服器端音檔遺失，應該設置 TimeOut |
 | unfinished | 美化版面 |
-| unfinished | 設定首頁新聞類別、播報者 |
-| unfinished | 新增當前綜合新聞、天氣預報、空氣品質的頁面 |
-| unfinished | 自選天氣預報位置 |
+| unfinished | 自選天氣預報位置、首頁新聞種類、播報者 |
+| unfinished | 自動抓取位置座標時改為主動 |
+| unfinished | 許願與問題回報 cancelable false |
 
 # Version Features
 ## 第一版包含以下功能：
