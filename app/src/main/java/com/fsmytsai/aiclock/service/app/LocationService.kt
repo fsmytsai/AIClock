@@ -6,12 +6,25 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import java.util.*
 
 class LocationService {
     companion object {
 
         @SuppressLint("MissingPermission")
         fun getLocation(context: Context, getLocationListener: GetLocationListener) {
+
+            val nowCalendar = Calendar.getInstance()
+            val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
+            val lastGetLocationTime = spDatas.getLong("LastGetLocationTime", 0)
+            //小於 5 分鐘則直接使用舊資料
+            if (nowCalendar.timeInMillis - lastGetLocationTime < 5 * 60 * 1000) {
+                SharedService.writeDebugLog(context, "LocationService getLocation use last location")
+                val lastLatitude = spDatas.getFloat("LastLatitude", 1000f)
+                val lastLongitude = spDatas.getFloat("LastLongitude", 0f)
+                getLocationListener.success(lastLatitude.toDouble(), lastLongitude.toDouble())
+                return
+            }
 
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             val providers = locationManager.getProviders(true)
@@ -75,9 +88,14 @@ class LocationService {
                             SharedService.writeDebugLog(context, "LocationService onLocationChanged provider = $provider callbackCount = $callbackCount ac = ${location.accuracy}")
 
                         if (callbackCount == providers.size) {
-                            if (bestAccuracy != 0f)
+                            if (bestAccuracy != 0f) {
+                                spDatas.edit().putLong("LastGetLocationTime", nowCalendar.timeInMillis)
+                                        .putFloat("LastLatitude", bestLatitude.toFloat())
+                                        .putFloat("LastLongitude", bestLongitude.toFloat())
+                                        .apply()
+
                                 getLocationListener.success(bestLatitude, bestLongitude)
-                            else
+                            } else
                                 getLocationListener.failed()
                         }
                     }
