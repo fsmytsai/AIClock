@@ -346,6 +346,7 @@ class HomeFragment : Fragment() {
 
     override fun onDestroy() {
         SharedService.writeDebugLog(mMainActivity, "HomeFragment onDestroy")
+        mMemoryCaches?.evictAll()
         releasePlay()
         super.onDestroy()
     }
