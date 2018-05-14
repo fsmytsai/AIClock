@@ -192,7 +192,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     LoadingService.showLoadingDialog(this)
-                    LocationService.getLocation(this, object : LocationService.GetLocationListener {
+                    LocationService.getLocation(this,false , object : LocationService.GetLocationListener {
                         override fun success(latitude: Double, longitude: Double) {
                             SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置成功")
                             mAlarmClock.latitude = latitude
@@ -344,7 +344,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         if (requestCode == REQUEST_LOCATION)
             if (grantResults.size == 2 && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
                 LoadingService.showLoadingDialog(this)
-                LocationService.getLocation(this, object : LocationService.GetLocationListener {
+                LocationService.getLocation(this, false, object : LocationService.GetLocationListener {
                     override fun success(latitude: Double, longitude: Double) {
                         SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置成功")
                         mAlarmClock.latitude = latitude

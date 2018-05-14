@@ -76,7 +76,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private val mHandler = Handler()
     private val mRunnable = Runnable {
-        if (mDownloadedCount == mNeedDownloadCount) {
+        if (mDownloadedCount == mNeedDownloadCount && mNeedDownloadCount != 0f) {
             SharedService.writeDebugLog(mContext, "SpeechDownloader overtime but download is finished")
             return@Runnable
         }
@@ -291,7 +291,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
     private fun setLocation() {
         SharedService.writeDebugLog(mContext, "SpeechDownloader setLocation lat = ${mAlarmClock.latitude} lon = ${mAlarmClock.longitude}")
-        LocationService.getLocation(mContext, object : LocationService.GetLocationListener {
+        LocationService.getLocation(mContext, true, object : LocationService.GetLocationListener {
             override fun success(latitude: Double, longitude: Double) {
                 mAlarmClock.latitude = latitude
                 mAlarmClock.longitude = longitude

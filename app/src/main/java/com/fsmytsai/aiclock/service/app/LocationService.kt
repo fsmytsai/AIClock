@@ -12,17 +12,42 @@ class LocationService {
     companion object {
 
         @SuppressLint("MissingPermission")
-        fun getLocation(context: Context, getLocationListener: GetLocationListener) {
+        fun getLocation(context: Context, useLastLocation: Boolean, getLocationListener: GetLocationListener) {
 
             val nowCalendar = Calendar.getInstance()
             val spDatas = context.getSharedPreferences("Datas", Context.MODE_PRIVATE)
             val lastGetLocationTime = spDatas.getLong("LastGetLocationTime", 0)
-            //小於 5 分鐘則直接使用舊資料
-            if (nowCalendar.timeInMillis - lastGetLocationTime < 5 * 60 * 1000) {
+            //背景執行或距離上次取得位置小於 5 分鐘則直接使用舊資料
+            if (useLastLocation || nowCalendar.timeInMillis - lastGetLocationTime < 5 * 60 * 1000) {
                 SharedService.writeDebugLog(context, "LocationService getLocation use last location")
-                val lastLatitude = spDatas.getFloat("LastLatitude", 1000f)
-                val lastLongitude = spDatas.getFloat("LastLongitude", 0f)
-                getLocationListener.success(lastLatitude.toDouble(), lastLongitude.toDouble())
+                val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                val providers = locationManager.getProviders(true)
+                var bestLocation: Location? = null
+                for (provider in providers) {
+                    val l = locationManager.getLastKnownLocation(provider) ?: continue
+                    if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
+                        bestLocation = l
+                    }
+                }
+
+                val lastLatitude: Double
+                val lastLongitude: Double
+                //取不到最佳位置則使用自己紀錄的
+                if (bestLocation == null) {
+                    lastLatitude = spDatas.getFloat("LastLatitude", 1000f).toDouble()
+                    lastLongitude = spDatas.getFloat("LastLongitude", 0f).toDouble()
+                } else {
+                    lastLatitude = bestLocation.latitude
+                    lastLongitude = bestLocation.longitude
+                    spDatas.edit().putFloat("LastLatitude", lastLatitude.toFloat())
+                            .putFloat("LastLongitude", lastLongitude.toFloat())
+                            .apply()
+                }
+
+                if (lastLatitude == 1000.0)
+                    getLocationListener.failed()
+                else
+                    getLocationListener.success(lastLatitude, lastLongitude)
                 return
             }
 

@@ -95,7 +95,7 @@ class HomeFragment : Fragment() {
         mRootView.rv_home.adapter = NewsAdapter()
 
         mRootView.iv_control.setOnClickListener {
-            if(mTexts.textList.size == 0){
+            if (mTexts.textList.size == 0) {
                 SharedService.showTextToast(mMainActivity, "無資料可播放")
                 return@setOnClickListener
             }
@@ -183,7 +183,7 @@ class HomeFragment : Fragment() {
         val weather = mMainActivity.spDatas.getBoolean("HomeWeather", hasPermission)
         if (weather) {
             mRootView.srl_home.isRefreshing = true
-            LocationService.getLocation(mMainActivity, object : LocationService.GetLocationListener {
+            LocationService.getLocation(mMainActivity, false, object : LocationService.GetLocationListener {
                 override fun success(latitude: Double, longitude: Double) {
                     mAlarmClock.latitude = latitude
                     mAlarmClock.longitude = longitude
