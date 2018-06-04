@@ -74,7 +74,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 //                }
 //    }
 
-    private val mHandler = Handler()
+    private val mHandler = Handler(context.mainLooper)
     private val mRunnable = Runnable {
         if (mDownloadedCount == mNeedDownloadCount && mNeedDownloadCount != 0f) {
             SharedService.writeDebugLog(mContext, "SpeechDownloader overtime but download is finished")
