@@ -13,8 +13,8 @@
 | unfinished | 卡住原因可能為伺服器端音檔遺失，應該設置 TimeOut |
 | unfinished | 美化版面 |
 | unfinished | 自選天氣預報位置、首頁新聞種類、播報者 |
-| unfinished | 自動抓取位置座標時改為主動 |
-| unfinished | 許願與問題回報 cancelable false |
+| unfinished | 新聞刪掉綜合改成多選 |
+| unfinished | 點擊天氣預報有更詳細的頁面 |
 
 # Version Features
 ## 第一版包含以下功能：
