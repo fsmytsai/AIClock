@@ -57,7 +57,7 @@ class HomeFragment : Fragment() {
             0,
             1000.0,
             0.0,
-            0,
+            "1,2,3,4,5",
             6,
             booleanArrayOf(false, false, false, false, false, false, false),
             false)
@@ -168,7 +168,7 @@ class HomeFragment : Fragment() {
 
     private fun setAlarmData() {
         val speaker = mMainActivity.spDatas.getInt("HomeSpeaker", 0)
-        val category = mMainActivity.spDatas.getInt("HomeCategory", 0)
+        val category = mMainActivity.spDatas.getString("HomeStringCategory", "1,2,3,4,5")
         val newsCount = mMainActivity.spDatas.getInt("HomeNewsCount", 6)
         val backgroundMusic = mMainActivity.spDatas.getString("HomeBackgroundMusic", null)
 
@@ -551,7 +551,7 @@ class HomeFragment : Fragment() {
         if (resultCode == Activity.RESULT_OK && requestCode == SETTING) {
             mMainActivity.spDatas.edit().putInt("HomeSpeaker", data!!.getIntExtra("Speaker", 0))
                     .putBoolean("HomeWeather", data.getBooleanExtra("Weather", false))
-                    .putInt("HomeCategory", data.getIntExtra("Category", 0))
+                    .putString("HomeStringCategory", data.getStringExtra("Category"))
                     .putInt("HomeNewsCount", data.getIntExtra("NewsCount", 0))
                     .putString("HomeBackgroundMusic", data.getStringExtra("BackgroundMusic")).apply()
             setAlarmData()

@@ -140,13 +140,13 @@ class AlarmClockFragment : Fragment() {
                         .setTitle("刪除鬧鐘")
                         .setMessage("您確定要刪除 ${String.format("%02d", ac.hour)}:${String.format("%02d", ac.minute)} 的鬧鐘嗎?")
                         .setNegativeButton("取消", null)
-                        .setPositiveButton("刪除", { _, _ ->
+                        .setPositiveButton("刪除") { _, _ ->
                             mAlarmClocks.alarmClockList.removeAt(position)
                             rvAlarmClock.adapter.notifyItemRemoved(position)
                             rvAlarmClock.adapter.notifyItemRangeChanged(position, mAlarmClocks.alarmClockList.size - position)
                             SharedService.cancelAlarm(mMainActivity, ac.acId)
                             SharedService.deleteAlarmClock(mMainActivity, ac.acId)
-                        })
+                        }
                         .show()
 
                 true

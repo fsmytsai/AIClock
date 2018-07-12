@@ -18,11 +18,10 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.view.*
+import android.widget.CheckBox
 import com.fsmytsai.aiclock.R
-import android.widget.RadioButton
 import com.bigkoo.pickerview.OptionsPickerView
 import com.fsmytsai.aiclock.model.*
-import com.fsmytsai.aiclock.ui.view.MyRadioGroup
 import kotlinx.android.synthetic.main.activity_add_alarm_clock.*
 import java.util.*
 import com.bigkoo.pickerview.TimePickerView
@@ -98,7 +97,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                         -1,
                         1000.0,
                         0.0,
-                        -1,
+                        "-1",
                         6,
                         booleanArrayOf(false, false, false, false, false, false, false),
                         true)
@@ -128,13 +127,13 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                     AlertDialog.Builder(this)
                             .setTitle("刪除智能鬧鐘")
                             .setMessage("您確定要刪除嗎?")
-                            .setPositiveButton("確定", { _, _ ->
+                            .setPositiveButton("確定") { _, _ ->
                                 SharedService.cancelAlarm(this, mAlarmClock.acId)
                                 SharedService.deleteAlarmClock(this, mAlarmClock.acId)
                                 intent.putExtra("IsDelete", true)
                                 setResult(Activity.RESULT_OK, intent)
                                 finish()
-                            })
+                            }
                             .setNegativeButton("取消", null)
                             .show()
                 }
@@ -192,7 +191,7 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                         ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                     LoadingService.showLoadingDialog(this)
-                    LocationService.getLocation(this,false , object : LocationService.GetLocationListener {
+                    LocationService.getLocation(this, false, object : LocationService.GetLocationListener {
                         override fun success(latitude: Double, longitude: Double) {
                             SharedService.showTextToast(this@AddAlarmClockActivity, "取得位置成功")
                             mAlarmClock.latitude = latitude
@@ -218,44 +217,62 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         if (mIsHome)
             ll_news_switch.visibility = View.GONE
 
-        when (mAlarmClock.category) {
-            -1 -> {
+//        when (mAlarmClock.category) {
+//            "-1" -> {
+//                sc_news.isChecked = false
+//                ll_news_type.visibility = View.GONE
+//                ll_news_count.visibility = View.GONE
+//            }
+//            "0" -> {
+//                cb_business.isChecked = true
+//                cb_entertainment.isChecked = true
+//                cb_health.isChecked = true
+//                cb_science.isChecked = true
+//                cb_sports.isChecked = true
+//            }
+//            "1" -> cb_business.isChecked = true
+//            "2" -> cb_entertainment.isChecked = true
+//            "3" -> cb_health.isChecked = true
+//            "4" -> cb_science.isChecked = true
+//            "5" -> cb_sports.isChecked = true
+////            6 -> rb_technology.isChecked = true
+//        }
+
+        when {
+            "-1" in mAlarmClock.category -> {
                 sc_news.isChecked = false
                 ll_news_type.visibility = View.GONE
                 ll_news_count.visibility = View.GONE
             }
-            0 -> rb_general.isChecked = true
-            1 -> rb_business.isChecked = true
-            2 -> rb_entertainment.isChecked = true
-            3 -> rb_health.isChecked = true
-            4 -> rb_science.isChecked = true
-            5 -> rb_sports.isChecked = true
-//            6 -> rb_technology.isChecked = true
+            "0" in mAlarmClock.category -> {
+                cb_business.isChecked = true
+                cb_entertainment.isChecked = true
+                cb_health.isChecked = true
+                cb_science.isChecked = true
+                cb_sports.isChecked = true
+            }
+            else -> for (i in 1..5) {
+                val checkBox = ll_category.findViewWithTag<CheckBox>(i.toString())
+                checkBox.isChecked = i.toString() in mAlarmClock.category
+            }
         }
 
         sc_news.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                mAlarmClock.category = 0
+                mAlarmClock.category = "1,2,3,4,5"
                 ll_news_type.visibility = View.VISIBLE
                 ll_news_count.visibility = View.VISIBLE
-                rb_general.isChecked = true
+                cb_business.isChecked = true
+                cb_entertainment.isChecked = true
+                cb_health.isChecked = true
+                cb_science.isChecked = true
+                cb_sports.isChecked = true
             } else {
-                mAlarmClock.category = -1
+                mAlarmClock.category = "-1"
                 ll_news_type.visibility = View.GONE
                 ll_news_count.visibility = View.GONE
             }
         }
-
-        rg_category.setOnCheckedChangeListener(object : MyRadioGroup.OnCheckedChangeListener {
-            override fun onCheckedChanged(group: MyRadioGroup, checkedId: Int) {
-                val rbCategory = findViewById<RadioButton>(checkedId)
-                mAlarmClock.category = rbCategory.tag.toString().toInt()
-                if (mAlarmClock.category != -1)
-                    ll_news_count.visibility = View.VISIBLE
-                else
-                    ll_news_count.visibility = View.GONE
-            }
-        })
 
         et_news_count.setText("${mAlarmClock.newsCount}")
         et_news_count.setOnClickListener {
@@ -267,21 +284,20 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         if (mIsHome)
             ll_repeat_day.visibility = View.GONE
         else {
-            val circleTextviewFull = ContextCompat.getDrawable(this, R.drawable.circle_textview_full)
+            val circleTextViewFull = ContextCompat.getDrawable(this, R.drawable.circle_textview_full)
             (0..6).filter { mAlarmClock.isRepeatArr[it] }
                     .forEach {
                         when (it) {
-                            0 -> tv_sun.background = circleTextviewFull
-                            1 -> tv_mon.background = circleTextviewFull
-                            2 -> tv_tues.background = circleTextviewFull
-                            3 -> tv_wednes.background = circleTextviewFull
-                            4 -> tv_thurs.background = circleTextviewFull
-                            5 -> tv_fri.background = circleTextviewFull
-                            6 -> tv_satur.background = circleTextviewFull
+                            0 -> tv_sun.background = circleTextViewFull
+                            1 -> tv_mon.background = circleTextViewFull
+                            2 -> tv_tues.background = circleTextViewFull
+                            3 -> tv_wednes.background = circleTextViewFull
+                            4 -> tv_thurs.background = circleTextViewFull
+                            5 -> tv_fri.background = circleTextViewFull
+                            6 -> tv_satur.background = circleTextViewFull
                         }
                     }
         }
-
 
         rv_background_music.layoutManager = GridLayoutManager(this, 3)
         rv_background_music.adapter = BackgroundMusicAdapter()
@@ -298,9 +314,9 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
             mAlarmClock.hour = calendar.get(Calendar.HOUR_OF_DAY)
             mAlarmClock.minute = calendar.get(Calendar.MINUTE)
         }).setType(booleanArrayOf(false, false, false, true, true, false))
-                .setLayoutRes(R.layout.block_time_picker, { v ->
+                .setLayoutRes(R.layout.block_time_picker) {
 
-                })
+                }
                 .setContentSize(24)
                 .setLineSpacingMultiplier(1.5f)
                 .setOutSideCancelable(false)
@@ -598,9 +614,30 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         }
     }
 
+    private var mIsSetting = false
+
     fun save(view: View) {
+        if (mIsSetting) {
+            SharedService.showTextToast(this, "設置中")
+            return
+        }
+
         if (mIsPlaying)
             mMediaPlayer.release()
+
+        var isAnyCheck = false
+        mAlarmClock.category = ""
+        for (i in 1..5) {
+            val checkBox = ll_category.findViewWithTag<CheckBox>(i.toString())
+            if (checkBox.isChecked) {
+                isAnyCheck = true
+                mAlarmClock.category += "$i,"
+            }
+        }
+        if (isAnyCheck)
+            mAlarmClock.category = mAlarmClock.category.dropLast(1)
+        else
+            mAlarmClock.category = "-1"
 
         if (mIsHome) {
             val resultIntent = Intent()
@@ -626,14 +663,17 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
                 return
             }
 
+            mIsSetting = true
+
             bindDownloadService(object : CanStartDownloadCallback {
                 override fun start() {
                     startDownload(mAlarmClock, object : SpeechDownloader.DownloadFinishListener {
                         override fun cancel() {
-
+                            mIsSetting = false
                         }
 
                         override fun startSetData() {
+                            mIsSetting = false
                             updateAlarmClock()
                         }
 

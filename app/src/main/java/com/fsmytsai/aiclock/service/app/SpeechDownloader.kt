@@ -115,16 +115,16 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
                 AlertDialog.Builder(mDownloadSpeechActivity!!)
                         .setCancelable(false)
                         .setView(dialogView)
-                        .setPositiveButton("開始設置鬧鐘", { _, _ ->
+                        .setPositiveButton("開始設置鬧鐘") { _, _ ->
                             if (dialogView.cb_never_prompt.isChecked) {
                                 spDatas.edit().putBoolean("NeverPrompt", true).apply()
                             }
                             setAlarmTime()
                             checkLatestUrl()
-                        })
-                        .setNegativeButton("取消", { _, _ ->
+                        }
+                        .setNegativeButton("取消") { _, _ ->
                             foregroundCancelDownloadSound()
-                        })
+                        }
                         .show()
             } else {
                 //延遲或主頁面不提示網路用量
@@ -146,7 +146,7 @@ class SpeechDownloader(context: Context, activity: DownloadSpeechActivity?) {
 
             //40分鐘內響鈴，且沒開天氣及新聞則直接設置鬧鐘
             if (mAlarmTimeList[0] == 0L && mAlarmTimeList[1] == 0L && mAlarmTimeList[2] <= 40 &&
-                    mAlarmClock.latitude == 1000.0 && mAlarmClock.category == -1)
+                    mAlarmClock.latitude == 1000.0 && mAlarmClock.category == "-1")
                 setAlarm(false)
             else
                 checkLatestUrl()
