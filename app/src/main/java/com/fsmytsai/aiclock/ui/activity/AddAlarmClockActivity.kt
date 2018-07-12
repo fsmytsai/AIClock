@@ -625,19 +625,21 @@ class AddAlarmClockActivity : DownloadSpeechActivity() {
         if (mIsPlaying)
             mMediaPlayer.release()
 
-        var isAnyCheck = false
-        mAlarmClock.category = ""
-        for (i in 1..5) {
-            val checkBox = ll_category.findViewWithTag<CheckBox>(i.toString())
-            if (checkBox.isChecked) {
-                isAnyCheck = true
-                mAlarmClock.category += "$i,"
+        if (mAlarmClock.category != "-1") {
+            var isAnyCheck = false
+            mAlarmClock.category = ""
+            for (i in 1..5) {
+                val checkBox = ll_category.findViewWithTag<CheckBox>(i.toString())
+                if (checkBox.isChecked) {
+                    isAnyCheck = true
+                    mAlarmClock.category += "$i,"
+                }
             }
+            if (isAnyCheck)
+                mAlarmClock.category = mAlarmClock.category.dropLast(1)
+            else
+                mAlarmClock.category = "-1"
         }
-        if (isAnyCheck)
-            mAlarmClock.category = mAlarmClock.category.dropLast(1)
-        else
-            mAlarmClock.category = "-1"
 
         if (mIsHome) {
             val resultIntent = Intent()
