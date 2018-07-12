@@ -13,7 +13,6 @@
 | unfinished | 卡住原因可能為伺服器端音檔遺失，應該設置 TimeOut |
 | unfinished | 美化版面 |
 | unfinished | 自選天氣預報位置、首頁新聞種類、播報者 |
-| unfinished | 新聞刪掉綜合改成多選 |
 | unfinished | 點擊天氣預報有更詳細的頁面 |
 
 # Version Features
@@ -26,6 +25,10 @@
 6. 支持系統大字體
 
 # Release Note
+## 1.13.0 versionCode = 38
+1. 刪除綜合新聞改成可多選
+2. 修正重複按勾勾按鈕造成重複設置鬧鐘的錯誤
+
 ## 1.12.1 versionCode = 37
 1. 修正有時重設鬧鐘時會閃退的錯誤
 
